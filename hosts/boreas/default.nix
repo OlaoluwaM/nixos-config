@@ -1,5 +1,6 @@
 # This is your system's configuration file.
 # Use this to configure your system environment (it replaces /etc/nixos/configuration.nix)
+# Based off: https://github.com/Misterio77/nix-starter-configs/blob/main/minimal/nixos/configuration.nix
 # Host: Asus ROG Zephyrus M16 (2023)
 {
   inputs,
@@ -7,7 +8,8 @@
   config,
   pkgs,
   ...
-}: {
+}:
+{
   # You can import other NixOS modules here
   imports = [
     # If you want to use modules from other flakes (such as nixos-hardware):
@@ -52,20 +54,17 @@
     channel.enable = false;
   };
 
-  # TODO: Add the rest of your current configuration
-
   # Bootloader.
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/vda";
   boot.loader.grub.useOSProber = true;
 
   # Enable memtest
-  boot.loader.systemd-boot.memtest86.enable = true;
+  # boot.loader.systemd-boot.memtest86.enable = true;
 
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
-  # TODO: Set your hostname
   networking.hostName = "boreas";
 
   # Enable networking
@@ -90,6 +89,7 @@
   };
 
   # Enable Gnome & Wayland (for now). I want to switch to something else later
+  # TODO: Move this configuration, for Gnome, out into it's own module to make swapping distro frontends easier
   services.desktopManager.gnome.enable = true;
   services.desktopManager.gdm.enable = true;
   services.desktopManager.gdm.wayland = true; # Enable Wayland
@@ -113,21 +113,25 @@
     #media-session.enable = true;
   };
 
-  # TODO: Configure your system-wide user settings (groups, etc), add more users as needed.
+  # NOTE: You can configure your system-wide user settings (groups, etc), add more users as needed.
   users.users = {
-    # FIXME: Replace with your username
+    # You can add more user entries here if you want to. They'll all follow the same schema as "olaolu"
     olaolu = {
-      # TODO: You can set an initial password for your user.
+      # You can set an initial password for your user.
       # If you do, you can skip setting a root password by passing '--no-root-passwd' to nixos-install.
       # Be sure to change it (using passwd) after rebooting!
       # initialPassword = "correcthorsebatterystaple";
       isNormalUser = true;
-      description = "Olaoluwa Mustapha"
+      description = "Olaoluwa Mustapha";
       openssh.authorizedKeys.keys = [
-        # TODO: Add your SSH public key(s) here, if you plan on using SSH to connect
+        # Add your SSH public key(s) here, if you plan on using SSH to connect
       ];
-      # TODO: Be sure to add any other groups you need (such as networkmanager, audio, docker, etc)
-      extraGroups = ["wheel", "networkmanager", "docker"];
+      # NOTE: Be sure to add any other groups you need (such as networkmanager, audio, docker, etc)
+      extraGroups = [
+        "wheel"
+        "networkmanager"
+        "docker"
+      ];
       shell = pkgs.zsh;
     };
   };
@@ -150,26 +154,24 @@
     vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is installed by default.
     wget
     curl
-    neovim
-    wl-clipboard
-    neovim
     memtest86plus
   ];
 
-
+  # Necessary as described here: https://nix-community.github.io/home-manager/options.xhtml#opt-programs.zsh.enableCompletion
+  environment.pathsToLink = [ "/share/zsh" ];
 
   # This setups a SSH server. Very important if you're setting up a headless system.
   # Feel free to remove if you don't need it.
   #services.openssh = {
   #  enable = true;
   #  settings = {
-      # Opinionated: forbid root login through SSH.
+  # Opinionated: forbid root login through SSH.
   #    PermitRootLogin = "no";
-      # Opinionated: use keys only.
-      # Remove if you want to SSH using passwords
- #     PasswordAuthentication = false;
- #   };
- # };
+  # Opinionated: use keys only.
+  # Remove if you want to SSH using passwords
+  #     PasswordAuthentication = false;
+  #   };
+  # };
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   system.stateVersion = "25.11";
