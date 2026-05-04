@@ -28,9 +28,9 @@
             owner = "umutphp";
             repo = "hacker-laws-cli";
             rev = "v${version}";
-            hash = "ferevewedrg"; # TODO: Fake hash, nix will give you the right one to replace this with
+            hash = pkgs.lib.fakeHash; # TODO: Fake hash, nix will give you the right one to replace this with
           };
-          vendorHash = "fervdweqerv243f"; # TODO: Fake hash, nix will give you the right one to replace this with
+          vendorHash = pkgs.lib.fakeHash; # TODO: Fake hash, nix will give you the right one to replace this with
         };
       }
     );

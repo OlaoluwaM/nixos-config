@@ -1,6 +1,7 @@
 {
   buildGoModule,
   pkgs,
+  lib,
   ...
 }:
 
@@ -15,7 +16,7 @@ buildGoModule {
     owner = "umutphp";
     repo = "hacker-laws-cli";
     rev = "v${version}";
-    hash = "ferevewedrg"; # TODO: Fake hash, nix will give you the right one to replace this with
+    hash = lib.fakeHash; # TODO: Fake hash, nix will give you the right one to replace this with
   };
-  vendorHash = "fervdweqerv243f"; # TODO: Fake hash, nix will give you the right one to replace this with
+  vendorHash = lib.fakeHash; # TODO: Fake hash, nix will give you the right one to replace this with
 }

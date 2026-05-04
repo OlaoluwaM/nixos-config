@@ -45,7 +45,7 @@ in
             owner = "cheat";
             repo = "cheat";
             rev = "5.1.0";
-            hash = ""; # build once, nix will tell you the correct hash
+            hash = lib.fakeHash; # TODO: Fake hash, nix will give you the right one to replace this with
           };
         });
       })
@@ -58,7 +58,7 @@ in
             owner = "Aitum";
             repo = "obs-aitum-multistream";
             rev = "1.0.7";
-            hash = ""; #TODO build once, nix will tell you the correct hash
+            hash = lib.fakeHash; # TODO: Fake hash, nix will give you the right one to replace this with
           };
           nativeBuildInputs = [ prev.cmake ];
           buildInputs = [
@@ -134,7 +134,7 @@ in
     google-chrome
 
     haskellPackages.threadscope
-    (callPackage "../../pkgs/home-manager/hacker-laws-cli" { })
+    (callPackage ../../pkgs/hacker-laws-cli { })
 
     libappindicator
     libva-utils
@@ -162,7 +162,7 @@ in
     powertop
 
     racket
-    (callPackage "../../pkgs/home-manager/rxfetch" { })
+    (callPackage ../../pkgs/rxfetch { })
 
     slack
     spotify
