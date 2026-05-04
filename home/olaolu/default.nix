@@ -24,6 +24,7 @@ in
     # You can also split up your configuration and import pieces of it here:
     # ./nvim.nix
     ../../modules/home-manager/zsh.nix
+    ../../modules/home-manager/fs-layout.nix
   ];
 
   nixpkgs = {
@@ -318,13 +319,7 @@ in
     userDirs = {
       enable = true;
       createDirectories = true;
-
-      desktop = "${home}/Desktop";
-      documents = "${home}/Documents";
-      download = "${home}/Downloads";
-      music = "${home}/Music";
-      pictures = "${home}/Pictures";
-      videos = "${home}/Videos";
+      # The Desktop, Documents, Videos, Pictures xdg dirs have the right defaults: https://github.com/nix-community/home-manager/blob/a89686d115e970e200eb2caa7603f3673050e00c/modules/misc/xdg-user-dirs.nix#L178
     };
   };
 
