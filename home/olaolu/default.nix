@@ -76,10 +76,10 @@ in
     };
   };
 
-  # TODO: Set your username
   home = {
     username = "olaolu";
     homeDirectory = "/home/olaolu";
+    # TODO: Perhaps we should move this to our dotfiles module where we have `home.file` defined
     sessionVariables = {
       VISUAL = visual;
       EDITOR = visual;
@@ -99,11 +99,12 @@ in
       FONT_DIR = "${config.xdg.dataHome}/fonts";
       STARSHIP_CONFIG = "${dots}/starship/starship.toml";
       GIT_PAGER = "delta";
-      COMPOSE_BAKE = true;
+      COMPOSE_BAKE = "true";
     };
   };
 
   # Add stuff for your user as you see fit:
+  # Doing this mean home-manager will be the one to manage your configuration for the program in question
   # programs.neovim.enable = true;
   home.packages = with pkgs; [
     # Packages from stable channel

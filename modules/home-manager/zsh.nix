@@ -19,7 +19,7 @@ in
     };
 
     localConfigPath = lib.mkOption {
-      type = lib.types.nullOr lib.types.str;
+      type = lib.types.str;
       default = "${cfg.dotsConfigPath}/shell/.zshrc.nix.zsh";
       example = "\${config.home.homeDirectory}/Desktop/dotfiles/<hostname>/nixos/.zshrc.nix.zsh";
       description = ''
@@ -56,7 +56,7 @@ in
     programs.zsh = {
       enable = true;
       enableCompletion = true;
-      # Home Manager sources zsh-autosuggestions directly; don't also load it via oh-my-zsh.
+      # Home Manager sources zsh-autosuggestions directly; no need to also load it as an oh-my-zsh plugin.
       autosuggestion.enable = true;
 
       sessionVariables = {

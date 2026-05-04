@@ -54,8 +54,6 @@
     channel.enable = false;
   };
 
-  # TODO: Add the rest of your current configuration
-
   # Bootloader.
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/vda";
@@ -67,7 +65,6 @@
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
-  # TODO: Set your hostname
   networking.hostName = "boreas";
 
   # Enable networking
@@ -92,6 +89,7 @@
   };
 
   # Enable Gnome & Wayland (for now). I want to switch to something else later
+  # TODO: Move this configuration, for Gnome, out into it's own module to make swapping distro frontends easier
   services.desktopManager.gnome.enable = true;
   services.desktopManager.gdm.enable = true;
   services.desktopManager.gdm.wayland = true; # Enable Wayland
@@ -115,20 +113,20 @@
     #media-session.enable = true;
   };
 
-  # TODO: Configure your system-wide user settings (groups, etc), add more users as needed.
+  # NOTE: You can configure your system-wide user settings (groups, etc), add more users as needed.
   users.users = {
-    # FIXME: Replace with your username
+    # You can add more user entries here if you want to. They'll all follow the same schema as "olaolu"
     olaolu = {
-      # TODO: You can set an initial password for your user.
+      # You can set an initial password for your user.
       # If you do, you can skip setting a root password by passing '--no-root-passwd' to nixos-install.
       # Be sure to change it (using passwd) after rebooting!
       # initialPassword = "correcthorsebatterystaple";
       isNormalUser = true;
       description = "Olaoluwa Mustapha";
       openssh.authorizedKeys.keys = [
-        # TODO: Add your SSH public key(s) here, if you plan on using SSH to connect
+        # Add your SSH public key(s) here, if you plan on using SSH to connect
       ];
-      # TODO: Be sure to add any other groups you need (such as networkmanager, audio, docker, etc)
+      # NOTE: Be sure to add any other groups you need (such as networkmanager, audio, docker, etc)
       extraGroups = [
         "wheel"
         "networkmanager"
@@ -159,6 +157,7 @@
     memtest86plus
   ];
 
+  # Necessary as described here: https://nix-community.github.io/home-manager/options.xhtml#opt-programs.zsh.enableCompletion
   environment.pathsToLink = [ "/share/zsh" ];
 
   # This setups a SSH server. Very important if you're setting up a headless system.
