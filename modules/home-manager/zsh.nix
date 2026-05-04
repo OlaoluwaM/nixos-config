@@ -10,21 +10,21 @@ in
   options.local.zsh = {
     enable = lib.mkEnableOption "opinionated Zsh configuration";
 
-    localConfigPath = lib.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      default = null;
-      example = "\${config.home.homeDirectory}/Desktop/dotfiles/nixos/.config/shell/.zshrc.nix.zsh";
+    dotsConfigPath = lib.mkOption {
+      type = lib.types.str;
+      example = "\${config.home.homeDirectory}/Desktop/dotfiles/<hostname>/nixos";
       description = ''
-        Runtime path to an extra Zsh config file to source after Home Manager
-        and oh-my-zsh have initialized.
+        Dotfiles config directory.
       '';
     };
 
-    dotsConfigPath = lib.mkOption {
-      type = lib.types.str;
-      example = "\${config.home.homeDirectory}/Desktop/dotfiles/nixos/.config";
+    localConfigPath = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = "${cfg.dotsConfigPath}/shell/.zshrc.nix.zsh";
+      example = "\${config.home.homeDirectory}/Desktop/dotfiles/<hostname>/nixos/.zshrc.nix.zsh";
       description = ''
-        Dotfiles config directory.
+        Runtime path to an extra Zsh config file to source after Home Manager
+        and oh-my-zsh have initialized.
       '';
     };
 
