@@ -1,5 +1,6 @@
 # This is your system's configuration file.
 # Use this to configure your system environment (it replaces /etc/nixos/configuration.nix)
+# Based off: https://github.com/Misterio77/nix-starter-configs/blob/main/minimal/nixos/configuration.nix
 # Host: Asus ROG Zephyrus M16 (2023)
 {
   inputs,
@@ -7,7 +8,8 @@
   config,
   pkgs,
   ...
-}: {
+}:
+{
   # You can import other NixOS modules here
   imports = [
     # If you want to use modules from other flakes (such as nixos-hardware):
@@ -60,7 +62,7 @@
   boot.loader.grub.useOSProber = true;
 
   # Enable memtest
-  boot.loader.systemd-boot.memtest86.enable = true;
+  # boot.loader.systemd-boot.memtest86.enable = true;
 
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
@@ -122,12 +124,16 @@
       # Be sure to change it (using passwd) after rebooting!
       # initialPassword = "correcthorsebatterystaple";
       isNormalUser = true;
-      description = "Olaoluwa Mustapha"
+      description = "Olaoluwa Mustapha";
       openssh.authorizedKeys.keys = [
         # TODO: Add your SSH public key(s) here, if you plan on using SSH to connect
       ];
       # TODO: Be sure to add any other groups you need (such as networkmanager, audio, docker, etc)
-      extraGroups = ["wheel", "networkmanager", "docker"];
+      extraGroups = [
+        "wheel"
+        "networkmanager"
+        "docker"
+      ];
       shell = pkgs.zsh;
     };
   };
@@ -150,26 +156,23 @@
     vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is installed by default.
     wget
     curl
-    neovim
-    wl-clipboard
-    neovim
     memtest86plus
   ];
 
-
+  environment.pathsToLink = [ "/share/zsh" ];
 
   # This setups a SSH server. Very important if you're setting up a headless system.
   # Feel free to remove if you don't need it.
   #services.openssh = {
   #  enable = true;
   #  settings = {
-      # Opinionated: forbid root login through SSH.
+  # Opinionated: forbid root login through SSH.
   #    PermitRootLogin = "no";
-      # Opinionated: use keys only.
-      # Remove if you want to SSH using passwords
- #     PasswordAuthentication = false;
- #   };
- # };
+  # Opinionated: use keys only.
+  # Remove if you want to SSH using passwords
+  #     PasswordAuthentication = false;
+  #   };
+  # };
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   system.stateVersion = "25.11";
