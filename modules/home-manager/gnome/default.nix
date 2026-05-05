@@ -265,7 +265,7 @@ in
         search-filter-time-type = "last_modified";
       };
 
-      # Night light and breaks
+      # Night light
       "org/gnome/settings-daemon/plugins/color" = {
         night-light-enabled = true;
         night-light-schedule-automatic = false;
@@ -274,11 +274,11 @@ in
         night-light-temperature = uint32 2467;
       };
 
+      # Extension settings
       "org/gnome/tweaks" = {
         show-extensions-notice = false;
       };
 
-      # Extension settings
       "org/gnome/shell/extensions/blur-my-shell/appfolder" = {
         brightness = 0.6;
         sigma = 30;

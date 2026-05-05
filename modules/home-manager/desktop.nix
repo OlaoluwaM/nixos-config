@@ -11,7 +11,7 @@ in
     ./gnome
     ./hyprland
   ];
-  # This option should mirrir what's in ../../modules/nixos/desktop.nix
+  # This option should mirror what's in ../../modules/nixos/desktop.nix
   options.local.desktop = {
     profile = lib.mkOption {
       type = lib.types.enum [
