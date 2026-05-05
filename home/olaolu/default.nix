@@ -3,6 +3,7 @@
 # Based off: https://github.com/Misterio77/nix-starter-configs/blob/main/minimal/home-manager/home.nix
 {
   inputs,
+  hostConfig,
   lib,
   config,
   pkgs,
@@ -23,8 +24,9 @@ in
 
     # You can also split up your configuration and import pieces of it here:
     # ./nvim.nix
-    ../../modules/home-manager/zsh.nix
+    ../../modules/home-manager/desktop.nix
     ../../modules/home-manager/fs-layout.nix
+    ../../modules/home-manager/zsh.nix
   ];
 
   nixpkgs = {
@@ -52,21 +54,15 @@ in
       })
 
       (final: prev: {
-        obs-aitum-multistream = prev.stdenv.mkDerivation {
-          pname = "obs-aitum-multistream";
-          version = "1.0.7";
+        defuddle = unstable.defuddle.overrideAttrs (old: {
+          version = "0.18.1";
           src = prev.fetchFromGitHub {
-            owner = "Aitum";
-            repo = "obs-aitum-multistream";
-            rev = "1.0.7";
+            owner = "kepano";
+            repo = "defuddle";
+            rev = "0.18.1";
             hash = lib.fakeHash; # TODO: Fake hash, nix will give you the right one to replace this with
           };
-          nativeBuildInputs = [ prev.cmake ];
-          buildInputs = [
-            prev.obs-studio
-            prev.qt6.qtbase
-          ];
-        };
+        });
       })
 
     ];
@@ -118,8 +114,11 @@ in
     bottom
 
     cmake
-    cheat
+    cheat # Uses overlay
+    claude-code # From https://github.com/sadjow/claude-code-nix
+    codex # From https://github.com/sadjow/codex-cli-nix
 
+    defuddle # Uses overlay
     direnv
     duf
 
@@ -139,8 +138,8 @@ in
     (callPackage ../../pkgs/hacker-laws-cli { })
 
     libappindicator
-    libva-utils
     libpq
+    libwebp
     localsend
 
     meson
@@ -148,7 +147,6 @@ in
     nmap
     nixfmt
     nitch
-    nodejs_25
     nvtopPackages.nvidia
     nvtopPackages.intel
     # Add amd on an amd device
@@ -184,9 +182,6 @@ in
     # Packages from unstable channel
     unstable.atuin
 
-    unstable.cargo-update
-    unstable.cargo-binstall
-
     unstable.delta
     unstable.discord
 
@@ -194,11 +189,17 @@ in
     unstable.fd
     unstable.fend
     unstable.ffmpeg-full
+    unstable.ffmpegthumbnailer
     unstable.fx
     unstable.fzf
 
     unstable.gdu
     unstable.git-credential-manager
+    # Override example to add plugins, you can do this for any package
+    (unstable.git.override {
+      withSsh = true;
+      withLibsecret = true;
+    })
     unstable.gh
     unstable.go
 
@@ -206,7 +207,7 @@ in
 
     unstable.imagemagick
     unstable.inxi
-    unstable.ipython
+    unstable.python3Packages.ipython
 
     unstable.jql
     unstable.just
@@ -214,8 +215,12 @@ in
 
     unstable.kitty
 
+    unstable.libdrm
     unstable.lazydocker
     unstable.lazygit
+    unstable.libgcc
+    unstable.libva
+    unstable.libva-utils
     unstable.lld
     unstable.lsd
     unstable.lsof
@@ -223,28 +228,23 @@ in
     unstable.navi
     unstable.ncdu
     unstable.neovim
+    unstable.neovim-node-client
     unstable.nil
+    (callPackage ../../pkgs/notebooklm-mcp-cli { })
     unstable.noti
 
     unstable.obsidian
-    # Override example to add plugins, you can do this for any package
-    (unstable.obs-studio.override {
-      plugins = with unstable.obs-studio-plugins; [
-        obs-gstreamer
-        obs-vaapi
-        obs-wlrobs
-        obs-noise
-        pkgs.obs-aitum-multistream # from your overlay
-      ];
-    })
     unstable.openai-whisper
 
+    unstable.pavucontrol
+    unstable.perl
     unstable.pciutils
     unstable.pinentry-curses
-    unstable.pnpm
     unstable.procs
     unstable.proton-vpn-cli
-    # withPackages wraps python3 so these libraries are importable by the interpreter
+    # withPackages wraps python3 so these libraries are importable by the interpreter.
+    # Again we are installing pynvim and dnspython this way because they are libraries not standalone executables.
+    # Yes there are individual entries for them in nixpkgs but they wouldn't be useful when specified in that way
     (unstable.python3.withPackages (ps: [
       ps.pynvim
       ps.dnspython
@@ -255,8 +255,6 @@ in
     unstable.ripgrep
     unstable.ripgrep-all
     unstable.rlwrap
-    unstable.ruby
-    unstable.rustup
 
     unstable.sad
     unstable.sd
@@ -298,13 +296,12 @@ in
     ];
     update.auto = {
       enable = true;
-      onCalendar = "weekly";
+      onCalendar = "Fri 10:00";
     };
   };
 
-  # Enable home-manager and git
+  # Enable home-manager
   programs.home-manager.enable = true;
-  programs.git.enable = true;
 
   # Manage standard XDG dirs with HM, and create them if they don't exist. Also supports non-standard dirs via the `extra` option.
   # This sets the following env variables by default:
@@ -328,6 +325,58 @@ in
     enable = true;
     localConfigPath = "${dots}/shell/.zshrc.nix.zsh";
     dotsConfigPath = dots;
+  };
+
+  local.desktop.profile = hostConfig.desktopProfile;
+
+  # Home Manager automatic upgrades. This is the user-level updater: it first
+  # refreshes flake.lock so the repo points at newer package versions, then it
+  # updates user tools and dotfiles. NixOS later uses the same lockfile
+  # for the operating-system update. See README.md for the split.
+  services.home-manager.autoUpgrade = {
+    # Turn on the scheduled Home Manager update job.
+    enable = true;
+
+    # Run every Saturday at 9 AM. systemd uses 24-hour time.
+    frequency = "Sat 09:00";
+
+    # Use the repo's flake.nix for Home Manager instead of the older
+    # channel-based setup.
+    useFlake = true;
+
+    # Refresh flake.lock before applying the Home Manager config. This is what
+    # actually moves the repo to newer package versions.
+    # preSwitchCommands = [ "nix flake update" ];
+
+    # The folder containing this repo's flake.nix. The timer enters this folder
+    # before refreshing flake.lock and applying Home Manager.
+    flakeDir = ""; # Something like "/home/olaolu/Desktop/labs/nix-setup"
+
+    # Keep detailed build output in the logs so failures are easier to diagnose.
+    # flags = [ "-L" ];
+  };
+
+  programs.obs-studio = {
+    enable = true;
+
+    # optional Nvidia hardware acceleration
+    # package = (
+    #   unstable.obs-studio.override {
+    #     cudaSupport = true;
+    #   }
+    # );
+    package = unstable.obs-studio;
+
+    plugins = with unstable.obs-studio-plugins; [
+      wlrobs
+      obs-backgroundremoval
+      obs-pipewire-audio-capture
+      obs-vaapi
+      obs-gstreamer
+      obs-vkcapture
+      obs-noise
+      obs-aitum-multistream
+    ];
   };
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
