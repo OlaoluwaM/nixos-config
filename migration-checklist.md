@@ -34,6 +34,7 @@
   - [x] Configure keybindings
   - [x] Configure other reasonably relevant gnome
 - [x] Create a module for using Hyprland with Nixos
+- [ ] Migrate the services, timers, and udev rules defined in $DOTS/system
 - [ ] Create a module for Nvidia stuff on NixOS
 - [ ] Create a module for Intel (CPU & GPU) stuff on Nixos
 - [ ] Configure Nvidia container toolkit
