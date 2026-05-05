@@ -183,7 +183,7 @@
     # scheduled job on the machine starting at the exact same second.
     randomizedDelaySec = "45min";
 
-    # If the laptop was off at 9 AM Saturday, run the missed update later when
+    # If the laptop was off at 5 PM Saturday, run the missed update later when
     # the machine is back on instead of skipping the week.
     persistent = true;
 
@@ -192,14 +192,14 @@
     allowReboot = false;
 
     # Avoid adding nixos-rebuild's legacy --upgrade flag. In this flake setup.
-    # --upgrade is useful for channel-based setup, but since we're using flakesit is redundant.
+    # --upgrade is useful for channel-based setup, but since we're using flakes, it is redundant.
     #
     # Home Manager is responsible for editing flake.lock; this timer only rebuilds the system from the lockfile that already exists.
     # This means that this timer would need to run *after* the HM auto-upgrade timer.
     upgrade = false;
 
     # Keep detailed build output in the logs so failures are easier to diagnose.
-    # Do not include flake update flages here because we don't want the systemd timer to update our flake.lock because doing so might lead to unexpected outcomes since the timer runs as root but the flake.lock is owned by a user
+    # Do not include flake update flags here because we don't want the systemd timer to update our flake.lock. Doing so might lead to unexpected outcomes since the timer runs as root but the flake.lock is owned by a user
     flags = [ "-L" ];
   };
 

@@ -76,7 +76,7 @@ in
   home = {
     username = "olaolu";
     homeDirectory = "/home/olaolu";
-    # TODO: Perhaps we should move this to our dotfiles module where we have `home.file` defined
+    # TODO: Perhaps we should move this to our dotfiles module where we have `home.file` defined?
     sessionVariables = {
       VISUAL = visual;
       EDITOR = visual;
@@ -346,25 +346,27 @@ in
 
     # Refresh flake.lock before applying the Home Manager config. This is what
     # actually moves the repo to newer package versions.
-    # preSwitchCommands = [ "nix flake update" ];
+    preSwitchCommands = [ "nix flake update" ];
 
     # The folder containing this repo's flake.nix. The timer enters this folder
-    # before refreshing flake.lock and applying Home Manager.
+    # before refreshing flake.lock and applying the Home Manager config.
     flakeDir = ""; # Something like "/home/olaolu/Desktop/labs/nix-setup"
 
     # Keep detailed build output in the logs so failures are easier to diagnose.
-    # flags = [ "-L" ];
+    flags = [ "-L" ];
   };
 
   programs.obs-studio = {
     enable = true;
 
+    # TODO: Move this to a dedicated Nvidia module
     # optional Nvidia hardware acceleration
     # package = (
     #   unstable.obs-studio.override {
     #     cudaSupport = true;
     #   }
     # );
+
     package = unstable.obs-studio;
 
     plugins = with unstable.obs-studio-plugins; [

@@ -5,7 +5,7 @@
 - [x] Curl & wget install
 - [x] OMZ installation & Setup
   - [x] Cleanup dotfiles
-- [ ] Create and add ssh keys to Github: Create an idempotent nix script via `writeShellApplication`. Authenticate the Github CLI manually
+- [ ] Create and add ssh keys to GitHub: Create an idempotent nix script via `writeShellApplication`. Authenticate the GitHub CLI manually
 - [x] Bootstrap file system using `home.activation`
 - [ ] Clone repos: I have decided to omit this since cloning repos isn't a difficult thing to do, but may be difficult to achieve with nix
 - [x] Docker install & setup
@@ -21,13 +21,13 @@
 - [ ] AstroNvim setup: I have a [repo](https://github.com/OlaoluwaM/nvim-setup) already so I'll just make a nix script like what I've got in distro-setup
 - [x] Crates install: Handled via nixpkgs
 - [x] Global npm packages
-- [ ] Add dotfiles symlink home-manager module using `home.file
+- [ ] Add dotfiles symlink home-manager module using `home.file`
 - [ ] Migrate cron jobs
-- [ ] Gh extensions and aliases: Handle manually get them from dotfiles directory
+- [ ] `gh` extensions and aliases: Handle manually get them from dotfiles directory
 - [x] Automatic updates
 - [x] Configure flatpaks and flathub
 - [ ] Configure Haskell
-- [ ] Configure multi-media
+- [ ] Configure multi-media per distro-setup script if applicable
 - [x] Create a module for using Gnome with NixOS
   - [x] Add gnome extension packages
   - [x] Configure gnome extension packages & their config
@@ -35,7 +35,7 @@
   - [x] Configure other reasonably relevant gnome
 - [x] Create a module for using Hyprland with Nixos
 - [ ] Create a module for Nvidia stuff on NixOS
-- [ ] Create a module for Intel stuff on Nixos
-- [ ] Configure nvidia container toolkit
+- [ ] Create a module for Intel (CPU & GPU) stuff on Nixos
+- [ ] Configure Nvidia container toolkit
 - [ ] Create a module for AMD CPU stuff on Nixos
 - [ ] Create a module for AMD GPU stuff on Nixos (yes separate)

@@ -66,7 +66,7 @@
         # For a new profile/user, just add a new entry like "olaolu@boreas" but with the name set to olaolu@<new-hostname>. You may want to replace the system arch if necessary username@hostname
         "olaolu@boreas" = home-manager.lib.homeManagerConfiguration {
           # Home-manager requires 'pkgs' instance
-          pkgs = nixpkgs.legacyPackages.x86_64-linux; # NOTE: replace x86_64-linux with your architecture if necessary
+          pkgs = nixpkgs.legacyPackages.${hosts.boreas.system}; # NOTE: replace x86_64-linux with your architecture if necessary
           # All of these will be passed to every imported HM module
           extraSpecialArgs = {
             inherit inputs;

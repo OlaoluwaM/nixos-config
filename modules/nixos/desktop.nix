@@ -38,7 +38,7 @@ in
       security.polkit.enable = true;
     })
 
-    # Do not move these up because when profile is none, the values of these options becomes a bit unclear
+    # Do not move these up because when profile is set to "none", the values of these options becomes a bit unclear
     {
       local.gnome.enable = cfg.profile == "gnome";
       local.hyprland.enable = cfg.profile == "hyprland";
