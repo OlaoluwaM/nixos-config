@@ -350,7 +350,7 @@ in
 
     # The folder containing this repo's flake.nix. The timer enters this folder
     # before refreshing flake.lock and applying the Home Manager config.
-    flakeDir = ""; # Something like "/home/olaolu/Desktop/labs/nix-setup"
+    flakeDir = ""; # Something like "/home/olaolu/Desktop/labs/nixos-config"
 
     # Keep detailed build output in the logs so failures are easier to diagnose.
     flags = [ "-L" ];

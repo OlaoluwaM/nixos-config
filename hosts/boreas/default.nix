@@ -170,7 +170,7 @@
 
     # Tell the updater where this repo lives and which machine config to build.
     # "#boreas" means "use the boreas machine from flake.nix".
-    flake = ""; # Something like "/home/olaolu/Desktop/labs/nix-setup#boreas";
+    flake = ""; # Something like "/home/olaolu/Desktop/labs/nixos-config#boreas";
 
     # Build the update now, but only start using it after the next reboot. This
     # avoids changing the running desktop session while we're using it.
