@@ -121,7 +121,7 @@ hardware.bluetooth.powerOnBoot = false;
 # Auto upgrades
 system.autoUpgrade = {
   enable = true;
-  flake = "path:/home/olaolu/Desktop/labs/nix-setup#boreas";
+  flake = "path:/home/olaolu/Desktop/labs/nixos-config#boreas";
   dates = "weekly";
 };
 ```
@@ -156,7 +156,7 @@ services.fprintd.enable = true;
 # Auto upgrades
 system.autoUpgrade = {
   enable = true;
-  flake = "path:/home/olaolu/Desktop/labs/nix-setup#framework";
+  flake = "path:/home/olaolu/Desktop/labs/nixos-config#framework";
   dates = "weekly";
 };
 ```
