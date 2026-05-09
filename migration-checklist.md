@@ -7,7 +7,6 @@
   - [x] Cleanup dotfiles
 - [ ] Create and add ssh keys to GitHub: Create an idempotent nix script via `writeShellApplication`. Authenticate the GitHub CLI manually
 - [x] Bootstrap file system using `home.activation`
-- [ ] Clone repos: I have decided to omit this since cloning repos isn't a difficult thing to do, but may be difficult to achieve with nix
 - [x] Docker install & setup
 - [x] VSCode install
 - [x] System packages install
@@ -34,9 +33,9 @@
   - [x] Configure keybindings
   - [x] Configure other reasonably relevant gnome
 - [x] Create a module for using Hyprland with Nixos
-- [ ] Migrate the services, timers, and udev rules defined in $DOTS/system
-- [ ] Create a module for Nvidia stuff on NixOS
-- [ ] Create a module for Intel (CPU & GPU) stuff on Nixos
+- [x] Migrate the services, timers, and udev rules defined in $DOTS/system
+- [x] Create a module for Nvidia stuff on NixOS: Already covered by [nixos-hardware](https://github.com/NixOS/nixos-hardware)
+- [x] Create a module for Intel (CPU & GPU) stuff on Nixos: Already covered by [nixos-hardware](https://github.com/NixOS/nixos-hardware)
 - [ ] Configure Nvidia container toolkit
-- [ ] Create a module for AMD CPU stuff on Nixos
-- [ ] Create a module for AMD GPU stuff on Nixos (yes separate)
+- [x] Create a module for AMD CPU stuff on Nixos: Already covered by [nixos-hardware](https://github.com/NixOS/nixos-hardware)
+- [x] Create a module for AMD GPU stuff on Nixos: Already covered by [nixos-hardware](https://github.com/NixOS/nixos-hardware)

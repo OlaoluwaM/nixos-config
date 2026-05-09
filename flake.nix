@@ -8,6 +8,7 @@
 
     claude-code.url = "github:sadjow/claude-code-nix";
     codex-cli.url = "github:sadjow/codex-cli-nix";
+    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
 
     # Home manager
     home-manager.url = "github:nix-community/home-manager/release-25.11";
@@ -24,7 +25,9 @@
       nixpkgs-unstable,
       claude-code,
       codex-cli,
+      nixos-hardware,
       home-manager,
+      nix-flatpak,
       ...
     }@inputs:
 
@@ -56,7 +59,10 @@
           };
           # > Our main nixos configuration file <
           # For another system config, you'd want to replace this too, to match the new system name
-          modules = [ ./hosts/boreas ];
+          modules = [
+            nixos-hardware.nixosModules.asus-zephyrus-gu603h
+            ./hosts/boreas
+          ];
         };
       };
 
@@ -81,8 +87,9 @@
           # > Our main home-manager configuration file <
           # For a new user profile, you'd need a new entry and replace `./home/olaolu` with whatever the new profile user name is
           modules = [
-            inputs.nix-flatpak.homeManagerModules.nix-flatpak
+            nix-flatpak.homeManagerModules.nix-flatpak
             # We're getting claude-code from this repo https://github.com/sadjow/claude-code-nix to always have the most up to date version
+            # The same guy also has a repo for codex https://github.com/sadjow/codex-cli-nix
             {
               nixpkgs.overlays = [
                 claude-code.overlays.default

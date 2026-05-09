@@ -6,6 +6,7 @@
   inputs,
   lib,
   config,
+  unstable,
   hostConfig,
   pkgs,
   ...
@@ -157,6 +158,186 @@
 
   # Necessary as described here: https://nix-community.github.io/home-manager/options.xhtml#opt-programs.zsh.enableCompletion
   environment.pathsToLink = [ "/share/zsh" ];
+
+  # supergfxctl is deprecated; asusctl/asusd now owns ASUS firmware controls. Force this
+  # off because older nixpkgs asusd modules may still enable supergfxd by default.
+  # see: https://github.com/NixOS/nixpkgs/pull/517986
+  services.supergfxd.enable = false;
+
+  # asusd's platform profile switching is backed by power-profiles-daemon.
+  services.power-profiles-daemon.enable = true;
+
+  # Setup asusctl and rog-control-center (https://asus-linux.org/guides/nixos/)
+  services = {
+    asusd = {
+      enable = true;
+      enableUserService = true;
+
+      package = unstable.asusctl;
+
+      asusdConfig.text = ''
+        (
+            // Keep long-term battery charging capped at 80%.
+            charge_control_end_threshold: 80,
+
+            // 0 means "do not restore a separate base limit" on shutdown/power events.
+            // This keeps the 80% limit persistent instead of treating it like a temporary
+            // one-shot charge limit.
+            base_charge_control_end_threshold: 0,
+
+            // Replaces the old Fedora udev script that stopped nvidia-powerd on battery
+            // and restarted it on AC. Dynamic Boost is useful on wall power, but it can
+            // burn battery when unplugged.
+            disable_nvidia_powerd_on_battery: true,
+
+            // Escape hatches for custom scripts on power-source changes. Keep these empty
+            // so asusd/asusctl owns power management without extra shell glue.
+            ac_command: "",
+            bat_command: "",
+
+            // When asusd changes the ASUS platform profile, also update the CPU
+            // energy_performance_preference. Without this, switching to Quiet/Performance
+            // changes the firmware profile but leaves CPU energy bias untouched.
+            platform_profile_linked_epp: true,
+
+            // Native baseline for power-source changes. AC goes straight to Performance.
+            // Battery starts at Balanced so unplugging does not over-throttle a healthy
+            // battery; the timer below lowers it to Quiet when capacity is <= 35%.
+            platform_profile_on_battery: Balanced,
+            change_platform_profile_on_battery: true,
+            platform_profile_on_ac: Performance,
+            change_platform_profile_on_ac: true,
+
+            // EPP mapping used when platform_profile_linked_epp is true.
+            profile_quiet_epp: Power,
+            profile_balanced_epp: BalancePower,
+            profile_custom_epp: Performance,
+            profile_performance_epp: Performance,
+
+            // Leave per-profile ASUS firmware tunings at stock defaults for now. The old
+            // Fedora setup changed profiles, not wattage/fan tuning tables.
+            ac_profile_tunings: {
+                Balanced: (
+                    enabled: false,
+                    group: {},
+                ),
+                Performance: (
+                    enabled: false,
+                    group: {},
+                ),
+                Quiet: (
+                    enabled: false,
+                    group: {},
+                ),
+            },
+            dc_profile_tunings: {
+                Balanced: (
+                    enabled: false,
+                    group: {},
+                ),
+                Quiet: (
+                    enabled: false,
+                    group: {},
+                ),
+                Performance: (
+                    enabled: false,
+                    group: {},
+                ),
+            },
+
+            // Armoury firmware settings such as MUX mode, panel overdrive, Dynamic Boost,
+            // and NVIDIA temp target are left imperative until we choose explicit policies.
+            armoury_settings: {},
+        )
+      '';
+    };
+  };
+
+  # Adds the battery-percentage behavior from the old Fedora tuned scripts, but
+  # keeps ASUS Linux as the control plane by calling asusctl profile set.
+  systemd.services.asus-battery-profile-threshold =
+    let
+      serviceUnitDependencies = [
+        "asusd.service"
+        "power-profiles-daemon.service"
+      ];
+    in
+    {
+      description = "Select ASUS platform profile based on battery threshold";
+
+      # Together, `after` & `wants` express an ordered dependency relationship between this service and the "asusd" service and "power-profiles-daemon" service. Specifically, it expresses that this asus-battery-profile-threshold service requires that the two aforementioned units be started (`wants`) when trying to start this one and that they should have been started up "before" this one (`after`).
+      after = serviceUnitDependencies;
+      wants = serviceUnitDependencies;
+
+      path = [
+        unstable.asusctl
+        pkgs.coreutils
+        pkgs.gnugrep
+        pkgs.gnused
+        pkgs.systemd
+      ];
+      serviceConfig = {
+        Type = "oneshot";
+      };
+
+      script = ''
+        set -eu
+
+        battery_dir=
+        for candidate in /sys/class/power_supply/BAT*; do
+          if [ -f "$candidate/capacity" ] && [ -f "$candidate/status" ]; then
+            battery_dir="$candidate"
+            break
+          fi
+        done
+
+        if [ -z "$battery_dir" ]; then
+          systemd-cat -t asus-battery-profile-threshold -p warning echo "No battery found; skipping profile update"
+          exit 0
+        fi
+
+        capacity="$(cat "$battery_dir/capacity")"
+        status="$(cat "$battery_dir/status")"
+
+        case "$status" in
+          Charging|Full|Not\ charging)
+            target=Performance
+            ;;
+          Discharging)
+            if [ "$capacity" -le 35 ]; then
+              target=Quiet
+            elif [ "$capacity" -le 65 ]; then
+              target=Balanced
+            else
+              target=Performance
+            fi
+            ;;
+          *)
+            systemd-cat -t asus-battery-profile-threshold -p warning echo "Unknown battery status '$status'; skipping profile update"
+            exit 0
+            ;;
+        esac
+
+        current="$(asusctl profile get | grep 'Active profile:' | sed 's/.*Active profile: //')"
+        if [ "$current" = "$target" ]; then
+          systemd-cat -t asus-battery-profile-threshold echo "ASUS profile already $target ($status, ''${capacity}%)"
+          exit 0
+        fi
+
+        asusctl profile set "$target"
+        systemd-cat -t asus-battery-profile-threshold echo "Set ASUS profile to $target ($status, ''${capacity}%)"
+      '';
+    };
+
+  systemd.timers.asus-battery-profile-threshold = {
+    description = "Periodically select ASUS platform profile from battery threshold";
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnBootSec = "1min";
+      OnUnitActiveSec = "3min";
+      Unit = "asus-battery-profile-threshold.service";
+    };
+  };
 
   # NixOS automatic upgrades. This is the system-level updater: it builds a new
   # version of the operating system using the package versions already recorded
