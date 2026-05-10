@@ -79,7 +79,8 @@ in
       };
 
       initContent = lib.mkIf (cfg.zshrcConfigPath != null) (
-        lib.mkAfter ''
+        # This way, our custom zshrc file will be sourced before OMZ is loaded
+        lib.mkBefore 790 ''
           if [[ -f "${cfg.zshrcConfigPath}" ]]; then
             source "${cfg.zshrcConfigPath}"
           fi
