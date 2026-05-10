@@ -144,6 +144,18 @@
   # Enable docker
   virtualisation.docker.enable = true;
 
+  # Setup docker with nvidia & nvidia-container-toolkit
+  hardware.nvidia-container-toolkit.enable = true;
+  hardware.nvidia-container-toolkit.package = unstable.nvidia-container-toolkit;
+  virtualisation.docker.daemon.settings.features.cdi = true;
+
+  # Use nvidia proprietary drivers
+  hardware.nvidia = {
+    open = false;
+    modesetting.enable = true;
+    package = config.boot.kernelPackages.nvidiaPackages.production;
+  };
+
   # Enable GNUpg Agent
   programs.gnupg.agent.enable = true;
 
@@ -154,6 +166,7 @@
     wget
     curl
     memtest86plus
+    unstable.nvidia-container-toolkit
   ];
 
   # Necessary as described here: https://nix-community.github.io/home-manager/options.xhtml#opt-programs.zsh.enableCompletion

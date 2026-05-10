@@ -350,15 +350,11 @@ in
   programs.obs-studio = {
     enable = true;
 
-    # TODO: Move this to a dedicated Nvidia module
-    # optional Nvidia hardware acceleration
-    # package = (
-    #   unstable.obs-studio.override {
-    #     cudaSupport = true;
-    #   }
-    # );
-
-    package = unstable.obs-studio;
+    package = (
+      unstable.obs-studio.override {
+        cudaSupport = (hostConfig.gpu or null) == "nvidia";
+      }
+    );
 
     plugins = with unstable.obs-studio-plugins; [
       wlrobs

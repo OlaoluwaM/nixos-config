@@ -36,7 +36,7 @@
 - [x] Migrate the services, timers, and udev rules defined in $DOTS/system
 - [x] Create a module for Nvidia stuff on NixOS: Already covered by [nixos-hardware](https://github.com/NixOS/nixos-hardware)
 - [x] Create a module for Intel (CPU & GPU) stuff on Nixos: Already covered by [nixos-hardware](https://github.com/NixOS/nixos-hardware)
-- [ ] Configure Nvidia container toolkit
-- [ ] Use propritary nvidia drivers with boreas
+- [x] Configure Nvidia container toolkit
+- [x] Use propritary nvidia drivers with boreas
 - [x] Create a module for AMD CPU stuff on Nixos: Already covered by [nixos-hardware](https://github.com/NixOS/nixos-hardware)
 - [x] Create a module for AMD GPU stuff on Nixos: Already covered by [nixos-hardware](https://github.com/NixOS/nixos-hardware)
