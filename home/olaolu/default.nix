@@ -13,7 +13,7 @@
 let
   home = "/home/olaolu";
   visual = "nvim";
-  dev = "${config.xdg.userDirs.desktop}/${hostConfig.devDirname}";
+  dev = "${config.xdg.userDirs.desktop}/${config.local.fsLayout.devDirname}";
 in
 {
   # You can import other home-manager modules here
@@ -318,6 +318,8 @@ in
     enable = true;
     dotsPath = "${config.xdg.userDirs.desktop}/${hostConfig.dotfilesRelativePath}";
   };
+
+  local.fsLayout.devDirname = hostConfig.devDirname;
 
   # Enable and configure zsh with OMZ and our custom module
   local.zsh = {
