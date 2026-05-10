@@ -35,7 +35,7 @@
       hosts = {
         # Having user data associated with a host does not lend itself to multi-user setups. Fortunately, boreas is a personal computer so coupling it with the single user I'll be using is fine. For a multi-user, host, however, we'd want to avoid this coupling. We could also consider this coupled user to be the "primary" user or something like that
 
-        # The user details defined here will be used (1) to parameterize the boreas nixos config and (2) to select the appropriate home-manager user profile
+        # The user details defined here will be used (1) to parameterize the boreas nixos config and (2) to select the appropriate home-manager user profile for boreas
         boreas = rec {
           hostName = "boreas";
           system = "x86_64-linux";
