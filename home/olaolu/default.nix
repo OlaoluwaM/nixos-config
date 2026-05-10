@@ -167,6 +167,9 @@ in
     # Packages from unstable channel
     unstable.atuin
 
+    unstable.cabal-install
+    unstable.cabal2nix
+
     unstable.delta
     unstable.discord
 
@@ -246,6 +249,8 @@ in
     unstable.shellcheck
     unstable.shfmt
     unstable.socat
+    unstable.stack
+    unstable.stack2nix
     unstable.starship
 
     unstable.tealdeer

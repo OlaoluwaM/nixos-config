@@ -25,8 +25,8 @@
 - [ ] `gh` extensions and aliases: Handle manually get them from dotfiles directory
 - [x] Automatic updates
 - [x] Configure flatpaks and flathub
-- [ ] Configure Haskell
-- [ ] Configure multi-media per distro-setup script if applicable
+- [x] Configure Haskell: The NixOS convention is to not install Haskell globally, but to instead have it be a local setup per project using a flake.nix. However, we'd still want to install stack and/or cabal globally
+- [x] Configure multi-media per distro-setup script if applicable
 - [x] Create a module for using Gnome with NixOS
   - [x] Add gnome extension packages
   - [x] Configure gnome extension packages & their config
