@@ -10,21 +10,20 @@ in
   options.local.zsh = {
     enable = lib.mkEnableOption "opinionated Zsh configuration";
 
-    dotsConfigPath = lib.mkOption {
+    histFilePath = lib.mkOption {
       type = lib.types.str;
-      example = "\${config.home.homeDirectory}/Desktop/dotfiles/<hostname>/nixos";
+      example = "\${config.home.homeDirectory}/.zsh_history";
       description = ''
-        Dotfiles config directory.
+        Path to zsh history file.
       '';
     };
 
-    localConfigPath = lib.mkOption {
+    zshrcConfigPath = lib.mkOption {
       type = lib.types.str;
-      default = "${cfg.dotsConfigPath}/shell/.zshrc.nix.zsh";
-      example = "\${config.home.homeDirectory}/Desktop/dotfiles/<hostname>/nixos/.zshrc.nix.zsh";
+      example = "\${config.home.homeDirectory}/.zshrc";
       description = ''
-        Runtime path to an extra Zsh config file to source after Home Manager
-        and oh-my-zsh have initialized.
+        Path to an extra Zsh config file to source after Home Manager
+        and oh-my-zsh initialization.
       '';
     };
 
@@ -61,7 +60,7 @@ in
 
       sessionVariables = {
         NVM_DIR = cfg.nvmDir;
-        HISTFILE = "${cfg.dotsConfigPath}/shell/.zsh_history";
+        HISTFILE = cfg.histFilePath;
       };
 
       oh-my-zsh = {
@@ -74,10 +73,10 @@ in
         '';
       };
 
-      initContent = lib.mkIf (cfg.localConfigPath != null) (
+      initContent = lib.mkIf (cfg.zshrcConfigPath != null) (
         lib.mkAfter ''
-          if [[ -f "${cfg.localConfigPath}" ]]; then
-            source "${cfg.localConfigPath}"
+          if [[ -f "${cfg.zshrcConfigPath}" ]]; then
+            source "${cfg.zshrcConfigPath}"
           fi
         ''
       );

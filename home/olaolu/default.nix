@@ -12,9 +12,8 @@
 }:
 let
   home = config.home.homeDirectory;
-  dots = "${home}/Desktop/dotfiles/nixos/.config";
   visual = "nvim";
-  dev = "${config.xdg.userDirs.desktop}/dev";
+  dev = "${config.xdg.userDirs.desktop}/${hostConfig.devDirname}";
 in
 {
   # You can import other home-manager modules here
@@ -25,6 +24,7 @@ in
     # You can also split up your configuration and import pieces of it here:
     # ./nvim.nix
     ../../modules/home-manager/desktop.nix
+    ../../modules/home-manager/dotfiles.nix
     ../../modules/home-manager/fs-layout.nix
     ../../modules/home-manager/zsh.nix
   ];
@@ -75,26 +75,11 @@ in
 
   home = {
     username = "olaolu";
-    homeDirectory = "/home/olaolu";
-    # TODO: Perhaps we should move this to our dotfiles module where we have `home.file` defined?
+    homeDirectory = home;
     sessionVariables = {
       VISUAL = visual;
       EDITOR = visual;
       DEV = dev;
-      DOTS = dots;
-      SYS_BAK_DIR_UNDER_GIT = "${dots}/system";
-      WALLPAPERS_DIR = "${config.xdg.userDirs.pictures}/wallpapers";
-      NAVI_PATH = "${dots}/navi/cheat";
-      NAVI_CONFIG_PATH = "${dots}/navi/config.yaml";
-      ATUIN_CONFIG_DIR = "${dots}/atuin";
-      _ZO_DATA_DIR = "${dots}/zoxide";
-      TEALDEER_CONFIG_DIR = "${dots}/tldr";
-      THEMES_DIR = "${config.xdg.dataHome}/themes";
-      CUSTOM_BIN_DIR = "${home}/.local/bin";
-      SYS_BAK_DIR_NOT_UNDER_GIT = "${home}/sys-bak";
-      CUSTOM_MAN_PATH = "${config.xdg.dataHome}/man";
-      FONT_DIR = "${config.xdg.dataHome}/fonts";
-      STARSHIP_CONFIG = "${dots}/starship/starship.toml";
       GIT_PAGER = "delta";
       COMPOSE_BAKE = "true";
     };
@@ -320,11 +305,17 @@ in
     };
   };
 
+  # Enable dotfiles
+  local.dotfiles = {
+    enable = true;
+    dotsPath = "${config.xdg.userDirs.desktop}/${hostConfig.dotfilesRelativePath}";
+  };
+
   # Enable and configure zsh with OMZ and our custom module
   local.zsh = {
     enable = true;
-    localConfigPath = "${dots}/shell/.zshrc.nix.zsh";
-    dotsConfigPath = dots;
+    zshrcConfigPath = "${home}/.zshrc.nix.zsh";
+    histFilePath = "${config.local.dotfiles.dotsPath}/shell/.zsh_history";
   };
 
   local.desktop.profile = hostConfig.desktopProfile;

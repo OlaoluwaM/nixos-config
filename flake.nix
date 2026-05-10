@@ -28,6 +28,7 @@
       nixos-hardware,
       home-manager,
       nix-flatpak,
+      config,
       ...
     }@inputs:
 
@@ -38,6 +39,9 @@
           # Change this to "hyprland" to swap from the full GNOME DE to the Hyprland WM.
           desktopProfile = "gnome";
           enableAsusRogKeybindings = true;
+          dotfilesRelativePath = "dotfiles/boreas/nixos";
+          devDirname = "dev";
+          gpu = "nvidia";
         };
       };
     in

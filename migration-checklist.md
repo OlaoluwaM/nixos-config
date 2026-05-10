@@ -20,7 +20,7 @@
 - [ ] AstroNvim setup: I have a [repo](https://github.com/OlaoluwaM/nvim-setup) already so I'll just make a nix script like what I've got in distro-setup
 - [x] Crates install: Handled via nixpkgs
 - [x] Global npm packages
-- [ ] Add dotfiles symlink home-manager module using `home.file`
+- [x] Add dotfiles symlink home-manager module using `home.file`
 - [ ] Migrate cron jobs
 - [ ] `gh` extensions and aliases: Handle manually get them from dotfiles directory
 - [x] Automatic updates
@@ -37,5 +37,6 @@
 - [x] Create a module for Nvidia stuff on NixOS: Already covered by [nixos-hardware](https://github.com/NixOS/nixos-hardware)
 - [x] Create a module for Intel (CPU & GPU) stuff on Nixos: Already covered by [nixos-hardware](https://github.com/NixOS/nixos-hardware)
 - [ ] Configure Nvidia container toolkit
+- [ ] Use propritary nvidia drivers with boreas
 - [x] Create a module for AMD CPU stuff on Nixos: Already covered by [nixos-hardware](https://github.com/NixOS/nixos-hardware)
 - [x] Create a module for AMD GPU stuff on Nixos: Already covered by [nixos-hardware](https://github.com/NixOS/nixos-hardware)
