@@ -28,7 +28,6 @@
       nixos-hardware,
       home-manager,
       nix-flatpak,
-      config,
       ...
     }@inputs:
 
