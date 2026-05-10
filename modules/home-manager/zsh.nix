@@ -19,7 +19,8 @@ in
     };
 
     zshrcConfigPath = lib.mkOption {
-      type = lib.types.str;
+      type = lib.types.nullOr lib.types.str;
+      default = null;
       example = "\${config.home.homeDirectory}/.zshrc";
       description = ''
         Path to an extra Zsh config file to source after Home Manager

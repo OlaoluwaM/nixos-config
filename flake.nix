@@ -33,7 +33,7 @@
 
     let
       hosts = {
-        # Having user data associated with a host does not lend itself to multi-user setups, only single user setups. Fortunately, boreas is a personal computer so coupling it with a single user is fine. For a multi-user, host, however, we'd want to avoid this coupling
+        # Having user data associated with a host does not lend itself to multi-user setups. Fortunately, boreas is a personal computer so coupling it with the single user I'll be using is fine. For a multi-user, host, however, we'd want to avoid this coupling. We could also consider this coupled user to be the "primary" user or something like that
         boreas = rec {
           hostName = "boreas";
           system = "x86_64-linux";

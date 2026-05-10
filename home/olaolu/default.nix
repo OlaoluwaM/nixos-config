@@ -11,7 +11,7 @@
   ...
 }:
 let
-  home = "/home/olaolu";
+  home = "/home/olaolu"; # Using a literal value here because it aligns with the path where this module is
   visual = "nvim";
   dev = "${config.xdg.userDirs.desktop}/${config.local.fsLayout.devDirname}";
   hasNvidiaGpu = (hostConfig.gpu or null) == "nvidia";

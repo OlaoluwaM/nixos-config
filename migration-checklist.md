@@ -37,6 +37,6 @@
 - [x] Create a module for Nvidia stuff on NixOS: Already covered by [nixos-hardware](https://github.com/NixOS/nixos-hardware)
 - [x] Create a module for Intel (CPU & GPU) stuff on Nixos: Already covered by [nixos-hardware](https://github.com/NixOS/nixos-hardware)
 - [x] Configure Nvidia container toolkit
-- [x] Use propritary nvidia drivers with boreas
+- [x] Use proprietary NVIDIA drivers with boreas
 - [x] Create a module for AMD CPU stuff on Nixos: Already covered by [nixos-hardware](https://github.com/NixOS/nixos-hardware)
 - [x] Create a module for AMD GPU stuff on Nixos: Already covered by [nixos-hardware](https://github.com/NixOS/nixos-hardware)
