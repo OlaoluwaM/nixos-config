@@ -11,7 +11,8 @@ in
     enable = lib.mkEnableOption "opinionated Zsh configuration";
 
     histFilePath = lib.mkOption {
-      type = lib.types.str;
+      type = lib.types.nullOr lib.types.str;
+      default = null;
       example = "\${config.home.homeDirectory}/.zsh_history";
       description = ''
         Path to zsh history file.
@@ -59,10 +60,13 @@ in
       # Home Manager sources zsh-autosuggestions directly; no need to also load it as an oh-my-zsh plugin.
       autosuggestion.enable = true;
 
-      sessionVariables = {
-        NVM_DIR = cfg.nvmDir;
-        HISTFILE = cfg.histFilePath;
-      };
+      sessionVariables =
+        {
+          NVM_DIR = cfg.nvmDir;
+        }
+        // lib.optionalAttrs (cfg.histFilePath != null) {
+          HISTFILE = cfg.histFilePath;
+        };
 
       oh-my-zsh = {
         enable = true;

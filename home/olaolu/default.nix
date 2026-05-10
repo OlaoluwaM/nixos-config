@@ -322,7 +322,7 @@ in
     };
   };
 
-  # Enable dotfiles
+  # Enable dotfiles. Must be done first so symlinks can be created for those configurations that depend on them
   local.dotfiles = {
     enable = true;
     dotsPath = "${config.xdg.userDirs.desktop}/${hostConfig.dotfilesRelativePath}";
