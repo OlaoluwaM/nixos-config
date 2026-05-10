@@ -11,8 +11,8 @@ let
   pictures = config.xdg.userDirs.pictures;
 
   mkSourcePath =
-    relativeFilepathFromdotsPath:
-    config.lib.file.mkOutOfStoreSymlink "${cfg.dotsPath}/${relativeFilepathFromdotsPath}";
+    relativeFilepathFromDotsSubPath:
+    config.lib.file.mkOutOfStoreSymlink "${cfg.dotsPath}/${relativeFilepathFromDotsSubPath}";
 
   homeLinks = {
     "catppuccin.gitconfig".source = mkSourcePath "git/catppuccin.gitconfig";

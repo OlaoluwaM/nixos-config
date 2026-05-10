@@ -2,6 +2,7 @@
 # Use this to configure your system environment (it replaces /etc/nixos/configuration.nix)
 # Based off: https://github.com/Misterio77/nix-starter-configs/blob/main/minimal/nixos/configuration.nix
 # Host: Asus ROG Zephyrus M16 (2023)
+# TODO: Update relevant configuration once we have a bare metal installation of nixos
 {
   inputs,
   lib,

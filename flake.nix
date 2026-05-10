@@ -33,9 +33,11 @@
 
     let
       hosts = {
-        # Having user data associated with a host does not lend itself to multi-user setups. Fortunately, boreas is a personal computer so coupling it with the single user I'll be using is fine. For a multi-user, host, however, we'd want to avoid this coupling. We could also consider this coupled user to be the "primary" user or something like that
+        # Having user data associated with a host does not lend well to multi-user setups. However, because boreas is a personal computer, coupling it with the single user I'll be using on it is fine. For a multi-user, host, though, we'd want to avoid this coupling. We could also consider this coupled user to be the "primary" user for boreas or something like that
 
         # The user details defined here will be used (1) to parameterize the boreas nixos config and (2) to select the appropriate home-manager user profile for boreas
+
+        # With this approach as well, we don't need to add extra profile entries under homeManagerConfiguration. The home-manager profile for boreas is parameterized on the user coupled with boreas. Meaning, so long as there is a `home/<username>/default.nix` file, we can easily switch users by just updating the user data here
         boreas = rec {
           hostName = "boreas";
           system = "x86_64-linux";
