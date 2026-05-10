@@ -34,13 +34,14 @@
     let
       hosts = {
         # Having user data associated with a host does not lend itself to multi-user setups. Fortunately, boreas is a personal computer so coupling it with the single user I'll be using is fine. For a multi-user, host, however, we'd want to avoid this coupling. We could also consider this coupled user to be the "primary" user or something like that
+
+        # The user details defined here will be used (1) to parameterize the boreas nixos config and (2) to select the appropriate home-manager user profile
         boreas = rec {
           hostName = "boreas";
           system = "x86_64-linux";
           username = "olaolu";
           userFullName = "Olaoluwa Mustapha";
-          homeDirectory = "/home/olaolu";
-          nixosConfigPath = "${homeDirectory}/nixos-config";
+          nixosConfigPath = "/home/${username}/nixos-config";
           # Change this to "hyprland" to swap from the full GNOME DE to the Hyprland WM.
           desktopProfile = "gnome";
           enableAsusRogKeybindings = true;
@@ -107,7 +108,7 @@
                 codex-cli.overlays.default
               ];
             }
-            ./home/olaolu
+            ./home/${boreas.username}
           ];
         };
       };

@@ -11,6 +11,11 @@ let
       pkgs.nodejs
     ];
     text = ''
+      if [[ ! -f "${wallpapersDir}/compressWallpapers.mjs" ]]; then
+        echo "compress-wallpapers: ${wallpapersDir}/compressWallpapers.mjs not found; skipping compression."
+        exit 0
+      fi
+
       cd "${wallpapersDir}"
       node ./compressWallpapers.mjs
     '';

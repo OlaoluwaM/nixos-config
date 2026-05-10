@@ -27,6 +27,7 @@ in
   options.local.fsLayout = {
     devDirname = lib.mkOption {
       type = lib.types.str;
+      default = "dev";
       example = "dev";
       description = ''
         Name of the development directory created under the XDG desktop directory.
