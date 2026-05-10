@@ -6,7 +6,9 @@
 
 let
   cfg = config.local.fsLayout;
+  home = config.home.homeDirectory;
   data = config.xdg.dataHome;
+  pictures = config.xdg.userDirs.pictures;
 
   dirs = [
     "${config.xdg.userDirs.desktop}/${cfg.devDirname}"
@@ -15,7 +17,9 @@ let
     "${data}/themes"
     "${data}/fonts"
     "${config.xdg.userDirs.videos}/Screencasts"
-    "${config.xdg.userDirs.pictures}/Screenshots"
+    "${pictures}/Screenshots"
+    "${pictures}/Wallpapers"
+    "${home}/sys-bak"
   ];
 
 in

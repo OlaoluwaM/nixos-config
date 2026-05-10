@@ -11,6 +11,13 @@
   pkgs,
   ...
 }:
+let
+  inherit (hostConfig)
+    hostName
+    username
+    userFullName
+    ;
+in
 {
   # You can import other NixOS modules here
   imports = [
@@ -68,7 +75,7 @@
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
-  networking.hostName = "boreas";
+  networking.hostName = hostName;
 
   # Enable networking
   networking.networkmanager.enable = true;
@@ -115,13 +122,13 @@
   # NOTE: You can configure your system-wide user settings (groups, etc), add more users as needed.
   users.users = {
     # You can add more user entries here if you want to. They'll all follow the same schema as "olaolu"
-    olaolu = {
+    ${username} = {
       # You can set an initial password for your user.
       # If you do, you can skip setting a root password by passing '--no-root-passwd' to nixos-install.
       # Be sure to change it (using passwd) after rebooting!
       # initialPassword = "correcthorsebatterystaple";
       isNormalUser = true;
-      description = "Olaoluwa Mustapha";
+      description = userFullName;
       openssh.authorizedKeys.keys = [
         # Add your SSH public key(s) here, if you plan on using SSH to connect
       ];
@@ -142,12 +149,19 @@
   programs.zsh.enable = true;
 
   # Enable docker
-  virtualisation.docker.enable = true;
+  virtualisation.docker = {
+    enable = true;
+    daemon.settings.features = {
+      cdi = true;
+    };
+  };
 
   # Setup docker with nvidia & nvidia-container-toolkit
-  hardware.nvidia-container-toolkit.enable = true;
-  hardware.nvidia-container-toolkit.package = unstable.nvidia-container-toolkit;
-  virtualisation.docker.daemon.settings.features.cdi = true;
+  # Nvidia configuration isn't made conditional because boreas will always have an NVIDIA GPU
+  hardware.nvidia-container-toolkit = {
+    enable = true;
+    package = unstable.nvidia-container-toolkit;
+  };
 
   # Use nvidia proprietary drivers
   hardware.nvidia = {
@@ -161,13 +175,15 @@
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
-  environment.systemPackages = with pkgs; [
-    vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is installed by default.
-    wget
-    curl
-    memtest86plus
-    unstable.nvidia-container-toolkit
-  ];
+  environment.systemPackages =
+    with pkgs;
+    [
+      vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is installed by default.
+      wget
+      curl
+      memtest86plus
+      unstable.nvidia-container-toolkit
+    ];
 
   # Necessary as described here: https://nix-community.github.io/home-manager/options.xhtml#opt-programs.zsh.enableCompletion
   environment.pathsToLink = [ "/share/zsh" ];
@@ -364,7 +380,8 @@
 
     # Tell the updater where this repo lives and which machine config to build.
     # "#boreas" means "use the boreas machine from flake.nix".
-    flake = ""; # Something like "/home/olaolu/Desktop/labs/nixos-config#boreas";
+    # Build the host configuration from this repository's flake.
+    flake = "${hostConfig.nixosConfigPath}#${hostName}";
 
     # Build the update now, but only start using it after the next reboot. This
     # avoids changing the running desktop session while we're using it.

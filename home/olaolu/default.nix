@@ -14,6 +14,7 @@ let
   home = "/home/olaolu";
   visual = "nvim";
   dev = "${config.xdg.userDirs.desktop}/${config.local.fsLayout.devDirname}";
+  hasNvidiaGpu = (hostConfig.gpu or null) == "nvidia";
 in
 {
   # You can import other home-manager modules here
@@ -43,27 +44,35 @@ in
       #   });
       # })
       (final: prev: {
-        cheat = prev.cheat.overrideAttrs (old: {
-          version = "5.1.0";
-          src = prev.fetchFromGitHub {
-            owner = "cheat";
-            repo = "cheat";
-            rev = "5.1.0";
-            hash = lib.fakeHash; # TODO: Fake hash, nix will give you the right one to replace this with
-          };
-        });
+        cheat =
+          let
+            version = "5.1.0";
+          in
+          prev.cheat.overrideAttrs (old: {
+            inherit version;
+            src = prev.fetchFromGitHub {
+              owner = "cheat";
+              repo = "cheat";
+              rev = version;
+              hash = lib.fakeHash; # TODO: Fake hash, nix will give you the right one to replace this with
+            };
+          });
       })
 
       (final: prev: {
-        defuddle = unstable.defuddle.overrideAttrs (old: {
-          version = "0.18.1";
-          src = prev.fetchFromGitHub {
-            owner = "kepano";
-            repo = "defuddle";
-            rev = "0.18.1";
-            hash = lib.fakeHash; # TODO: Fake hash, nix will give you the right one to replace this with
-          };
-        });
+        defuddle =
+          let
+            version = "0.18.1";
+          in
+          unstable.defuddle.overrideAttrs (old: {
+            inherit version;
+            src = prev.fetchFromGitHub {
+              owner = "kepano";
+              repo = "defuddle";
+              rev = version;
+              hash = lib.fakeHash; # TODO: Fake hash, nix will give you the right one to replace this with
+            };
+          });
       })
 
     ];
@@ -75,7 +84,7 @@ in
   };
 
   home = {
-    username = "olaolu";
+    username = "olaolu"; # Since this is explicit in the path
     homeDirectory = home;
     sessionVariables = {
       VISUAL = visual;
@@ -330,10 +339,8 @@ in
 
   local.desktop.profile = hostConfig.desktopProfile;
 
-  # Home Manager automatic upgrades. This is the user-level updater: it first
-  # refreshes flake.lock so the repo points at newer package versions, then it
-  # updates user tools and dotfiles. NixOS later uses the same lockfile
-  # for the operating-system update. See README.md for the split.
+  # Home Manager automatic upgrades. This is the user-level updater for user tools and dotfiles. If preSwitchCommands is enabled below, it also refreshes flake.lock before switching.
+  # NixOS later uses that same (updated) lockfile for the operating-system update. See README.md for the split.
   services.home-manager.autoUpgrade = {
     # Turn on the scheduled Home Manager update job.
     enable = true;
@@ -351,7 +358,7 @@ in
 
     # The folder containing this repo's flake.nix. The timer enters this folder
     # before refreshing flake.lock and applying the Home Manager config.
-    flakeDir = ""; # Something like "/home/olaolu/Desktop/labs/nixos-config"
+    flakeDir = hostConfig.nixosConfigPath;
 
     # Keep detailed build output in the logs so failures are easier to diagnose.
     flags = [ "-L" ];
@@ -362,7 +369,7 @@ in
 
     package = (
       unstable.obs-studio.override {
-        cudaSupport = (hostConfig.gpu or null) == "nvidia";
+        cudaSupport = hasNvidiaGpu;
       }
     );
 

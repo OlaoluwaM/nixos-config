@@ -1,7 +1,7 @@
 { config, pkgs, ... }:
 
 let
-  home = config.home.homeDirectory;
+  wallpapersDir = "${config.xdg.userDirs.pictures}/Wallpapers";
 
   compressWallpapers = pkgs.writeShellApplication {
     name = "compress-wallpapers";
@@ -11,7 +11,7 @@ let
       pkgs.nodejs
     ];
     text = ''
-      cd "${home}/Pictures/wallpapers"
+      cd "${wallpapersDir}"
       node ./compressWallpapers.mjs
     '';
   };

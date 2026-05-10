@@ -9,7 +9,15 @@
 
 let
   cfg = config.local.gnome;
-  home = config.home.homeDirectory;
+  xdgDirs = config.xdg.userDirs;
+  documents = xdgDirs.documents;
+  downloads = xdgDirs.download;
+  music = xdgDirs.music;
+  pictures = xdgDirs.pictures;
+  videos = xdgDirs.videos;
+  screenshots = "${pictures}/Screenshots";
+  screencasts = "${videos}/Screencasts";
+  wallpapers = "${pictures}/Wallpapers";
   enableAsusRogKeybindings = hostConfig.enableAsusRogKeybindings or false;
   # dconf stores GNOME settings as typed GVariant values; these helpers
   # preserve exact types for values Nix cannot infer, like tuples and variants.
@@ -57,40 +65,37 @@ let
       ]
     ]))
   ]);
+  customKeybindingSchema = "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings";
+  # Used in the media-keys custom-keybindings list, which expects slash-wrapped dconf paths.
+  mkCustomKeybindingPath = index: "/${customKeybindingSchema}/custom${toString index}/";
+  # Used as a dconf.settings attr key, where Home Manager expects the same path without edge slashes.
+  mkCustomKeybindingKey = index: "${customKeybindingSchema}/custom${toString index}";
   customKeybindings =
-    [
-      "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
-      "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/"
-      "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/"
-      "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/"
-      "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/"
-      "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/"
-    ]
+    map mkCustomKeybindingPath (lib.range 0 5)
     ++ lib.optionals enableAsusRogKeybindings [
-      "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom6/"
-      "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7/"
+      (mkCustomKeybindingPath 6)
+      (mkCustomKeybindingPath 7)
     ];
-  favoriteApps =
-    [
-      "firefox.desktop"
-      "kitty.desktop"
-    ]
-    ++ lib.optionals enableAsusRogKeybindings [
-      "rog-control-center.desktop"
-    ];
+  favoriteApps = [
+    "firefox.desktop"
+    "kitty.desktop"
+  ]
+  ++ lib.optionals enableAsusRogKeybindings [
+    "rog-control-center.desktop"
+  ];
   gtkBookmarks = ''
-    file://${home}/Documents/job-items
-    file://${home}/Videos/Screencasts
-    file://${home}/Pictures/Screenshots
-    file://${home}/Desktop
-    file://${home}/Pictures/wallpapers/images wallpapers
-    file://${home}/Documents/library/non-technical-shelf
-    file://${home}/Documents/library/technical-shelf
-    file://${home}/Documents
-    file://${home}/Music
-    file://${home}/Pictures
-    file://${home}/Videos
-    file://${home}/Downloads
+    file://${documents}/job-items
+    file://${screencasts}
+    file://${screenshots}
+    file://${xdgDirs.desktop}
+    file://${wallpapers}/images wallpapers
+    file://${documents}/library/non-technical-shelf
+    file://${documents}/library/technical-shelf
+    file://${documents}
+    file://${music}
+    file://${pictures}
+    file://${videos}
+    file://${downloads}
   '';
 in
 {
@@ -457,57 +462,53 @@ in
       };
 
       # Custom keybindings
-      "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0" = {
+      "${mkCustomKeybindingKey 0}" = {
         binding = "<Super>o";
         command = "flatpak run md.obsidian.Obsidian";
         name = "Obsidian";
       };
 
-      "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1" = {
+      "${mkCustomKeybindingKey 1}" = {
         binding = "<Super>t";
         command = "kitty";
         name = "Terminal";
       };
 
-      "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2" = {
+      "${mkCustomKeybindingKey 2}" = {
         binding = "<Control><Alt>t";
         command = "ticktick";
         name = "TickTick";
       };
 
-      "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3" = {
+      "${mkCustomKeybindingKey 3}" = {
         binding = "<Super>s";
         command = "slack";
         name = "Slack";
       };
 
-      "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4" = {
+      "${mkCustomKeybindingKey 4}" = {
         binding = "<Alt>s";
         command = "flatpak run com.spotify.Client";
         name = "Spotify";
       };
 
-      "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5" = {
+      "${mkCustomKeybindingKey 5}" = {
         binding = "<Super>d";
         command = "flatpak run com.discordapp.Discord";
         name = "Discord";
       };
 
-      "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom6" =
-        lib.mkIf enableAsusRogKeybindings
-          {
-            binding = "Launch1";
-            command = "rog-control-center";
-            name = "Rog Control Center";
-          };
+      "${mkCustomKeybindingKey 6}" = lib.mkIf enableAsusRogKeybindings {
+        binding = "Launch1";
+        command = "rog-control-center";
+        name = "Rog Control Center";
+      };
 
-      "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7" =
-        lib.mkIf enableAsusRogKeybindings
-          {
-            binding = "F5";
-            command = "asusctl profile -n";
-            name = "Switch Power profile";
-          };
+      "${mkCustomKeybindingKey 7}" = lib.mkIf enableAsusRogKeybindings {
+        binding = "F5";
+        command = "asusctl profile -n";
+        name = "Switch Power profile";
+      };
     };
   };
 }

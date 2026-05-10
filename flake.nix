@@ -33,8 +33,14 @@
 
     let
       hosts = {
-        boreas = {
+        # Having user data associated with a host does not lend itself to multi-user setups, only single user setups. Fortunately, boreas is a personal computer so coupling it with a single user is fine. For a multi-user, host, however, we'd want to avoid this coupling
+        boreas = rec {
+          hostName = "boreas";
           system = "x86_64-linux";
+          username = "olaolu";
+          userFullName = "Olaoluwa Mustapha";
+          homeDirectory = "/home/olaolu";
+          nixosConfigPath = "${homeDirectory}/nixos-config";
           # Change this to "hyprland" to swap from the full GNOME DE to the Hyprland WM.
           desktopProfile = "gnome";
           enableAsusRogKeybindings = true;
@@ -43,18 +49,20 @@
           gpu = "nvidia";
         };
       };
+
+      boreas = hosts.boreas;
     in
     {
       # NixOS configuration entrypoint
       # Available through 'nixos-rebuild --flake .#your-hostname'
       nixosConfigurations = {
         # For a new system, just add a new entry like boreas. Although you may want to replace the system arch if necessary
-        boreas = nixpkgs.lib.nixosSystem {
+        ${boreas.hostName} = nixpkgs.lib.nixosSystem {
           specialArgs = {
             inherit inputs;
-            hostConfig = hosts.boreas;
+            hostConfig = boreas;
             unstable = import nixpkgs-unstable {
-              system = hosts.boreas.system; # NOTE: replace x86_64-linux with your architecture if necessary
+              system = boreas.system; # NOTE: replace x86_64-linux with your architecture if necessary
               config = {
                 allowUnfree = true;
               };
@@ -73,15 +81,15 @@
       # Available through 'home-manager --flake .#your-username@your-hostname'
       homeConfigurations = {
         # For a new profile/user, just add a new entry like "olaolu@boreas" but with the name set to olaolu@<new-hostname>. You may want to replace the system arch if necessary username@hostname
-        "olaolu@boreas" = home-manager.lib.homeManagerConfiguration {
+        "${boreas.username}@${boreas.hostName}" = home-manager.lib.homeManagerConfiguration {
           # Home-manager requires 'pkgs' instance
-          pkgs = nixpkgs.legacyPackages.${hosts.boreas.system}; # NOTE: replace x86_64-linux with your architecture if necessary
+          pkgs = nixpkgs.legacyPackages.${boreas.system}; # NOTE: replace x86_64-linux with your architecture if necessary
           # All of these will be passed to every imported HM module
           extraSpecialArgs = {
             inherit inputs;
-            hostConfig = hosts.boreas;
+            hostConfig = boreas;
             unstable = import nixpkgs-unstable {
-              system = hosts.boreas.system; # NOTE: replace x86_64-linux with your architecture if necessary
+              system = boreas.system; # NOTE: replace x86_64-linux with your architecture if necessary
               config = {
                 allowUnfree = true;
               };

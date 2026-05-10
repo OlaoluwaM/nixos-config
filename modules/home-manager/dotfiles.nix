@@ -7,6 +7,8 @@
 let
   cfg = config.local.dotfiles;
   home = config.home.homeDirectory;
+  data = config.xdg.dataHome;
+  pictures = config.xdg.userDirs.pictures;
 
   mkSourcePath =
     relativeFilepathFromdotsPath:
@@ -71,11 +73,11 @@ in
       SHELL_ENV = "${home}/.shell-env";
       SYS_BAK_DIR_NOT_UNDER_GIT = "${home}/sys-bak";
       SYS_BAK_DIR_UNDER_GIT = "${cfg.dotsPath}/system";
-      WALLPAPERS_DIR = "${config.xdg.userDirs.pictures}/wallpapers";
-      THEMES_DIR = "${config.xdg.dataHome}/themes";
+      WALLPAPERS_DIR = "${pictures}/Wallpapers";
+      THEMES_DIR = "${data}/themes";
       CUSTOM_BIN_DIR = "${home}/.local/bin";
-      CUSTOM_MAN_PATH = "${config.xdg.dataHome}/man";
-      FONT_DIR = "${config.xdg.dataHome}/fonts";
+      CUSTOM_MAN_PATH = "${data}/man";
+      FONT_DIR = "${data}/fonts";
       NAVI_PATH = "${cfg.dotsPath}/navi/cheats";
       NAVI_CONFIG_PATH = "${cfg.dotsPath}/navi/config.yaml";
       ATUIN_CONFIG_DIR = "${cfg.dotsPath}/atuin";
