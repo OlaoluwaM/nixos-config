@@ -11,7 +11,7 @@
   ...
 }:
 let
-  home = config.home.homeDirectory;
+  home = "/home/olaolu";
   visual = "nvim";
   dev = "${config.xdg.userDirs.desktop}/${hostConfig.devDirname}";
 in
@@ -24,6 +24,7 @@ in
     # You can also split up your configuration and import pieces of it here:
     # ./nvim.nix
     ../../modules/home-manager/desktop.nix
+    ../../modules/home-manager/cron-jobs.nix
     ../../modules/home-manager/dotfiles.nix
     ../../modules/home-manager/fs-layout.nix
     ../../modules/home-manager/zsh.nix
@@ -250,7 +251,9 @@ in
     unstable.shfmt
     unstable.socat
     unstable.stack
-    unstable.stack2nix
+    # stack2nix is marked broken in nixpkgs; use cabal2nix for simple
+    # package expression generation, or haskell.nix for Stack/Stackage fidelity.
+    # unstable.stack2nix
     unstable.starship
 
     unstable.tealdeer

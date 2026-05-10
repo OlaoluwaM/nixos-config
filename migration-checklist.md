@@ -21,7 +21,7 @@
 - [x] Crates install: Handled via nixpkgs
 - [x] Global npm packages
 - [x] Add dotfiles symlink home-manager module using `home.file`
-- [ ] Migrate cron jobs
+- [x] Migrate cron jobs: wallpaper compression is now a Home Manager user systemd timer. Other legacy cron jobs were intentionally left out.
 - [ ] `gh` extensions and aliases: Handle manually get them from dotfiles directory
 - [x] Automatic updates
 - [x] Configure flatpaks and flathub
