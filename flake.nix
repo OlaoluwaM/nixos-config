@@ -37,9 +37,8 @@
 
         # The user details defined here will be used (1) to parameterize the boreas nixos config and (2) to select the appropriate home-manager user profile for boreas
 
-        # With this approach as well, we don't need to add extra profile entries under homeManagerConfiguration. The home-manager profile for boreas is parameterized on the user coupled with boreas. Meaning, so long as there is a `home/<username>/default.nix` file, we can easily switch users by just updating the user data here
+        # With this approach as well, we don't need to add extra profile entries under homeManagerConfiguration to switch boreas to a different profile. Changing the user data associated with the boreas attribute set will do that automatically, so long as there is a `home/<username>/default.nix` file for the profile.
         boreas = rec {
-          hostName = "boreas";
           system = "x86_64-linux";
           username = "olaolu";
           userFullName = "Olaoluwa Mustapha";
@@ -57,10 +56,10 @@
     in
     {
       # NixOS configuration entrypoint
-      # Available through 'nixos-rebuild --flake .#your-hostname'
+      # Available through 'nixos-rebuild --flake #your-hostname'
       nixosConfigurations = {
         # For a new system, just add a new entry like boreas. Although you may want to replace the system arch if necessary
-        ${boreas.hostName} = nixpkgs.lib.nixosSystem {
+        boreas = nixpkgs.lib.nixosSystem {
           specialArgs = {
             inherit inputs;
             hostConfig = boreas;
@@ -84,7 +83,7 @@
       # Available through 'home-manager --flake .#your-username@your-hostname'
       homeConfigurations = {
         # For a new profile/user, just add a new entry like "olaolu@boreas" but with the name set to olaolu@<new-hostname>. You may want to replace the system arch if necessary username@hostname
-        "${boreas.username}@${boreas.hostName}" = home-manager.lib.homeManagerConfiguration {
+        "${boreas.username}@boreas" = home-manager.lib.homeManagerConfiguration {
           # Home-manager requires 'pkgs' instance
           pkgs = nixpkgs.legacyPackages.${boreas.system}; # NOTE: replace x86_64-linux with your architecture if necessary
           # All of these will be passed to every imported HM module

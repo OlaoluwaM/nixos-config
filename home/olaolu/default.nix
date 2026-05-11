@@ -11,7 +11,9 @@
   ...
 }:
 let
-  home = "/home/olaolu"; # Using a literal value here because it aligns with the path where this module is
+  # Using a literal value here because it aligns with the path. Making it variable doesn't make sense
+  username = "olaolu";
+  home = "/home/${username}";
   visual = "nvim";
   dev = "${config.xdg.userDirs.desktop}/${config.local.fsLayout.devDirname}";
   hasNvidiaGpu = (hostConfig.gpu or null) == "nvidia";
@@ -84,7 +86,7 @@ in
   };
 
   home = {
-    username = "olaolu"; # Since this is explicit in the path
+    username = username;
     homeDirectory = home;
     sessionVariables = {
       VISUAL = visual;
@@ -279,6 +281,7 @@ in
     unstable.w3m
     unstable.webp-pixbuf-loader
     unstable.witr
+    unstable.wireshark
 
     unstable.yazi
     unstable.yt-dlp

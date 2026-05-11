@@ -14,7 +14,6 @@
 }:
 let
   inherit (hostConfig)
-    hostName
     username
     userFullName
     ;
@@ -76,7 +75,8 @@ in
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
-  networking.hostName = hostName;
+  # Literal value because of the directory path. This is under the "boreas" host so making it variable doesn't make sense
+  networking.hostName = "boreas";
 
   # Enable networking
   networking.networkmanager.enable = true;
@@ -176,15 +176,13 @@ in
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
-  environment.systemPackages =
-    with pkgs;
-    [
-      vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is installed by default.
-      wget
-      curl
-      memtest86plus
-      unstable.nvidia-container-toolkit
-    ];
+  environment.systemPackages = with pkgs; [
+    vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is installed by default.
+    wget
+    curl
+    memtest86plus
+    unstable.nvidia-container-toolkit
+  ];
 
   # Necessary as described here: https://nix-community.github.io/home-manager/options.xhtml#opt-programs.zsh.enableCompletion
   environment.pathsToLink = [ "/share/zsh" ];
@@ -382,7 +380,7 @@ in
     # Tell the updater where this repo lives and which machine config to build.
     # "#boreas" means "use the boreas machine from flake.nix".
     # Build the host configuration from this repository's flake.
-    flake = "${hostConfig.nixosConfigPath}#${hostName}";
+    flake = "${hostConfig.nixosConfigPath}#boreas";
 
     # Build the update now, but only start using it after the next reboot. This
     # avoids changing the running desktop session while we're using it.
