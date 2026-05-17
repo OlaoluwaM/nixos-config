@@ -42,9 +42,9 @@ in
     '';
 
     home.activation.createLegacyXdgLinks = lib.hm.dag.entryAfter [ "createPersonalDirs" ] ''
-      [[ -e "$HOME/.icons" || -L "$HOME/.icons" ]] || run ln -sf $VERBOSE_ARG "$XDG_DATA_HOME/icons" "$HOME/.icons"
-      [[ -e "$HOME/.themes" || -L "$HOME/.themes" ]] || run ln -sf $VERBOSE_ARG "$XDG_DATA_HOME/themes" "$HOME/.themes"
-      [[ -e "$HOME/.fonts" || -L "$HOME/.fonts" ]] || run ln -sf $VERBOSE_ARG "$XDG_DATA_HOME/fonts" "$HOME/.fonts"
+      [[ -e "$HOME/.icons" || -L "$HOME/.icons" ]] || run ln -sf $VERBOSE_ARG "${data}/icons" "$HOME/.icons"
+      [[ -e "$HOME/.themes" || -L "$HOME/.themes" ]] || run ln -sf $VERBOSE_ARG "${data}/themes" "$HOME/.themes"
+      [[ -e "$HOME/.fonts" || -L "$HOME/.fonts" ]] || run ln -sf $VERBOSE_ARG "${data}/fonts" "$HOME/.fonts"
     '';
   };
 }

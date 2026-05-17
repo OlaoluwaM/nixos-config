@@ -46,22 +46,6 @@ in
       #   });
       # })
       (final: prev: {
-        cheat =
-          let
-            version = "5.1.0";
-          in
-          prev.cheat.overrideAttrs (old: {
-            inherit version;
-            src = prev.fetchFromGitHub {
-              owner = "cheat";
-              repo = "cheat";
-              rev = version;
-              hash = lib.fakeHash; # TODO: Fake hash, nix will give you the right one to replace this with
-            };
-          });
-      })
-
-      (final: prev: {
         defuddle =
           let
             version = "0.18.1";
@@ -111,7 +95,6 @@ in
     bottom
 
     cmake
-    cheat # Uses overlay
     claude-code # From https://github.com/sadjow/claude-code-nix
     codex # From https://github.com/sadjow/codex-cli-nix
 
@@ -144,8 +127,7 @@ in
     nmap
     nixfmt
     nitch
-    nvtopPackages.nvidia
-    nvtopPackages.intel
+    nvtopPackages.full
     # Add amd on an amd device
 
     openssl
@@ -181,6 +163,7 @@ in
 
     unstable.cabal-install
     unstable.cabal2nix
+    unstable.cheat # Creating an overlay would involve more effort than I am willing to expend
 
     unstable.delta
     unstable.discord
@@ -239,7 +222,6 @@ in
     unstable.pavucontrol
     unstable.perl
     unstable.pciutils
-    unstable.pinentry-curses
     unstable.procs
     unstable.proton-vpn-cli
     # withPackages wraps python3 so these libraries are importable by the interpreter.
@@ -357,14 +339,16 @@ in
 
     # Refresh flake.lock before applying the Home Manager config. This is what
     # actually moves the repo to newer package versions.
-    preSwitchCommands = [ "nix flake update" ];
+    # Will be made available in v26
+    # preSwitchCommands = [ "nix flake update" ];
 
     # The folder containing this repo's flake.nix. The timer enters this folder
     # before refreshing flake.lock and applying the Home Manager config.
     flakeDir = hostConfig.nixosConfigPath;
 
     # Keep detailed build output in the logs so failures are easier to diagnose.
-    flags = [ "-L" ];
+    # Will be made available in v26
+    # flags = [ "-L" ];
   };
 
   programs.obs-studio = {
