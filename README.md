@@ -2,6 +2,31 @@
 
 Based off the minimal startup config in [this repo](https://github.com/Misterio77/nix-starter-configs)
 
+## Usage
+
+Clone this repo in the `$HOME` directory.
+
+Run any one of the following to apply our system configuration:
+
+- `sudo nixos-rebuild switch --flake $HOME/nixos-config#hostname`
+- `sudo nixos-rebuild switch --flake "$HOME/nixos-config#hostname"`
+- `sudo nixos-rebuild switch --flake ~/nixos-config#hostname`
+- `cd ~/nixos-config` then run `sudo nixos-rebuild switch --flake .#hostname`
+
+After we must setup home-manager using the following command (the flake path can be specified in the same manner as above). We run this only once. Once this is done we can just use `home-manager switch --flake ...`
+
+```bash
+nix run github:nix-community/home-manager/release-25.11 -- switch --flake ~/nixos-config#olaolu@boreas
+```
+
+Finally, after the above command completes successfully we should be able to just run `home-manager` as a standalone tool like so to apply your home configuration.
+
+```bash
+home-manager switch --flake .#username@hostname
+```
+
+NOTE: All `nixos-rebuild` or `home-manager` commands must reference the flake (using `--flake`) to work as you'd expect.
+
 ## Automatic Updates
 
 This repo uses two automatic upgrade timers with separate responsibilities:
