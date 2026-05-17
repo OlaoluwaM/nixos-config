@@ -138,6 +138,7 @@ in
         "wheel"
         "networkmanager"
         "docker"
+        "libvirtd"
       ];
       shell = pkgs.zsh;
     };
@@ -179,7 +180,28 @@ in
     curl
     memtest86plus
     unstable.nvidia-container-toolkit
+    spice-vdagent
+    unstable.virt-viewer
   ];
+
+  # All this spice stuff is to make this config viable on a VM guest. Specifically to allow for copy-pasting between host and guest
+  # Though it looks like we still need to run spice-vdagent in the foreground for this all to work
+  # Some of these are from https://nixos.wiki/wiki/Virt-manager
+  services.spice-webdavd.enable = true;
+  services.spice-vdagentd.enable = true;
+  services.qemuGuest.enable = true;
+
+  # Enable virt-manager
+  programs.virt-manager = {
+    enable = true;
+    package = unstable.virt-manager
+  };
+
+  virtualisation.libvirtd = {
+    enable = true;
+    package = unstable.libvirt;
+  };
+  virtualisation.spiceUSBRedirection.enable = true;
 
   # Necessary as described here: https://nix-community.github.io/home-manager/options.xhtml#opt-programs.zsh.enableCompletion
   environment.pathsToLink = [ "/share/zsh" ];

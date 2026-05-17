@@ -257,8 +257,6 @@ in
 
     unstable.uv
 
-    unstable.virt-manager
-    unstable.virt-viewer
     unstable.vscode-fhs
 
     unstable.w3m
