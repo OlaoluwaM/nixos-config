@@ -30,6 +30,7 @@ in
     ../../modules/home-manager/cron-jobs.nix
     ../../modules/home-manager/dotfiles.nix
     ../../modules/home-manager/fs-layout.nix
+    ../../modules/home-manager/gpg.nix
     ../../modules/home-manager/zsh.nix
   ];
 
@@ -111,7 +112,6 @@ in
     git-extras
     glmark2
     gnumake
-    gnupg
     google-chrome
 
     haskellPackages.threadscope

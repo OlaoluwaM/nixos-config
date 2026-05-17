@@ -118,8 +118,6 @@ in
       libappindicator-gtk3
       libgda5
 
-      pinentry-gnome3
-
       seahorse
       sticky-notes
 

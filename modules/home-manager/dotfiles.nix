@@ -24,8 +24,6 @@ let
     ".gitconfig".source = mkSourcePath "git/.gitconfig";
     ".githelpers".source = mkSourcePath "git/.githelpers";
     ".gitignore_global".source = mkSourcePath "git/.gitignore_global";
-    ".gnupg/gpg-agent.conf".source = mkSourcePath "gpg/gpg-agent.conf";
-    ".gnupg/gpg.conf".source = mkSourcePath "gpg/gpg.conf";
     ".noti.yaml".source = mkSourcePath "noti/noti.yaml";
     ".shell-env".source = mkSourcePath "shell/.shell-env";
     ".stack/config.yaml".source = mkSourcePath "stack/config.yaml";
