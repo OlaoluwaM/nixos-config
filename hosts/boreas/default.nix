@@ -181,7 +181,7 @@ in
     memtest86plus
     unstable.nvidia-container-toolkit
     spice-vdagent
-    unstable.virt-viewer
+    virt-viewer
   ];
 
   # All this spice stuff is to make this config viable on a VM guest. Specifically to allow for copy-pasting between host and guest
@@ -192,15 +192,8 @@ in
   services.qemuGuest.enable = true;
 
   # Enable virt-manager
-  programs.virt-manager = {
-    enable = true;
-    package = unstable.virt-manager
-  };
-
-  virtualisation.libvirtd = {
-    enable = true;
-    package = unstable.libvirt;
-  };
+  programs.virt-manager.enable = true;
+  virtualisation.libvirtd.enable = true;
   virtualisation.spiceUSBRedirection.enable = true;
 
   # Necessary as described here: https://nix-community.github.io/home-manager/options.xhtml#opt-programs.zsh.enableCompletion
