@@ -35,20 +35,9 @@ in
       description = "NVM directory used by the oh-my-zsh nvm plugin.";
     };
 
-    ohMyZshPlugins = lib.mkOption {
+    extraOhMyZshPlugins = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [
-        "git"
-        "command-not-found"
-        "git-escape-magic"
-        "safe-paste"
-        "fast-syntax-highlighting"
-        "you-should-use"
-        "gh"
-        "zoxide"
-        "nvm"
-        "direnv"
-      ];
+      default = [];
       description = "Oh My Zsh plugins to load.";
     };
   };
@@ -70,7 +59,18 @@ in
 
       oh-my-zsh = {
         enable = true;
-        plugins = cfg.ohMyZshPlugins;
+        plugins = [
+        "git"
+        "command-not-found"
+        "git-escape-magic"
+        "safe-paste"
+        "fast-syntax-highlighting"
+        "you-should-use"
+        "gh"
+        "zoxide"
+        "nvm"
+        "direnv"
+      ] ++ cfg.extraOhMyZshPlugins;
 
         extraConfig = ''
           zstyle :omz:plugins:nvm autoload yes

@@ -158,6 +158,8 @@ in
     woff2
 
     z3
+    zsh-fast-syntax-highlighting # So we don't have to manually install these like we do in distro-setup
+    zsh-you-should-use # We can include them as plugins
 
     # Packages from unstable channel
     unstable.atuin
