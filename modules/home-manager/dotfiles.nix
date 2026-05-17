@@ -33,7 +33,6 @@ let
   configLinks = {
     "bat/config".source = mkSourcePath "bat/config";
     "bat/themes/Catppuccin Mocha.tmTheme".source = mkSourcePath "bat/Catppuccin Mocha.tmTheme";
-    "fontconfig/fonts.conf".source = mkSourcePath "fontconfig/fonts.conf";
     "fsh/catppuccin-mocha.ini".source = mkSourcePath "fsh/catppuccin-mocha.ini";
     "kitty/current-theme.conf".source = mkSourcePath "kitty/current-theme.conf";
     "kitty/kitty-dark.png".source = mkSourcePath "kitty/kitty-dark.png";
