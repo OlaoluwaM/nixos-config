@@ -40,3 +40,11 @@
 - [x] Use proprietary NVIDIA drivers with boreas
 - [x] Create a module for AMD CPU stuff on Nixos: Already covered by [nixos-hardware](https://github.com/NixOS/nixos-hardware)
 - [x] Create a module for AMD GPU stuff on Nixos: Already covered by [nixos-hardware](https://github.com/NixOS/nixos-hardware)
+- [x] Setup pinentry per desktop profile
+- [x] Port gnugpg configuration to nix
+- [x] Port fontconfig configuration to nix
+- [x] Document "Usage" and home-manager install steps in README
+- [ ] Fix nixos vm to allow copy pasting of text and files across host and guest
+- [x] Document how all `nixos` and `home-manager` commands will now always need to reference our flake to work as we expect
+  - [ ] Create shell aliases
+- [ ] Configure borgbackup
