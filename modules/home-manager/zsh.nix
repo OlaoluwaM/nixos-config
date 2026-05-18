@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 let
@@ -64,8 +65,6 @@ in
         "command-not-found"
         "git-escape-magic"
         "safe-paste"
-        "fast-syntax-highlighting"
-        "you-should-use"
         "gh"
         "zoxide"
         "nvm"
@@ -77,6 +76,18 @@ in
           zstyle :omz:plugins:nvm silent-autoload yes
         '';
       };
+
+      plugins = [
+        {
+          name = "you-should-use";
+          src = pkgs.zsh-you-should-use.src;
+        }
+
+        {
+          name = "fast-syntax-highlighting";
+          src = pkgs.zsh-fast-syntax-highlighting.src;
+        }
+      ];
 
       initContent = lib.mkIf (cfg.zshrcConfigPath != null) (
         # This way, the zshrc file in our dotfiles for nixos will be sourced before OMZ is loaded

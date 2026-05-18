@@ -46,5 +46,23 @@ in
       [[ -e "$HOME/.themes" || -L "$HOME/.themes" ]] || run ln -sf $VERBOSE_ARG "${data}/themes" "$HOME/.themes"
       [[ -e "$HOME/.fonts" || -L "$HOME/.fonts" ]] || run ln -sf $VERBOSE_ARG "${data}/fonts" "$HOME/.fonts"
     '';
+
+    # Per https://discourse.nixos.org/t/apps-installed-via-home-manager-are-not-visible-within-gnome/48252
+    home.activation.copyDesktopFiles = lib.hm.dag.entryAfter ["installPackages"] ''
+      if [ "$XDG_CURRENT_DESKTOP" = "GNOME" ]; then
+
+        if [ ! -d "${config.home.homeDirectory}/.local/share/applications" ]; then
+          mkdir "${config.home.homeDirectory}/.local/share/applications"
+        fi
+
+        if [ -d "${config.home.homeDirectory}/.local/share/applications/nix" ]; then
+          rm -rf "${config.home.homeDirectory}/.local/share/applications/nix"
+        fi
+
+        ln -sf "${config.home.homeDirectory}/.nix-profile/share/applications" \
+          ${config.home.homeDirectory}/.local/share/applications/nix
+
+      fi
+    '';
   };
 }
