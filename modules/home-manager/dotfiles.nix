@@ -45,10 +45,6 @@ let
     "yt-dlp/config".source = mkSourcePath "yt-dlp/config";
   };
 
-  dataLinks = {
-    "applications/kitty.desktop".source = mkSourcePath "kitty/kitty.desktop";
-  };
-
 in
 {
   options.local.dotfiles = {
@@ -85,7 +81,5 @@ in
     };
 
     xdg.configFile = configLinks;
-
-    xdg.dataFile = dataLinks;
   };
 }
