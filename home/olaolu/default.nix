@@ -47,6 +47,7 @@ in
       #     patches = [ ./change-hello-to-hi.patch ];
       #   });
       # })
+      # For https://github.com/kepano/defuddle
       (final: prev: {
         defuddle =
           let
@@ -58,7 +59,7 @@ in
               owner = "kepano";
               repo = "defuddle";
               rev = version;
-              hash = lib.fakeHash; # TODO: Fake hash, nix will give you the right one to replace this with
+              hash = "sha256-e/+eigIzpP0g+ZqTeyZnF6mloaY6UeKcMWfqryCcLbM=";
             };
           });
       })

@@ -7,7 +7,7 @@
 
 # Derivation for https://github.com/jacob-bd/notebooklm-mcp-cli
 let
-  version = "0.6.4";
+  version = "0.6.9";
 in
 
 python3Packages.buildPythonApplication {
@@ -19,7 +19,7 @@ python3Packages.buildPythonApplication {
     owner = "jacob-bd";
     repo = "notebooklm-mcp-cli";
     rev = "v${version}";
-    hash = "sha256-s8WVT/tAGUpLsYs7PFJFad1EGoy81yutDer6dF0AuSg=";
+    hash = "sha256-V5yZNVjMETMF5AZ9zC/Ol9VccRZYVaDmznNKpUZr+vg=";
   };
 
   build-system = with python3Packages; [
