@@ -78,7 +78,10 @@ let
     ];
   favoriteApps = [
     "firefox.desktop"
+    "obsidian.desktop"
     "kitty.desktop"
+    "com.obsproject.Studio.desktop"
+    "com.github.neithern.g4music.desktop"
   ]
   ++ lib.optionals enableAsusRogKeybindings [
     "rog-control-center.desktop"
