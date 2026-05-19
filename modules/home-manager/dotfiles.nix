@@ -26,7 +26,6 @@ let
     ".gitignore_global".source = mkSourcePath "git/.gitignore_global";
     ".noti.yaml".source = mkSourcePath "noti/noti.yaml";
     ".shell-env".source = mkSourcePath "shell/.shell-env";
-    ".profile".source = mkSourcePath "shell/.profile";
     ".stack/config.yaml".source = mkSourcePath "stack/config.yaml";
     ".zshrc.nix.zsh".source = mkSourcePath "shell/.zshrc.nix.zsh";
   };
