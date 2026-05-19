@@ -316,6 +316,7 @@ in
         pkgs.gnused
         pkgs.systemd
       ];
+
       serviceConfig = {
         Type = "oneshot";
       };
@@ -377,52 +378,6 @@ in
       OnUnitActiveSec = "3min";
       Unit = "asus-battery-profile-threshold.service";
     };
-  };
-
-  # NixOS automatic upgrades. This is the system-level updater: it builds a new
-  # version of the operating system using the package versions already recorded
-  # in flake.lock. It does not choose newer package versions itself; Home
-  # Manager does that part. See README.md for the split.
-  # Reference: https://wiki.nixos.org/wiki/Automatic_system_upgrades
-  # This creates and enables a systemd timer for automatic updates
-  system.autoUpgrade = {
-    # Turn on the scheduled system update job.
-    enable = true;
-
-    # Tell the updater where this repo lives and which machine config to build.
-    # "#boreas" means "use the boreas machine from flake.nix".
-    # Build the host configuration from this repository's flake.
-    flake = "${hostConfig.nixosConfigPath}#boreas";
-
-    # Build the update now, but only start using it after the next reboot. This
-    # avoids changing the running desktop session while we're using it.
-    operation = "boot";
-
-    # Run every Saturday at 5 PM. systemd uses 24-hour time.
-    dates = "Sat 17:00";
-
-    # Allow systemd to delay the job by up to 45 minutes. This avoids every
-    # scheduled job on the machine starting at the exact same second.
-    randomizedDelaySec = "45min";
-
-    # If the laptop was off at 5 PM Saturday, run the missed update later when
-    # the machine is back on instead of skipping the week.
-    persistent = true;
-
-    # Never restart the machine automatically. If the update needs a reboot, it
-    # waits until you reboot manually.
-    allowReboot = false;
-
-    # Avoid adding nixos-rebuild's legacy --upgrade flag. In this flake setup.
-    # --upgrade is useful for channel-based setup, but since we're using flakes, it is redundant.
-    #
-    # Home Manager is responsible for editing flake.lock; this timer only rebuilds the system from the lockfile that already exists.
-    # This means that this timer would need to run *after* the HM auto-upgrade timer.
-    upgrade = false;
-
-    # Keep detailed build output in the logs so failures are easier to diagnose.
-    # Do not include flake update flags here because we don't want the systemd timer to update our flake.lock. Doing so might lead to unexpected outcomes since the timer runs as root but the flake.lock is owned by a user
-    flags = [ "-L" ];
   };
 
   # This setups a SSH server. Very important if you're setting up a headless system.

@@ -327,33 +327,6 @@ in
 
   local.desktop.profile = hostConfig.desktopProfile;
 
-  # Home Manager automatic upgrades. This is the user-level updater for user tools and dotfiles. If preSwitchCommands is enabled below, it also refreshes flake.lock before switching.
-  # NixOS later uses that same (updated) lockfile for the operating-system update. See README.md for the split.
-  services.home-manager.autoUpgrade = {
-    # Turn on the scheduled Home Manager update job.
-    enable = true;
-
-    # Run every Saturday at 9 AM. systemd uses 24-hour time.
-    frequency = "Sat 09:00";
-
-    # Use the repo's flake.nix for Home Manager instead of the older
-    # channel-based setup.
-    useFlake = true;
-
-    # Refresh flake.lock before applying the Home Manager config. This is what
-    # actually moves the repo to newer package versions.
-    # Will be made available in v26
-    # preSwitchCommands = [ "nix flake update" ];
-
-    # The folder containing this repo's flake.nix. The timer enters this folder
-    # before refreshing flake.lock and applying the Home Manager config.
-    flakeDir = hostConfig.nixosConfigPath;
-
-    # Keep detailed build output in the logs so failures are easier to diagnose.
-    # Will be made available in v26
-    # flags = [ "-L" ];
-  };
-
   programs.obs-studio = {
     enable = true;
 
