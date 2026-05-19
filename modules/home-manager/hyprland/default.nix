@@ -25,11 +25,18 @@ in
       hyprpaper
     ];
 
-    # For screen sharing and opening desktop apps
+    # xdg-desktop-portal 1.17+ requires an explicit backend selection when
+    # portals are enabled. Hyprland handles compositor-specific portals such as
+    # screen sharing, while GTK covers generic interfaces Hyprland does not implement, such as the file picker.
     xdg.portal = {
       enable = true;
       extraPortals = with pkgs; [
         xdg-desktop-portal-hyprland
+        xdg-desktop-portal-gtk
+      ];
+      config.common.default = [
+        "hyprland"
+        "gtk"
       ];
     };
   };
