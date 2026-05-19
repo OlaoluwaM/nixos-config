@@ -15,12 +15,21 @@ Run any one of the following to apply our system configuration:
 
 After we must setup/initialize home-manager using the following command (the flake path can be specified in the same manner as above). We run this only once. Once this is done we should be able to just use `home-manager switch --flake ...` (<https://nix-community.github.io/home-manager/index.xhtml#sec-flakes-prerequisites>)
 
+This repo intentionally uses a stable base with selected unstable packages:
+
+- `nixpkgs` points at `nixos-25.11`.
+- `home-manager` points at `release-25.11` and follows stable `nixpkgs`.
+- `nixpkgs-unstable` is imported separately and passed in as `unstable` for specific packages that benefit from newer versions.
+
+That keeps the NixOS and Home Manager module systems aligned while still allowing newer user packages where needed. This is the safer default for a daily-driver machine and is friendlier while learning Nix than running the whole config on unstable.
+
+If we want to move Home Manager to `master`, then we'd need to have Home Manager track nixpkgs-unstable. In `flake.nix`, change `home-manager.url` to `github:nix-community/home-manager/master` and strongly consider changing `home-manager.inputs.nixpkgs.follows` from `nixpkgs` to `nixpkgs-unstable`. For a fully unstable setup, also make the standalone Home Manager `pkgs` come from `nixpkgs-unstable`. Do not change `home.stateVersion` just because the branch changes; that value is a compatibility pin for migration defaults, not the active Home Manager version. In the command below, we'd also replace `release-25.11` with `master` too.
+
+But the current setup is fine for now. It seems to be the ideal/standard setup. No need to switch it unless there is a compelling reason and if one does arise, it should be documented.
+
 ```bash
-nix run github:nix-community/home-manager/master -- switch -b backup --flake ~/nixos-config#olaolu@boreas
-
-# OR
-
-nix run home-manager/master -- switch -b backup --flake ~/nixos-config#olaolu@boreas
+# Match the Home Manager branch pinned in flake.nix.
+nix run github:nix-community/home-manager/release-25.11 -- switch -b backup --flake ~/nixos-config#olaolu@boreas
 ```
 
 Finally, after the above command completes successfully we should be able to just run `home-manager` as a standalone tool like so to apply your home configuration.
