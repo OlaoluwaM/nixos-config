@@ -216,7 +216,8 @@ in
     unstable.ncdu
     unstable.neovim
     unstable.neovim-node-client
-    unstable.nil
+    unstable.nil # For nix ide plugin
+    unstable.nixd # For nix ide plugin
     (callPackage ../../pkgs/notebooklm-mcp-cli { })
     unstable.noti
 

@@ -51,22 +51,29 @@ in
       '';
     }
 
-    (lib.mkIf config.local.gnome.enable {
-      # GNOME does not reliably pick up new Home Manager desktop entries from
-      # ~/.nix-profile/share/applications until the session is restarted. See:
+    {
+      # Desktop environments and app launchers should be able to find Home
+      # Manager's launchers under ~/.nix-profile/share/applications, but not all
+      # of them handle that profile path reliably during a running session. The
+      # files can be valid, and tools like gtk-launch can still run them, while
+      # the app search UI keeps using an old app list until logout/login. GNOME
+      # exposed this with Kitty: kitty.desktop was present and valid, but GNOME
+      # search only showed it after the file also appeared in the standard
+      # user-local applications directory. See:
       # https://discourse.nixos.org/t/apps-installed-via-home-manager-are-not-visible-within-gnome/48252
       #
-      # The common workaround is to expose the profile's applications directory
-      # under ~/.local/share/applications/nix. That makes GNOME rescan without a
-      # login cycle, but it also changes desktop entry IDs from foo.desktop to
-      # nix-foo.desktop, which causes duplicate search results whenever GNOME
-      # also sees foo.desktop through XDG_DATA_DIRS.
+      # The short workaround is to link the whole Home Manager applications
+      # directory as ~/.local/share/applications/nix. Launchers tend to notice
+      # that local path quickly, but the extra "nix/" folder changes each app's
+      # launcher ID: foo.desktop becomes nix-foo.desktop. If the launcher also
+      # sees foo.desktop through XDG_DATA_DIRS, the same app can appear twice.
       #
-      # Instead, link each profile desktop file directly into the user's local
-      # applications directory while preserving the original basename. This keeps
-      # GNOME's file-monitor-friendly local path without changing desktop entry
-      # IDs. It intentionally skips unmanaged files in the target directory so
-      # locally-authored launchers are not overwritten.
+      # So instead, link each launcher file directly into the user's local
+      # applications directory. That uses the most common user-local launcher
+      # path while keeping the original filename, so foo.desktop stays
+      # foo.desktop.
+      # Existing local launchers are skipped on purpose so hand-written entries
+      # and app-created entries are not overwritten.
       home.activation.linkProfileDesktopFiles = lib.hm.dag.entryAfter [
         "installPackages"
         "linkGeneration"
@@ -74,18 +81,18 @@ in
         applicationsDir=${lib.escapeShellArg applicationsDir}
         profileApplicationsDir=${lib.escapeShellArg profileApplicationsDir}
 
-        # Ensure GNOME's user-local applications directory exists.
+        # Make sure the user-local launcher directory exists.
         run mkdir -p $VERBOSE_ARG "$applicationsDir"
 
-        # Remove the older directory-symlink workaround if it exists. That
-        # workaround made GNOME notice apps, but also changed desktop entry IDs
-        # to nix-*.desktop and caused duplicate search results.
+        # Remove the older "applications/nix" shortcut if it is still around.
+        # It helped launchers notice apps, but it also renamed launcher IDs to
+        # nix-*.desktop and could create duplicate results.
         if [[ -L "$applicationsDir/nix" ]]; then
           run rm $VERBOSE_ARG "$applicationsDir/nix"
         fi
 
-        # Clean up stale symlinks created by this activation when the profile no
-        # longer contains the desktop file they point at.
+        # Remove links this activation created for apps that are no longer in
+        # the current Home Manager profile.
         for linkedDesktopFile in "$applicationsDir"/*.desktop; do
           [[ -L "$linkedDesktopFile" ]] || continue
 
@@ -96,14 +103,14 @@ in
           fi
         done
 
-        # Expose each profile desktop entry at the top level of the user-local
-        # applications directory while preserving its original desktop file ID.
+        # Put each Home Manager launcher directly in the local launcher
+        # directory, keeping the same filename and therefore the same app ID.
         for desktopFile in "$profileApplicationsDir"/*.desktop; do
           [[ -e "$desktopFile" ]] || continue
 
           target="$applicationsDir/$(basename "$desktopFile")"
 
-          # Do not overwrite desktop entries managed by other tools or by hand.
+          # Leave local launchers alone unless they are links we created before.
           if [[ -e "$target" || -L "$target" ]]; then
             if [[ ! -L "$target" || "$(readlink "$target")" != "$profileApplicationsDir"/*.desktop ]]; then
               _i "Skipping unmanaged desktop entry $target"
@@ -111,10 +118,10 @@ in
             fi
           fi
 
-          # Refresh the symlink so it follows the currently active generation.
+          # Refresh the link so it follows the currently active generation.
           run ln -sfnT $VERBOSE_ARG "$desktopFile" "$target"
         done
       '';
-    })
+    }
   ];
 }
