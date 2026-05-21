@@ -14,6 +14,7 @@ in
   imports = [
     ./hypridle.nix
     ./hyprlock.nix
+    ./quickshell.nix
   ];
 
   options.local.hyprland = {
@@ -22,8 +23,21 @@ in
 
   config = lib.mkIf cfg.enable {
     home.packages = with pkgs; [
-      hyprpaper
+      font-awesome
+      libsForQt5.qtwayland
+      nautilus
+      nerd-fonts.symbols-only
+      noto-fonts
+      noto-fonts-color-emoji
+      qt6.qtwayland
     ];
+
+    # For mounting external storage devices seamlessly like in GNOME
+    services.udiskie = {
+      enable = true;
+      automount = true;
+      notify = true;
+    };
 
     # xdg-desktop-portal 1.17+ requires an explicit backend selection when
     # portals are enabled. Hyprland handles compositor-specific portals such as

@@ -31,6 +31,9 @@ in
       withUWSM = cfg.withUWSM;
     };
 
+    # Necessary since Nautilus is a gnome app
+    programs.dconf.enable = true;
+
     # Login screen replacement for gdm on hyprland
     services.greetd = {
       enable = true;
@@ -43,5 +46,10 @@ in
     # Does not install hyprlock or hypridle. Only allows a PAM service named `hyprlock` to authenticate the user on lock screen
     # We'd still want to configure hyprlock and hypridle in a home-manager module
     security.pam.services.hyprlock = { };
+
+    # Nautilus uses GVfs for trash, removable devices, and common virtual file
+    # systems. GNOME enables this for us; Hyprland does not.
+    services.gvfs.enable = true;
+    services.udisks2.enable = true;
   };
 }
