@@ -18,9 +18,9 @@ let
     "${data}/icons"
     "${data}/themes"
     "${data}/fonts"
-    "${config.xdg.userDirs.videos}/Screencasts"
-    "${pictures}/Screenshots"
-    "${pictures}/Wallpapers"
+    "${config.xdg.userDirs.videos}/screencasts"
+    "${pictures}/screenshots"
+    "${pictures}/wallpapers"
     "${home}/sys-bak"
   ];
 

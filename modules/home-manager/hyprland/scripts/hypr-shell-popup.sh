@@ -1,6 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Beginner orientation:
+#
+# This is a tiny bridge from Hyprland keybinds to Quickshell.
+#
+# Problem it solves:
+# Hyprland keybinds can run shell commands, but they cannot directly call a QML
+# function inside shell.qml. So this script writes a command into a small file.
+# shell.qml polls that file every 250ms and runs the matching QML action.
+#
+# Current use:
+#   hypr-shell-popup quick-settings
+# opens the quick settings popover.
+#
+# The first value written to the file is a timestamp token. That token makes
+# every write unique, so shell.qml can tell "this is a new command" instead of
+# repeatedly handling the same old file content.
+
 state_dir="${XDG_RUNTIME_DIR:-/tmp}/hypr-shell"
 state_file="$state_dir/popup-command"
 
@@ -10,8 +27,11 @@ case "${1:-}" in
 quick-settings | quickSettings)
 	command="quickSettings"
 	;;
+osd-volume | osd-brightness | osd-keyboard | osd-mute)
+	command="$1"
+	;;
 *)
-	printf 'Usage: %s quick-settings\n' "$0" >&2
+	printf 'Usage: %s <quick-settings|osd-volume|osd-brightness|osd-keyboard|osd-mute>\n' "$0" >&2
 	exit 64
 	;;
 esac

@@ -66,7 +66,7 @@ in
       SHELL_ENV = "${home}/.shell-env";
       SYS_BAK_DIR_NOT_UNDER_GIT = "${home}/sys-bak";
       SYS_BAK_DIR_UNDER_GIT = "${cfg.dotsPath}/system";
-      WALLPAPERS_DIR = "${pictures}/Wallpapers";
+      WALLPAPERS_DIR = "${pictures}/wallpapers";
       THEMES_DIR = "${data}/themes";
       CUSTOM_BIN_DIR = "${home}/.local/bin";
       CUSTOM_MAN_PATH = "${data}/man";

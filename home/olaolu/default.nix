@@ -27,7 +27,6 @@ in
     # You can also split up your configuration and import pieces of it here:
     # ./nvim.nix
     ../../modules/home-manager/desktop.nix
-    ../../modules/home-manager/cron-jobs.nix
     ../../modules/home-manager/dotfiles.nix
     ../../modules/home-manager/fs-layout.nix
     ../../modules/home-manager/fontconfig.nix
@@ -326,6 +325,7 @@ in
   };
 
   local.desktop.profile = hostConfig.desktopProfile;
+  local.theme.preset = "catppuccin-mocha";
 
   programs.obs-studio = {
     enable = true;

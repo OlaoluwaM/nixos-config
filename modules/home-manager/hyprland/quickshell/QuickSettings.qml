@@ -1,0 +1,264 @@
+pragma ComponentBehavior: Bound
+
+import QtQuick
+import QtQuick.Layouts
+
+ColumnLayout {
+    id: quickSettings
+    required property var shell
+    spacing: 18
+
+    property int batteryPercent: parseInt(shell.batteryText) || 0
+    property bool isCharging: {
+        let t = shell.batteryText.toLowerCase();
+        return t.indexOf("charging") >= 0
+            && t.indexOf("not charging") < 0
+            && t.indexOf("discharging") < 0;
+    }
+    property bool showPowerMenu: false
+    property string normalizedPowerProfile: {
+        let p = shell.powerProfileText.toLowerCase();
+        if (p === "saver" || p === "quiet") return "power-saver";
+        return p;
+    }
+
+    property string batteryStatusLabel: {
+        let t = shell.batteryText.toLowerCase();
+        if (t === "ac") return "AC Power";
+        if (isCharging) return "Charging";
+        if (t.indexOf("not charging") >= 0) return "Plugged In";
+        if (t.indexOf("full") >= 0) return "Full";
+        if (t.indexOf("discharging") >= 0) return "On Battery";
+        return "On Battery";
+    }
+
+    // ── Battery display ──────────────────────────────────────────────
+    Item {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+
+        ColumnLayout {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 4
+
+            Item {
+                Layout.alignment: Qt.AlignHCenter
+                implicitWidth: bigPct.implicitWidth + pctSign.implicitWidth
+                implicitHeight: bigPct.implicitHeight
+
+                Text {
+                    id: bigPct
+                    text: quickSettings.batteryPercent.toString()
+                    color: Theme.text
+                    font.pixelSize: 54
+                    font.weight: Font.DemiBold
+                }
+
+                Text {
+                    id: pctSign
+                    text: "%"
+                    color: Theme.textSecondary
+                    font.pixelSize: 22
+                    anchors.left: bigPct.right
+                    anchors.baseline: bigPct.baseline
+                }
+            }
+
+            RowLayout {
+                Layout.alignment: Qt.AlignHCenter
+                spacing: 6
+
+                ShellIcon {
+                    name: quickSettings.isCharging ? "batteryCharging" : "battery"
+                    iconColor: Theme.textSecondary
+                    implicitSize: 12
+                }
+
+                Text {
+                    text: quickSettings.batteryStatusLabel
+                    color: Theme.textSecondary
+                    font.pixelSize: 13
+                }
+            }
+        }
+    }
+
+    // ── Brightness slider ────────────────────────────────────────────
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: 12
+
+        ShellIcon {
+            name: brightnessSlider.value <= 1 ? "brightnessOff" : "brightness"
+            iconColor: brightnessSlider.value <= 1 ? Theme.textDim : Theme.textSecondary
+            implicitSize: 16
+        }
+
+        StyledSlider {
+            id: brightnessSlider
+            Layout.fillWidth: true
+            from: 1; to: 100
+            value: Number(quickSettings.shell.brightnessText.replace("%", "")) || 50
+            accentColor: Theme.primary
+            onMoved: quickSettings.shell.setBrightness(value)
+        }
+    }
+
+    // ── Volume slider ────────────────────────────────────────────────
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: 12
+
+        ShellIcon {
+            name: quickSettings.shell.muted || volumeSlider.value <= 0 ? "volumeMuted" : "volume"
+            iconColor: quickSettings.shell.muted || volumeSlider.value <= 0 ? Theme.textDim : Theme.textSecondary
+            implicitSize: 16
+        }
+
+        StyledSlider {
+            id: volumeSlider
+            Layout.fillWidth: true
+            from: 0; to: 100
+            value: Number(quickSettings.shell.volumeText.replace("%", "")) || 0
+            accentColor: Theme.primary
+            onMoved: quickSettings.shell.setVolume(value)
+        }
+    }
+
+    // ── Quick toggles ────────────────────────────────────────────────
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: 10
+
+        Repeater {
+            model: [
+                { icon: "lock",     action: "lock",     danger: false, toggle: false },
+                { icon: "logout",   action: "logout",   danger: false, toggle: false },
+                { icon: "airplane", action: "airplane", danger: false, toggle: true  },
+                { icon: "power",    action: "power",    danger: true,  toggle: false }
+            ]
+
+            delegate: IconButton {
+                id: toggleBtn
+                required property var modelData
+
+                active: (modelData.toggle && quickSettings.shell.airplaneMode)
+                    || (modelData.action === "power" && quickSettings.showPowerMenu)
+                activeColor: modelData.danger ? Theme.error : Theme.primary
+                accessibleName: modelData.action
+                bordered: true
+                buttonSize: 42
+                danger: modelData.danger
+                iconName: modelData.icon
+                iconSize: 15
+                normalColor: "transparent"
+
+                Layout.fillWidth: true
+                Layout.preferredHeight: 42
+
+                onClicked: {
+                    if (toggleBtn.modelData.action === "lock") quickSettings.shell.runLockCommand();
+                    else if (toggleBtn.modelData.action === "logout") quickSettings.shell.runLogoutCommand();
+                    else if (toggleBtn.modelData.action === "airplane") quickSettings.shell.toggleAirplaneMode();
+                    else if (toggleBtn.modelData.action === "power") quickSettings.showPowerMenu = !quickSettings.showPowerMenu;
+                }
+            }
+        }
+    }
+
+    // ── Power menu (replaces profile pills when active) ─────────────
+    RowLayout {
+        Layout.fillWidth: true
+        Layout.preferredHeight: 42
+        spacing: 10
+        visible: quickSettings.showPowerMenu
+
+        Repeater {
+            model: [
+                { label: qsTr("Reboot"),    icon: "refresh", action: "reboot" },
+                { label: qsTr("Suspend"),   icon: "sleep",   action: "suspend" },
+                { label: qsTr("Power Off"), icon: "power",   action: "poweroff" }
+            ]
+
+            delegate: IconButton {
+                id: powerBtn
+                required property var modelData
+
+                property bool isDanger: modelData.action === "poweroff"
+
+                accessibleName: modelData.label
+                bordered: true
+                buttonSize: 42
+                danger: powerBtn.isDanger
+                iconName: modelData.icon
+                iconSize: 15
+                normalColor: "transparent"
+
+                Layout.fillWidth: true
+                Layout.preferredHeight: 42
+
+                onClicked: {
+                    if (powerBtn.modelData.action === "reboot") quickSettings.shell.runRebootCommand();
+                    else if (powerBtn.modelData.action === "suspend") quickSettings.shell.runSleepCommand();
+                    else if (powerBtn.modelData.action === "poweroff") quickSettings.shell.runPowerOffCommand();
+                }
+
+                HoverTooltip {
+                    active: powerBtn.hovered
+                    text: powerBtn.modelData.label
+                    anchors {
+                        horizontalCenter: parent.horizontalCenter
+                        bottom: parent.top
+                        bottomMargin: 6
+                    }
+                }
+            }
+        }
+    }
+
+    // ── Power profile buttons ────────────────────────────────────────
+    RowLayout {
+        Layout.fillWidth: true
+        Layout.preferredHeight: 42
+        spacing: 10
+        visible: !quickSettings.showPowerMenu
+
+        Repeater {
+            model: [
+                { label: qsTr("Performance"), value: "performance", icon: "bolt"  },
+                { label: qsTr("Balanced"),    value: "balanced",    icon: "gauge" },
+                { label: qsTr("Power Saver"), value: "power-saver", icon: "leaf"  }
+            ]
+
+            delegate: IconButton {
+                id: profileBtn
+                required property var modelData
+
+                active: quickSettings.normalizedPowerProfile === modelData.value
+                activeColor: Theme.primary
+                accessibleName: modelData.label
+                bordered: true
+                buttonSize: 42
+                iconName: modelData.icon
+                iconSize: 15
+                normalColor: "transparent"
+
+                Layout.fillWidth: true
+                Layout.preferredHeight: 42
+
+                onClicked: quickSettings.shell.runPowerProfileSet(profileBtn.modelData.value)
+
+                HoverTooltip {
+                    active: profileBtn.hovered
+                    text: profileBtn.modelData.label
+                    anchors {
+                        horizontalCenter: parent.horizontalCenter
+                        bottom: parent.top
+                        bottomMargin: 6
+                    }
+                }
+            }
+        }
+    }
+}

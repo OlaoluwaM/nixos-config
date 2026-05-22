@@ -8,6 +8,7 @@ let
 in
 {
   imports = [
+    ./theme.nix
     ./gnome
     ./hyprland
   ];

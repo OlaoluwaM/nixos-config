@@ -6,29 +6,63 @@ This module is a small Hyprland baseline for the `hyprland` desktop profile. It 
 
 - `modules/nixos/hyprland.nix`: system-level Hyprland, greetd/tuigreet, PAM, dconf, GVfs, and UDisks.
 - `modules/home-manager/hyprland/default.nix`: Home Manager package baseline, portals, fonts, Nautilus, and udiskie.
-- `modules/home-manager/hyprland/quickshell.nix`: Hyprland config, Quickshell deployment, session services, keybinds, and small helper scripts.
+- `modules/home-manager/hyprland/quickshell.nix`: Hyprland config, Quickshell deployment, Waypaper/awww wallpaper setup, session services, keybinds, and small helper scripts.
 - `modules/home-manager/hyprland/quickshell/shell.qml`: the Quickshell bar, popovers, native notifications, and tray.
+- `modules/home-manager/hyprland/quickshell/README.md`: plain-language map of the Quickshell QML files and shared UI components.
 - `modules/home-manager/hyprland/hyprlock.nix`: lock screen.
 - `modules/home-manager/hyprland/hypridle.nix`: idle lock and display-off behavior.
-- `modules/home-manager/hyprland/scripts/`: status, timezone, wallpaper, and screenshot helpers.
+- `modules/home-manager/hyprland/scripts/`: status, timezone, screenshot, and temporary TTY test helpers.
 
 Enable the profile by setting the host `desktopProfile` to `"hyprland"` in `flake.nix`.
 
-## Desktop Shape
+## Launch Process
 
-The session starts from `greetd` using `tuigreet --cmd Hyprland`. The setup deliberately avoids UWSM for now, so the generated `hyprland.conf` explicitly starts the user services that the session depends on:
+The production launch path is:
 
-- `hypr-shell-swww.service`
-- `hypr-shell-wallpaper.service`
+```text
+greetd -> tuigreet -> Hyprland -> hyprland.conf exec-once -> user services -> Quickshell QML
+```
+
+Plain English version:
+
+1. `modules/nixos/hyprland.nix` enables Hyprland and `greetd`.
+2. `greetd` shows the `tuigreet` login prompt.
+3. After login, `tuigreet --cmd Hyprland` starts Hyprland directly.
+4. Home Manager writes `~/.config/hypr/hyprland.conf` from `modules/home-manager/hyprland/quickshell.nix`.
+5. Hyprland reads that config and runs the `exec-once` commands near the top of the file.
+6. Those `exec-once` commands import the Wayland session environment into systemd and start the user services this session depends on.
+7. `hypr-shell-quickshell.service` runs `quickshell --config hyprland`, which loads `~/.config/quickshell/hyprland/shell.qml`.
+
+The setup deliberately avoids UWSM for now. That means this profile does not
+depend on UWSM to activate `graphical-session.target`; the generated
+`hyprland.conf` starts the user services explicitly.
+
+The explicit service startup list is:
+
+- `hypr-shell-awww.service`
+- `hypr-shell-waypaper-restore.service`
 - `hypr-shell-quickshell.service`
 - `hypr-shell-vicinae.service`
-- `hypr-shell-clipboard.service`
 - `hypridle.service`
 - `hyprpolkitagent.service`
 - `hyprsunset.service`
 - `udiskie.service`
 
-This explicit startup is intentional. Several Home Manager services are linked to `graphical-session.target`, but this profile does not currently rely on UWSM to activate that target.
+`hypr-shell-clipboard.service` is intentionally not started. Vicinae is already
+being used for clipboard history, so the old `cliphist` collector is left
+commented out unless you decide to bring it back.
+
+If `local.hyprland.withUWSM` is enabled later, revisit both sides of the launch:
+the `greetd` command should start the UWSM-managed Hyprland session, and the
+explicit `exec-once = systemctl --user start ...` lines may no longer be the
+right ownership model. Do not flip only the boolean and assume the rest of the
+startup chain is unchanged.
+
+## Desktop Shape
+
+Once launched, the session shape is a standalone Hyprland desktop with a custom
+Quickshell top bar, Vicinae launcher, native notification handling, a system
+tray, hyprlock, hypridle, Waypaper/awww wallpapers, and a small set of helper scripts.
 
 ## Top Bar
 
@@ -53,6 +87,134 @@ The bar is top-aligned and includes:
 
 The tray uses Quickshell's StatusNotifier support. It is for modern AppIndicator/StatusNotifier tray items, not legacy XEmbed tray icons.
 
+The bar uses small SVG icons rendered by Quickshell. It intentionally does not
+use Nerd Font glyph icons. Glyph icons are special characters inside patched
+fonts; when the patched font is missing or Qt chooses a different font, those
+icons show up as boxes or incorrect symbols. SVG icons avoid that dependency.
+
+## Fast Host Testing
+
+For faithful host-side testing on a non-NixOS machine, run Hyprland from a real
+TTY and launch Quickshell inside it. This helper is deliberately not installed
+by Home Manager and is not part of the production NixOS setup.
+
+A TTY is the full-screen text login reached with `Ctrl+Alt+F3`, `Ctrl+Alt+F4`, etc. It is not a terminal window inside GNOME. The TTY helper intentionally refuses to run when `DISPLAY` or `WAYLAND_DISPLAY` is set because that means you are still inside a graphical desktop.
+
+Typical flow from the Fedora host:
+
+```sh
+Ctrl+Alt+F3
+login
+cd ~/Desktop/labs/nixos-config
+./modules/home-manager/hyprland/scripts/hypr-shell-tty-test.sh
+```
+
+The helper reads the working-tree `shell.qml`, generates a temporary Quickshell config under `$XDG_RUNTIME_DIR/hypr-shell-tty-test`, writes a temporary Hyprland config, and launches:
+
+```sh
+Hyprland --config "$XDG_RUNTIME_DIR/hypr-shell-tty-test/tty-hyprland/hyprland.conf"
+```
+
+That temporary Hyprland config launches Quickshell with real `PanelWindow`/layer-shell behavior. Quickshell startup logs for this test session are written under:
+
+```text
+$XDG_RUNTIME_DIR/hypr-shell-tty-test/tty-hyprland/quickshell.log
+```
+
+If the wallpaper appears but the top bar does not, check that log first. It should show whether Quickshell started, whether it exited, and which temporary config directory it loaded.
+
+The helper also writes Hyprland snapshots a few seconds after startup:
+
+```text
+$XDG_RUNTIME_DIR/hypr-shell-tty-test/tty-hyprland/layers.log
+$XDG_RUNTIME_DIR/hypr-shell-tty-test/tty-hyprland/monitors.log
+$XDG_RUNTIME_DIR/hypr-shell-tty-test/tty-hyprland/clients.log
+```
+
+`layers.log` is the important one for a missing bar. It should show layer-shell
+surfaces named `quickshell-topbar`, `quickshell-popover`, or
+`quickshell-notifications`.
+
+If the normal bar still does not appear, run the TTY helper in smoke-test mode:
+
+```sh
+HYPR_SHELL_TTY_SMOKE=1 ./modules/home-manager/hyprland/scripts/hypr-shell-tty-test.sh
+```
+
+Smoke-test mode replaces the full shell with one bright red `PanelWindow` named
+`quickshell-smoke-test`. If that red bar appears, Quickshell and Hyprland can
+create layer-shell panels and the bug is inside the full shell QML. If it does
+not appear, the problem is below the shell design layer: Quickshell, Hyprland,
+the host TTY session, or the Fedora package/build.
+
+By default, the TTY test uses this mock wallpaper:
+
+```text
+/home/olaolu/Pictures/Wallpapers/images/skeleton-prophet.jpg
+```
+
+Quickshell is still launched before the wallpaper process. That ordering matters
+because the bar test should not depend on wallpaper startup.
+
+Pass a wallpaper explicitly when you want to test a different image:
+
+```sh
+./modules/home-manager/hyprland/scripts/hypr-shell-tty-test.sh --wallpaper /path/to/image.jpg
+```
+
+The wallpaper path can also come from an environment variable:
+
+```sh
+HYPR_SHELL_TTY_WALLPAPER=/path/to/image.jpg ./modules/home-manager/hyprland/scripts/hypr-shell-tty-test.sh
+```
+
+The temporary TTY session applies this test wallpaper with `swaybg`. This is
+separate from the normal Hyprland profile, which uses Waypaper with `awww` for
+regular wallpapers. The helper expects `swaybg` to already be available on the
+non-NixOS test host. Wallpaper startup logs are written under:
+
+```text
+$XDG_RUNTIME_DIR/hypr-shell-tty-test/tty-hyprland/wallpaper.log
+```
+
+When you edit QML or helper scripts, close the temporary Hyprland session and
+run `hypr-shell-tty-test` again. That keeps the test path simple and predictable.
+
+To close the temporary Hyprland test session, press either:
+
+```text
+Super+Escape
+Super+Shift+Q
+```
+
+Those keys are bound to Hyprland's `exit` command in the generated temporary config. If the keybinds do not work, switch to another TTY with `Ctrl+Alt+F3`, `Ctrl+Alt+F4`, or similar, log in, and run:
+
+```sh
+pkill Hyprland
+```
+
+Switch back to GNOME with its original virtual-terminal shortcut, commonly `Ctrl+Alt+F2` on Fedora Workstation.
+
+The TTY helper uses this monitor rule by default:
+
+```sh
+monitor = ,preferred,auto,1
+```
+
+Override it only when needed:
+
+```sh
+./modules/home-manager/hyprland/scripts/hypr-shell-tty-test.sh --monitor ',1920x1080@60,auto,1'
+```
+
+This is meant for bar/popover styling and real Hyprland shell behavior. It is not a full replacement for the VM. Use the VM when changing NixOS boot, greetd, PAM, Home Manager activation, package installation, or systemd service wiring.
+
+To remove this temporary TTY test harness after it has served its purpose:
+
+1. Delete `modules/home-manager/hyprland/scripts/hypr-shell-tty-test.sh`.
+2. Delete `modules/home-manager/hyprland/scripts/hypr-shell-generate-quickshell.sh`.
+3. Delete this `Fast Host Testing` section.
+
 ## Keybinds
 
 | Binding | Action |
@@ -61,7 +223,7 @@ The tray uses Quickshell's StatusNotifier support. It is for modern AppIndicator
 | `Super+Space` | Open Vicinae launcher fallback with `vicinae open` |
 | `Super+Return` | Open Kitty |
 | `Super+Shift+V` | Open Vicinae clipboard history |
-| `Super+Shift+W` | Pick a random wallpaper from `$WALLPAPERS_DIR` |
+| `Super+Shift+W` | Open Waypaper |
 | `F6` | Region screenshot, then annotate/copy/save in Satty |
 | `Shift+F6` | Full screenshot, then annotate/copy/save in Satty |
 | `Ctrl+F6` | Active-window screenshot, then annotate/copy/save in Satty |
@@ -81,24 +243,59 @@ The tray uses Quickshell's StatusNotifier support. It is for modern AppIndicator
 | `Super+Left Mouse` | Move window |
 | `Super+Right Mouse` | Resize window |
 
+## Power Actions
+
+The Quickshell power controls intentionally use different tools for different
+jobs:
+
+- Logout uses `hyprshutdown`.
+- Reboot uses `hyprshutdown --post-cmd 'systemctl reboot'`.
+- Power off uses `hyprshutdown --post-cmd 'systemctl poweroff'`.
+- Suspend uses `systemctl suspend`.
+- Lock uses `loginctl lock-session`.
+
+`hyprshutdown` is used for logout, reboot, and power off because it asks apps to
+close before Hyprland exits. A raw `hyprctl dispatch exit` quits Hyprland more
+abruptly, so it is kept only in the temporary TTY test harness as an emergency
+way to leave that throwaway session. Suspend is different: it should keep the
+session alive, so it goes straight through systemd instead of exiting Hyprland.
+
 ## Wallpapers
 
 Wallpapers come from the directory referenced by `$WALLPAPERS_DIR`. The dotfiles module currently sets that to `~/Pictures/Wallpapers`.
 
-The wallpaper helper:
+Waypaper is the wallpaper picker. `awww` is the Wayland daemon that actually
+draws the selected wallpaper on screen.
 
-- supports `.jpg`, `.jpeg`, `.png`, and `.webp`;
-- stores the selected wallpaper path in `$XDG_STATE_HOME/hypr-shell/wallpaper`;
-- maintains `$XDG_CACHE_HOME/hypr-shell/lock-wallpaper` for hyprlock;
-- applies wallpapers with `swww`.
+Home Manager writes `~/.config/waypaper/config.ini` so Waypaper starts with the
+right wallpaper folder and the `awww` backend. Waypaper stores the selected
+wallpaper in its own state file, which keeps the Nix-written config from needing
+to be edited by the app.
+
+When a wallpaper is selected, Waypaper runs a small post-command that updates:
+
+```text
+$XDG_CACHE_HOME/hypr-shell/lock-wallpaper
+```
+
+Hyprlock reads that symlink for the lock-screen background.
+
+Waypaper escapes the `$wallpaper` value before running `post_command`, so the
+config passes `$wallpaper` unquoted. That looks odd, but it is what keeps paths
+with spaces working.
 
 Useful commands:
 
 ```sh
-hypr-shell-wallpaper random
-hypr-shell-wallpaper restore
-hypr-shell-wallpaper set /path/to/image.png
+waypaper
+waypaper --random
+waypaper --restore
 ```
+
+`Super+Shift+W` opens Waypaper. Waypaper is also exposed as a normal desktop
+entry named `Waypaper`, so Vicinae can open it from app search. The random
+wallpaper command is present in the generated Hyprland config as a commented
+keybind, but it is intentionally left unbound until a key is chosen for it.
 
 ## Screenshots
 
@@ -238,7 +435,7 @@ The Quickshell docs still call out caveats: the language server does not provide
 
 These are intentionally not part of this baseline:
 
-- `hyprpaper`: replaced by `swww`.
+- `hyprpaper`: replaced by Waypaper with `awww`.
 - `swaync`, `dunst`, `mako`, `fnott`: replaced by Quickshell-native notifications.
 - Waybar, AGS, Eww, HyprPanel, Noctalia, ashell: replaced by this small Quickshell shell.
 - Wofi, Rofi, Fuzzel, Walker, Anyrun, Hyprlauncher: replaced by Vicinae.

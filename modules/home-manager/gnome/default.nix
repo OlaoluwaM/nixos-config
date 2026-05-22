@@ -15,9 +15,9 @@ let
   music = xdgDirs.music;
   pictures = xdgDirs.pictures;
   videos = xdgDirs.videos;
-  screenshots = "${pictures}/Screenshots";
-  screencasts = "${videos}/Screencasts";
-  wallpapers = "${pictures}/Wallpapers";
+  screenshots = "${pictures}/screenshots";
+  screencasts = "${videos}/screencasts";
+  wallpapers = "${pictures}/wallpapers";
   enableAsusRogKeybindings = hostConfig.enableAsusRogKeybindings or false;
   # dconf stores GNOME settings as typed GVariant values; these helpers
   # preserve exact types for values Nix cannot infer, like tuples and variants.
@@ -91,7 +91,7 @@ let
     file://${screencasts}
     file://${screenshots}
     file://${xdgDirs.desktop}
-    file://${wallpapers}/images wallpapers
+    file://${wallpapers} wallpapers
     file://${documents}/library/non-technical-shelf
     file://${documents}/library/technical-shelf
     file://${documents}

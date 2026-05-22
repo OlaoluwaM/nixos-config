@@ -1,12 +1,33 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Beginner orientation:
+#
+# This script provides one screenshot command with three modes:
+# - area: drag to select an area
+# - full: capture the whole current screen
+# - window: capture the active Hyprland window
+#
+# Tools involved:
+# - grim captures pixels on Wayland.
+# - slurp lets you select an area with the mouse.
+# - hyprctl asks Hyprland for window geometry.
+# - jq extracts values from Hyprland's JSON.
+# - satty opens the screenshot editor/annotator.
+# - wl-copy copies the result to the Wayland clipboard.
+#
+# The colors in area_geometry are the selection overlay colors. They were tuned
+# to match the lavender/accent direction of the ricing.
+
 mode="${1:-area}"
 screenshot_dir="${XDG_PICTURES_DIR:-"$HOME/Pictures"}/Screenshots"
 output_pattern="$screenshot_dir/Screenshot-%Y%m%d-%H%M%S.png"
 
 mkdir -p "$screenshot_dir"
 
+# Shared satty options. These control editor behavior after a screenshot is
+# taken. For example, --initial-tool arrow means satty opens with the arrow tool
+# selected, and --save-after-copy saves a file even when copying to clipboard.
 satty_args=(
 	--filename -
 	--fullscreen current-screen
@@ -22,6 +43,9 @@ satty_args=(
 	--corner-roundness 12
 )
 
+# Interactive area selection. slurp returns a geometry string like:
+#   10,20 800x600
+# grim can use that string to capture exactly that rectangle.
 area_geometry() {
 	slurp \
 		-d \
@@ -31,6 +55,8 @@ area_geometry() {
 		-w 3
 }
 
+# Active-window capture. Hyprland knows the active window position and size; jq
+# turns that JSON into the same geometry format grim expects.
 window_geometry() {
 	hyprctl activewindow -j |
 		jq -er '
@@ -40,6 +66,8 @@ window_geometry() {
     '
 }
 
+# Capture a region and pipe the image into satty. Empty geometry means the user
+# cancelled selection, so exit quietly.
 capture_region() {
 	local geometry="$1"
 
