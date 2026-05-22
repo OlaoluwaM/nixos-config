@@ -25,6 +25,7 @@ let
     name = "hypr-shell-status";
     runtimeInputs = with pkgs; [
       bluez
+      brightnessctl
       coreutils
       findutils
       gawk
@@ -32,10 +33,19 @@ let
       jq
       lm_sensors
       networkmanager
+      pamixer
       playerctl
       powerProfileScript
     ];
     text = builtins.readFile ./scripts/hypr-shell-status.sh;
+  };
+
+  popupScript = pkgs.writeShellApplication {
+    name = "hypr-shell-popup";
+    runtimeInputs = with pkgs; [
+      coreutils
+    ];
+    text = builtins.readFile ./scripts/hypr-shell-popup.sh;
   };
 
   timezoneScript = pkgs.writeShellApplication {
@@ -82,6 +92,9 @@ let
         "@BLUETOOTH_COMMAND@"
         "@POWER_COMMAND@"
         "@POWER_PROFILE_COMMAND@"
+        "@PAMIXER_COMMAND@"
+        "@BRIGHTNESS_COMMAND@"
+        "@PLAYERCTL_COMMAND@"
       ]
       [
         "${statusScript}/bin/hypr-shell-status"
@@ -91,6 +104,9 @@ let
         "${pkgs.blueman}/bin/blueman-manager"
         "${unstable.hyprshutdown}/bin/hyprshutdown"
         "${powerProfileScript}/bin/hypr-shell-power-profile"
+        "${pkgs.pamixer}/bin/pamixer"
+        "${pkgs.brightnessctl}/bin/brightnessctl"
+        "${pkgs.playerctl}/bin/playerctl"
       ]
       (builtins.readFile ./quickshell/shell.qml);
 in
@@ -99,7 +115,7 @@ in
     home.packages = with pkgs; [
       blueman
       brightnessctl
-      cliphist
+      # cliphist
       grim
       jq
       libnotify
@@ -117,6 +133,7 @@ in
       unstable.hyprshutdown
 
       powerProfileScript
+      popupScript
       statusScript
       timezoneScript
       wallpaperScript
@@ -143,7 +160,7 @@ in
         exec-once = systemctl --user start hypr-shell-wallpaper.service
         exec-once = systemctl --user start hypr-shell-quickshell.service
         exec-once = systemctl --user start hypr-shell-vicinae.service
-        exec-once = systemctl --user start hypr-shell-clipboard.service
+        # exec-once = systemctl --user start hypr-shell-clipboard.service
         exec-once = systemctl --user start hypridle.service
         exec-once = systemctl --user start hyprpolkitagent.service
         exec-once = systemctl --user start hyprsunset.service
@@ -212,15 +229,16 @@ in
         $terminal = kitty
 
         bind = $mod, Return, exec, $terminal
-        bindr = $mod, SUPER_L, exec, ${pkgs.vicinae}/bin/vicinae
-        bindr = $mod, SUPER_R, exec, ${pkgs.vicinae}/bin/vicinae
-        bind = $mod, Space, exec, ${pkgs.vicinae}/bin/vicinae
-        bind = $mod SHIFT, V, exec, ${pkgs.vicinae}/bin/vicinae vicinae://launch/clipboard/history
+        bindr = $mod, SUPER_L, exec, ${pkgs.vicinae}/bin/vicinae open
+        bindr = $mod, SUPER_R, exec, ${pkgs.vicinae}/bin/vicinae open
+        bind = $mod, Space, exec, ${pkgs.vicinae}/bin/vicinae open
+        bind = $mod SHIFT, V, exec, ${pkgs.vicinae}/bin/vicinae 'vicinae://launch/clipboard/history?toggle=true'
         bind = $mod SHIFT, W, exec, ${wallpaperScript}/bin/hypr-shell-wallpaper random
         bind = , F6, exec, ${screenshotScript}/bin/hypr-shell-screenshot area
         bind = SHIFT, F6, exec, ${screenshotScript}/bin/hypr-shell-screenshot full
         bind = CTRL, F6, exec, ${screenshotScript}/bin/hypr-shell-screenshot window
         bind = $mod, E, exec, ${pkgs.nautilus}/bin/nautilus
+        bind = $mod, Q, exec, ${popupScript}/bin/hypr-shell-popup quick-settings
         bind = $mod, N, exec, ${pkgs.networkmanagerapplet}/bin/nm-connection-editor
         bind = $mod, B, exec, ${pkgs.blueman}/bin/blueman-manager
         bind = $mod, M, exec, ${pkgs.mission-center}/bin/missioncenter
@@ -332,18 +350,18 @@ in
         };
       };
 
-      hypr-shell-clipboard = {
-        Unit = {
-          Description = "Clipboard history collector";
-          After = [ "graphical-session.target" ];
-          PartOf = [ "graphical-session.target" ];
-        };
-
-        Service = {
-          ExecStart = "${pkgs.wl-clipboard}/bin/wl-paste --watch ${pkgs.cliphist}/bin/cliphist store";
-          Restart = "on-failure";
-        };
-      };
+      # hypr-shell-clipboard = {
+      #   Unit = {
+      #     Description = "Clipboard history collector";
+      #     After = [ "graphical-session.target" ];
+      #     PartOf = [ "graphical-session.target" ];
+      #   };
+      #
+      #   Service = {
+      #     ExecStart = "${pkgs.wl-clipboard}/bin/wl-paste --watch ${pkgs.cliphist}/bin/cliphist store";
+      #     Restart = "on-failure";
+      #   };
+      # };
     };
   };
 }

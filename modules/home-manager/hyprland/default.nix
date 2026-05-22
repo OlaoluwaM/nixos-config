@@ -22,6 +22,8 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    qt.enable = true;
+
     home.packages = with pkgs; [
       font-awesome
       libsForQt5.qtwayland
@@ -29,6 +31,9 @@ in
       nerd-fonts.symbols-only
       noto-fonts
       noto-fonts-color-emoji
+      qt6.qtdeclarative
+      qt6.qtimageformats
+      qt6.qtsvg
       qt6.qtwayland
     ];
 

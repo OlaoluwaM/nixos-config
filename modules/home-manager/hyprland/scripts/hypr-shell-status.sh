@@ -1,3 +1,5 @@
+# shellcheck shell=bash
+
 state_dir="${XDG_RUNTIME_DIR:-/tmp}/hypr-shell"
 mkdir -p "$state_dir"
 
@@ -65,6 +67,25 @@ if [ -z "$temp" ]; then
 	temp="--"
 fi
 
+volume="$(pamixer --get-volume 2>/dev/null || true)"
+if [ -z "$volume" ]; then
+	volume="--"
+else
+	volume="${volume}%"
+fi
+
+muted="$(pamixer --get-mute 2>/dev/null || printf 'false')"
+
+brightness="$(
+	brightnessctl -m 2>/dev/null |
+		awk -F, '{ gsub(/%/, "", $4); print $4; exit }' || true
+)"
+if [ -z "$brightness" ]; then
+	brightness="--"
+else
+	brightness="${brightness}%"
+fi
+
 battery="AC"
 bat_dir="$(find /sys/class/power_supply -maxdepth 1 -type l -name 'BAT*' 2>/dev/null | head -n 1 || true)"
 if [ -n "$bat_dir" ] && [ -r "$bat_dir/capacity" ]; then
@@ -75,7 +96,7 @@ fi
 
 network="$(
 	nmcli -t -f TYPE,STATE,CONNECTION device status 2>/dev/null |
-		awk -F: '$2 == "connected" && ($1 == "wifi" || $1 == "ethernet") { print $3; exit }'
+		awk -F: '$2 == "connected" && ($1 == "wifi" || $1 == "ethernet") { print $3; exit }' || true
 )"
 if [ -z "$network" ]; then
 	network="offline"
@@ -83,7 +104,7 @@ fi
 
 vpn="$(
 	nmcli -t -f TYPE,NAME connection show --active 2>/dev/null |
-		awk -F: '$1 == "vpn" || $1 == "wireguard" { print $2; exit }'
+		awk -F: '$1 == "vpn" || $1 == "wireguard" { print $2; exit }' || true
 )"
 if [ -z "$vpn" ]; then
 	vpn="off"
@@ -91,7 +112,7 @@ fi
 
 bluetooth="$(
 	bluetoothctl show 2>/dev/null |
-		awk -F': ' '/Powered:/ { print tolower($2); exit }'
+		awk -F': ' '/Powered:/ { print tolower($2); exit }' || true
 )"
 if [ -z "$bluetooth" ]; then
 	bluetooth="off"
@@ -118,6 +139,9 @@ jq -cn \
 	--arg cpu "$cpu" \
 	--arg mem "$mem" \
 	--arg temp "$temp" \
+	--arg volume "$volume" \
+	--arg muted "$muted" \
+	--arg brightness "$brightness" \
 	--arg battery "$battery" \
 	--arg network "$network" \
 	--arg vpn "$vpn" \
@@ -129,6 +153,9 @@ jq -cn \
     cpu: $cpu,
     mem: $mem,
     temp: $temp,
+    volume: $volume,
+    muted: $muted,
+    brightness: $brightness,
     battery: $battery,
     network: $network,
     vpn: $vpn,
