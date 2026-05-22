@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 
@@ -14,21 +15,23 @@ in
 
       settings = {
         general = {
-          lock_cmd = "pidof hyprlock || hyprlock";
-          before_sleep_cmd = "loginctl lock-session";
-          after_sleep_cmd = "hyprctl dispatch dpms on";
+          lock_cmd = "${pkgs.procps}/bin/pidof hyprlock || ${pkgs.hyprlock}/bin/hyprlock";
+          before_sleep_cmd = "${pkgs.systemd}/bin/loginctl lock-session";
+          after_sleep_cmd = "${pkgs.hyprland}/bin/hyprctl dispatch dpms on";
         };
 
         listener = [
           {
             timeout = 900;
-            on-timeout = "loginctl lock-session";
+            on-timeout = "${pkgs.systemd}/bin/loginctl lock-session";
           }
-          {
-            timeout = 1200;
-            on-timeout = "hyprctl dispatch dpms off";
-            on-resume = "hyprctl dispatch dpms on";
-          }
+          # VM displays can fail to wake cleanly after DPMS off. Re-enable this
+          # on bare metal if display-off idle behavior is still wanted.
+          # {
+          #   timeout = 1200;
+          #   on-timeout = "${pkgs.hyprland}/bin/hyprctl dispatch dpms off";
+          #   on-resume = "${pkgs.hyprland}/bin/hyprctl dispatch dpms on";
+          # }
         ];
       };
     };

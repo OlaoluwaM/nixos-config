@@ -1,7 +1,22 @@
 # shellcheck shell=bash
 
 state_dir="${XDG_RUNTIME_DIR:-/tmp}/hypr-shell"
-mkdir -p "$state_dir"
+if ! mkdir -p "$state_dir" 2>/dev/null || [ ! -w "$state_dir" ]; then
+	state_dir="/tmp/hypr-shell-${UID:-$(id -u)}"
+	mkdir -p "$state_dir"
+fi
+
+format_seconds() {
+	awk -v seconds="${1:-0}" '
+    BEGIN {
+      if (seconds !~ /^[0-9]+([.][0-9]+)?$/) {
+        seconds = 0
+      }
+      total = int(seconds)
+      printf "%d:%02d", int(total / 60), total % 60
+    }
+  '
+}
 
 cpu_state="$state_dir/cpu-sample"
 read -r _ user nice system idle iowait irq softirq steal _ </proc/stat
@@ -18,7 +33,7 @@ if [ -r "$cpu_state" ]; then
 	fi
 fi
 
-printf '%s %s\n' "$total" "$idle_all" >"$cpu_state"
+printf '%s %s\n' "$total" "$idle_all" >"$cpu_state" 2>/dev/null || true
 
 mem="$(
 	awk '
@@ -64,12 +79,12 @@ if [ -z "$temp" ]; then
 fi
 
 if [ -z "$temp" ]; then
-	temp="--"
+	temp="N/A"
 fi
 
 volume="$(pamixer --get-volume 2>/dev/null || true)"
 if [ -z "$volume" ]; then
-	volume="--"
+	volume="N/A"
 else
 	volume="${volume}%"
 fi
@@ -81,7 +96,7 @@ brightness="$(
 		awk -F, '{ gsub(/%/, "", $4); print $4; exit }' || true
 )"
 if [ -z "$brightness" ]; then
-	brightness="--"
+	brightness="N/A"
 else
 	brightness="${brightness}%"
 fi
@@ -99,7 +114,7 @@ network="$(
 		awk -F: '$2 == "connected" && ($1 == "wifi" || $1 == "ethernet") { print $3; exit }' || true
 )"
 if [ -z "$network" ]; then
-	network="offline"
+	network="Offline"
 fi
 
 vpn="$(
@@ -107,7 +122,7 @@ vpn="$(
 		awk -F: '$1 == "vpn" || $1 == "wireguard" { print $2; exit }' || true
 )"
 if [ -z "$vpn" ]; then
-	vpn="off"
+	vpn="Off"
 fi
 
 bluetooth="$(
@@ -115,7 +130,7 @@ bluetooth="$(
 		awk -F': ' '/Powered:/ { print tolower($2); exit }' || true
 )"
 if [ -z "$bluetooth" ]; then
-	bluetooth="off"
+	bluetooth="Off"
 fi
 
 power_profile="$(hypr-shell-power-profile status 2>/dev/null || true)"
@@ -124,6 +139,11 @@ if [ -z "$power_profile" ]; then
 fi
 
 media_status="$(playerctl status 2>/dev/null || true)"
+media_artist="$(playerctl metadata --format '{{ artist }}' 2>/dev/null || true)"
+media_track_title="$(playerctl metadata --format '{{ title }}' 2>/dev/null || true)"
+media_album_art="$(playerctl metadata --format '{{ mpris:artUrl }}' 2>/dev/null || true)"
+media_position_raw="$(playerctl position 2>/dev/null || true)"
+media_length_raw="$(playerctl metadata mpris:length 2>/dev/null || true)"
 media_title="$(
 	playerctl metadata --format '{{ artist }} - {{ title }}' 2>/dev/null |
 		sed 's/^ - //; s/ - $//' || true
@@ -134,6 +154,22 @@ fi
 if [ -z "$media_status" ]; then
 	media_status="Stopped"
 fi
+if [ -z "$media_track_title" ]; then
+	media_track_title="$media_title"
+fi
+
+media_position="$(format_seconds "$media_position_raw")"
+media_length_seconds="$(
+	awk -v micros="${media_length_raw:-0}" '
+    BEGIN {
+      if (micros !~ /^[0-9]+$/) {
+        micros = 0
+      }
+      printf "%.0f", micros / 1000000
+    }
+  '
+)"
+media_length="$(format_seconds "$media_length_seconds")"
 
 jq -cn \
 	--arg cpu "$cpu" \
@@ -149,6 +185,11 @@ jq -cn \
 	--arg powerProfile "$power_profile" \
 	--arg mediaStatus "$media_status" \
 	--arg mediaTitle "$media_title" \
+	--arg mediaArtist "$media_artist" \
+	--arg mediaTrackTitle "$media_track_title" \
+	--arg mediaAlbumArt "$media_album_art" \
+	--arg mediaPosition "$media_position" \
+	--arg mediaLength "$media_length" \
 	'{
     cpu: $cpu,
     mem: $mem,
@@ -162,5 +203,10 @@ jq -cn \
     bluetooth: $bluetooth,
     powerProfile: $powerProfile,
     mediaStatus: $mediaStatus,
-    mediaTitle: $mediaTitle
+    mediaTitle: $mediaTitle,
+    mediaArtist: $mediaArtist,
+    mediaTrackTitle: $mediaTrackTitle,
+    mediaAlbumArt: $mediaAlbumArt,
+    mediaPosition: $mediaPosition,
+    mediaLength: $mediaLength
   }'

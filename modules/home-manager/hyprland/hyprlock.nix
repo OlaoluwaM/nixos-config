@@ -32,7 +32,7 @@ in
             size = "280, 54";
             position = "0, -70";
             outline_thickness = 2;
-            outer_color = "rgb(cba6f7)";
+            outer_color = "rgb(b4befe)";
             inner_color = "rgb(181825)";
             font_color = "rgb(cdd6f4)";
             check_color = "rgb(89b4fa)";

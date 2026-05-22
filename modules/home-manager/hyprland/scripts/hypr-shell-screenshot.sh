@@ -26,8 +26,8 @@ area_geometry() {
 	slurp \
 		-d \
 		-b "#11111bcc" \
-		-c "#cba6f7ff" \
-		-s "#cba6f744" \
+		-c "#b4befeff" \
+		-s "#b4befe44" \
 		-w 3
 }
 

@@ -20,26 +20,53 @@ Scope {
     property int calendarMonthOffset: 0
     property string popupCommandToken: ""
     property string popupCommandFile: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/hypr-shell/popup-command"
-    property string clockText: "--"
-    property string cpuText: "--"
-    property string memText: "--"
-    property string tempText: "--"
-    property string volumeText: "--"
+    property string clockText: "Loading"
+    property string cpuText: "..."
+    property string memText: "..."
+    property string tempText: "..."
+    property string volumeText: "N/A"
     property bool muted: false
-    property string brightnessText: "--"
-    property string powerProfileText: "--"
-    property string batteryText: "--"
-    property string networkText: "--"
-    property string vpnText: "--"
-    property string bluetoothText: "--"
+    property string brightnessText: "N/A"
+    property string powerProfileText: "Unavailable"
+    property string batteryText: "AC"
+    property string networkText: "Offline"
+    property string vpnText: "Off"
+    property string bluetoothText: "Off"
     property string mediaStatus: "Stopped"
     property string mediaTitle: "No media"
-    property string localTime: "--"
-    property string birminghamTime: "--"
-    property string lagosTime: "--"
-    property string sanFranciscoTime: "--"
+    property string mediaArtist: ""
+    property string mediaTrackTitle: "No media"
+    property string mediaAlbumArt: ""
+    property string mediaPosition: "0:00"
+    property string mediaLength: "0:00"
+    property string localTime: "Loading"
+    property string birminghamTime: "..."
+    property string lagosTime: "..."
+    property string sanFranciscoTime: "..."
     readonly property int maxNotificationHistory: 20
     readonly property int trayItemCount: SystemTray.items.values.length
+    readonly property color rosewater: "#f5e0dc"
+    readonly property color lavender: "#b4befe"
+    readonly property color red: "#f38ba8"
+    readonly property color peach: "#fab387"
+    readonly property color yellow: "#f9e2af"
+    readonly property color green: "#a6e3a1"
+    readonly property color teal: "#94e2d5"
+    readonly property color blue: "#89b4fa"
+    readonly property color text: "#cdd6f4"
+    readonly property color subtext0: "#a6adc8"
+    readonly property color overlay0: "#6c7086"
+    readonly property color overlay1: "#7f849c"
+    readonly property color surface0: "#313244"
+    readonly property color surface1: "#45475a"
+    readonly property color surface2: "#585b70"
+    readonly property color base: "#1e1e2e"
+    readonly property color mantle: "#181825"
+    readonly property color crust: "#11111b"
+    readonly property color baseAlpha: "#1e1e2ecc"
+    readonly property color crustAlpha: "#11111bf2"
+    readonly property bool mediaActive: mediaStatus === "Playing" || mediaStatus === "Paused"
+    readonly property string mediaDisplayTitle: mediaArtist !== "" && mediaTrackTitle !== "" ? mediaArtist + " - " + mediaTrackTitle : mediaTrackTitle
 
     function togglePopup(name) {
         if (name !== "tray") {
@@ -85,8 +112,8 @@ Scope {
             temp: "",
             volume: muted ? "󰝟" : "󰕾",
             brightness: "󰃟",
-            network: networkText === "offline" ? "󰤮" : "󰤨",
-            vpn: vpnText === "off" ? "󰌾" : "󰌆",
+            network: networkText.toLowerCase() === "offline" ? "󰤮" : "󰤨",
+            vpn: vpnText.toLowerCase() === "off" ? "󰌾" : "󰌆",
             bluetooth: "󰂯",
             battery: batteryText === "AC" ? "󰚥" : "󰁹",
             notifications: root.doNotDisturb ? "󰂛" : "󰂚",
@@ -94,6 +121,9 @@ Scope {
             quick: "󰒓",
             power: "",
             media: root.mediaStatus === "Playing" ? "󰐊" : "󰝛",
+            previous: "󰒮",
+            playPause: root.mediaStatus === "Playing" ? "󰏤" : "󰐊",
+            next: "󰒭",
             left: "󰅁",
             right: "󰅂"
         };
@@ -111,6 +141,10 @@ Scope {
 
     function setBrightness(value) {
         root.runAndRefresh("@BRIGHTNESS_COMMAND@ set " + Math.round(value) + "%");
+    }
+
+    function isUnavailable(value) {
+        return value === "" || value === "--" || value === "N/A" || value === "Unavailable";
     }
 
     function runPlayerctl(action) {
@@ -251,7 +285,7 @@ Scope {
                     const data = JSON.parse(this.text);
                     root.cpuText = data.cpu + "%";
                     root.memText = data.mem + "%";
-                    root.tempText = data.temp === "--" ? "--" : data.temp + "C";
+                    root.tempText = root.isUnavailable(data.temp) ? "N/A" : data.temp + "C";
                     root.volumeText = data.volume;
                     root.muted = data.muted === "true";
                     root.brightnessText = data.brightness;
@@ -262,6 +296,11 @@ Scope {
                     root.powerProfileText = data.powerProfile;
                     root.mediaStatus = data.mediaStatus;
                     root.mediaTitle = data.mediaTitle;
+                    root.mediaArtist = data.mediaArtist || "";
+                    root.mediaTrackTitle = data.mediaTrackTitle || data.mediaTitle || "No media";
+                    root.mediaAlbumArt = data.mediaAlbumArt || "";
+                    root.mediaPosition = data.mediaPosition || "0:00";
+                    root.mediaLength = data.mediaLength || "0:00";
                 } catch (e) {
                     console.log("hypr-shell status parse failed:", e);
                 }
@@ -334,13 +373,13 @@ Scope {
 
                 screen: modelData
                 color: "transparent"
-                height: 46
-                exclusiveZone: 58
+                height: 62
+                exclusiveZone: 70
 
                 margins {
-                    top: 8
-                    left: 12
-                    right: 12
+                    top: 6
+                    left: 10
+                    right: 10
                     bottom: 0
                 }
 
@@ -353,49 +392,229 @@ Scope {
                 Rectangle {
                     id: topBar
                     anchors.fill: parent
-                    radius: 14
-                    color: "#11111bcc"
-                    border.color: "#313244"
+                    radius: 12
+                    color: "#11111bd9"
+                    border.color: "#b4befe66"
                     border.width: 1
                     clip: true
 
-                    Row {
-                        id: workspaceRow
+                    Rectangle {
+                        id: workspaceCapsule
                         anchors.left: parent.left
                         anchors.leftMargin: 10
                         anchors.verticalCenter: parent.verticalCenter
-                        spacing: 6
+                        width: Math.max(46, workspaceRow.implicitWidth + 18)
+                        height: 42
+                        radius: 10
+                        color: "#1e1e2ed9"
+                        border.color: root.surface0
+                        border.width: 1
 
-                        Repeater {
-                            model: Hyprland.workspaces
+                        Row {
+                            id: workspaceRow
+                            anchors.centerIn: parent
+                            spacing: 4
 
-                            delegate: Rectangle {
-                                required property var modelData
+                            Repeater {
+                                model: Hyprland.workspaces
 
-                                property bool occupied: modelData.toplevels.values.length > 0
-                                property bool shown: modelData.active || occupied
-                                property string label: modelData.name || modelData.id
+                                delegate: Rectangle {
+                                    required property var modelData
 
-                                visible: shown
-                                width: shown ? Math.max(28, wsLabel.implicitWidth + 14) : 0
-                                height: 28
-                                radius: 9
-                                color: modelData.focused ? "#cba6f7" : (modelData.active ? "#585b70" : "#181825")
-                                border.color: modelData.urgent ? "#f38ba8" : "#313244"
-                                border.width: 1
+                                    property bool occupied: modelData.toplevels.values.length > 0
+                                    property bool shown: modelData.active || occupied
+                                    property string label: modelData.name || modelData.id
+
+                                    visible: shown
+                                    width: shown ? 32 : 0
+                                    height: 30
+                                    radius: 9
+                                    color: modelData.focused ? root.lavender : (modelData.active ? root.surface2 : "transparent")
+                                    border.color: modelData.urgent ? root.red : "transparent"
+                                    border.width: modelData.urgent ? 1 : 0
+
+                                    Text {
+                                        id: wsLabel
+                                        anchors.centerIn: parent
+                                        text: parent.label
+                                        color: modelData.focused ? root.base : root.text
+                                        font.pixelSize: 12
+                                        font.weight: Font.DemiBold
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        onClicked: modelData.activate()
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        id: statsCapsule
+                        anchors.left: workspaceCapsule.right
+                        anchors.leftMargin: 10
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 226
+                        height: 42
+                        radius: 10
+                        color: "#1e1e2ed9"
+                        border.color: root.surface0
+                        border.width: 1
+
+                        Row {
+                            id: leftStatus
+                            anchors.centerIn: parent
+                            spacing: 4
+
+                            Text {
+                                width: 68
+                                horizontalAlignment: Text.AlignHCenter
+                                text: root.icon("cpu") + " " + root.cpuText
+                                color: root.blue
+                                font.family: "Symbols Nerd Font Mono"
+                                font.pixelSize: 12
+                            }
+
+                            Text {
+                                width: 68
+                                horizontalAlignment: Text.AlignHCenter
+                                text: root.icon("memory") + " " + root.memText
+                                color: root.teal
+                                font.family: "Symbols Nerd Font Mono"
+                                font.pixelSize: 12
+                            }
+
+                            Text {
+                                width: 76
+                                horizontalAlignment: Text.AlignHCenter
+                                text: root.icon("temp") + " " + root.tempText
+                                color: root.peach
+                                font.family: "Symbols Nerd Font Mono"
+                                font.pixelSize: 12
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        id: mediaCapsule
+                        anchors.left: statsCapsule.right
+                        anchors.leftMargin: 10
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: root.mediaActive
+                        width: root.mediaActive ? 292 : 0
+                        height: 42
+                        radius: 10
+                        color: root.activePopup === "media" ? root.surface0 : "#1e1e2ed9"
+                        border.color: root.activePopup === "media" ? root.lavender : root.surface0
+                        border.width: 1
+                        clip: true
+
+                        Row {
+                            anchors.fill: parent
+                            anchors.margins: 6
+                            spacing: 8
+
+                            Rectangle {
+                                width: 30
+                                height: 30
+                                radius: 7
+                                color: root.surface0
+                                clip: true
+
+                                Image {
+                                    id: mediaArtwork
+                                    anchors.fill: parent
+                                    source: root.mediaAlbumArt
+                                    sourceSize.width: 30
+                                    sourceSize.height: 30
+                                    fillMode: Image.PreserveAspectCrop
+                                    asynchronous: true
+                                    visible: root.mediaAlbumArt !== "" && mediaArtwork.status === Image.Ready
+                                }
 
                                 Text {
-                                    id: wsLabel
                                     anchors.centerIn: parent
-                                    text: parent.label
-                                    color: modelData.focused ? "#11111b" : "#cdd6f4"
-                                    font.pixelSize: 12
-                                    font.weight: Font.DemiBold
+                                    visible: root.mediaAlbumArt === "" || mediaArtwork.status !== Image.Ready
+                                    text: root.icon("media")
+                                    color: root.lavender
+                                    font.family: "Symbols Nerd Font Mono"
+                                    font.pixelSize: 14
+                                }
+                            }
+
+                            Item {
+                                width: 132
+                                height: 30
+
+                                Column {
+                                    anchors.fill: parent
+                                    spacing: 1
+
+                                    Text {
+                                        width: parent.width
+                                        text: root.mediaDisplayTitle
+                                        color: root.text
+                                        font.pixelSize: 11
+                                        font.weight: Font.DemiBold
+                                        elide: Text.ElideRight
+                                        maximumLineCount: 1
+                                        textFormat: Text.PlainText
+                                    }
+
+                                    Text {
+                                        width: parent.width
+                                        text: root.mediaPosition + " / " + root.mediaLength
+                                        color: root.subtext0
+                                        font.pixelSize: 10
+                                        elide: Text.ElideRight
+                                        maximumLineCount: 1
+                                        textFormat: Text.PlainText
+                                    }
                                 }
 
                                 MouseArea {
                                     anchors.fill: parent
-                                    onClicked: modelData.activate()
+                                    onClicked: root.togglePopup("media")
+                                }
+                            }
+
+                            Row {
+                                width: 74
+                                height: 30
+                                spacing: 4
+
+                                Repeater {
+                                    model: [
+                                        { action: "previous", icon: root.icon("previous") },
+                                        { action: "play-pause", icon: root.icon("playPause") },
+                                        { action: "next", icon: root.icon("next") }
+                                    ]
+
+                                    delegate: Rectangle {
+                                        required property var modelData
+
+                                        width: 22
+                                        height: 30
+                                        radius: 7
+                                        color: mediaControlMouse.containsMouse ? root.surface1 : "transparent"
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: parent.modelData.icon
+                                            color: root.text
+                                            font.family: "Symbols Nerd Font Mono"
+                                            font.pixelSize: 13
+                                        }
+
+                                        MouseArea {
+                                            id: mediaControlMouse
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            onClicked: root.runPlayerctl(parent.modelData.action)
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -404,18 +623,18 @@ Scope {
                     Rectangle {
                         id: clockPill
                         anchors.centerIn: parent
-                        width: centerText.implicitWidth + 26
-                        height: 30
+                        width: centerText.implicitWidth + 30
+                        height: 42
                         radius: 10
-                        color: root.activePopup === "calendar" ? "#313244" : "#181825"
-                        border.color: root.activePopup === "calendar" ? "#cba6f7" : "#45475a"
+                        color: root.activePopup === "calendar" ? root.surface0 : "#1e1e2ed9"
+                        border.color: root.activePopup === "calendar" ? root.lavender : root.surface0
                         border.width: 1
 
                         Text {
                             id: centerText
                             anchors.centerIn: parent
                             text: root.clockText
-                            color: "#f5e0dc"
+                            color: root.text
                             font.pixelSize: 13
                             font.weight: Font.DemiBold
                         }
@@ -431,83 +650,21 @@ Scope {
                         anchors.right: parent.right
                         anchors.rightMargin: 10
                         anchors.verticalCenter: parent.verticalCenter
-                        spacing: 6
+                        spacing: 10
 
                         Rectangle {
-                            width: mediaIcon.implicitWidth + 16
-                            height: 28
-                            radius: 9
-                            color: root.activePopup === "media" ? "#313244" : "#181825"
-                            visible: root.mediaStatus === "Playing"
-
-                            Text {
-                                id: mediaIcon
-                                anchors.centerIn: parent
-                                text: root.icon("media")
-                                color: "#a6e3a1"
-                                font.family: "Symbols Nerd Font Mono"
-                                font.pixelSize: 15
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: root.togglePopup("media")
-                            }
-                        }
-
-                        Text {
-                            text: root.icon("cpu") + " " + root.cpuText
-                            color: "#89b4fa"
-                            font.family: "Symbols Nerd Font Mono"
-                            font.pixelSize: 12
-                        }
-
-                        Text {
-                            text: root.icon("memory") + " " + root.memText
-                            color: "#94e2d5"
-                            font.family: "Symbols Nerd Font Mono"
-                            font.pixelSize: 12
-                        }
-
-                        Text {
-                            text: root.icon("temp") + " " + root.tempText
-                            color: "#fab387"
-                            font.family: "Symbols Nerd Font Mono"
-                            font.pixelSize: 12
-                        }
-
-                        Rectangle {
-                            width: 34
-                            height: 28
-                            radius: 9
-                            color: root.activePopup === "quickSettings" ? "#313244" : "#181825"
-                            border.color: root.activePopup === "quickSettings" ? "#cba6f7" : "#313244"
+                            width: notificationIcon.implicitWidth + 20
+                            height: 42
+                            radius: 10
+                            color: root.activePopup === "notifications" ? root.surface0 : "#1e1e2ed9"
+                            border.color: root.activePopup === "notifications" ? root.lavender : root.surface0
                             border.width: 1
 
                             Text {
-                                anchors.centerIn: parent
-                                text: root.icon("quick")
-                                color: "#cdd6f4"
-                                font.family: "Symbols Nerd Font Mono"
-                                font.pixelSize: 15
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: root.togglePopup("quickSettings")
-                            }
-                        }
-
-                        Rectangle {
-                            width: 34
-                            height: 28
-                            radius: 9
-                            color: root.activePopup === "notifications" ? "#313244" : "#181825"
-
-                            Text {
+                                id: notificationIcon
                                 anchors.centerIn: parent
                                 text: notificationHistory.count > 0 ? root.icon("notifications") + " " + notificationHistory.count : root.icon("notifications")
-                                color: root.doNotDisturb ? "#f38ba8" : "#cdd6f4"
+                                color: root.doNotDisturb ? root.red : root.text
                                 font.family: "Symbols Nerd Font Mono"
                                 font.pixelSize: 13
                             }
@@ -520,17 +677,17 @@ Scope {
 
                         Rectangle {
                             visible: root.trayItemCount > 0
-                            width: root.trayItemCount > 0 ? 34 : 0
-                            height: 28
-                            radius: 9
-                            color: root.activePopup === "tray" ? "#313244" : "#181825"
-                            border.color: root.activePopup === "tray" ? "#cba6f7" : "#313244"
+                            width: root.trayItemCount > 0 ? 42 : 0
+                            height: 42
+                            radius: 10
+                            color: root.activePopup === "tray" ? root.surface0 : "#1e1e2ed9"
+                            border.color: root.activePopup === "tray" ? root.lavender : root.surface0
                             border.width: 1
 
                             Text {
                                 anchors.centerIn: parent
                                 text: root.icon("tray")
-                                color: "#cdd6f4"
+                                color: root.text
                                 font.family: "Symbols Nerd Font Mono"
                                 font.pixelSize: 14
                             }
@@ -556,6 +713,28 @@ Scope {
                                 }
                             }
                         }
+
+                        Rectangle {
+                            width: 42
+                            height: 42
+                            radius: 10
+                            color: root.activePopup === "quickSettings" ? root.lavender : "#1e1e2ed9"
+                            border.color: root.activePopup === "quickSettings" ? root.lavender : root.surface0
+                            border.width: 1
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: root.icon("quick")
+                                color: root.activePopup === "quickSettings" ? root.base : root.text
+                                font.family: "Symbols Nerd Font Mono"
+                                font.pixelSize: 15
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: root.togglePopup("quickSettings")
+                            }
+                        }
                     }
                 }
             }
@@ -566,7 +745,7 @@ Scope {
         id: popover
         color: "transparent"
         visible: root.activePopup !== ""
-        implicitHeight: 390
+        implicitHeight: root.activePopup === "quickSettings" ? 620 : 430
         exclusionMode: ExclusionMode.Ignore
 
         anchors {
@@ -577,13 +756,13 @@ Scope {
 
         Rectangle {
             id: popoverCard
-            y: 66
+            y: 70
             width: root.activePopup === "calendar" ? 420 : root.activePopup === "tray" ? 320 : root.activePopup === "quickSettings" ? 430 : 430
             height: root.activePopup === "calendar" ? 380 : root.activePopup === "tray" ? 230 : root.activePopup === "quickSettings" ? 520 : 280
             x: root.activePopup === "calendar" ? Math.round((parent.width - width) / 2) : parent.width - width - 12
             radius: 16
-            color: "#11111bf2"
-            border.color: "#313244"
+            color: root.crustAlpha
+            border.color: root.surface0
             border.width: 1
 
             HoverHandler {
@@ -640,14 +819,14 @@ Scope {
 
                     Text {
                         text: "Quick Settings"
-                        color: "#f5e0dc"
+                        color: root.text
                         font.pixelSize: 18
                         font.weight: Font.DemiBold
                     }
 
                     Text {
                         text: root.networkText + " / VPN " + root.vpnText
-                        color: "#a6adc8"
+                        color: root.subtext0
                         font.pixelSize: 12
                         elide: Text.ElideRight
                         Layout.fillWidth: true
@@ -658,14 +837,14 @@ Scope {
                     Layout.preferredWidth: 42
                     Layout.preferredHeight: 42
                     radius: 12
-                    color: "#181825"
-                    border.color: "#f38ba8"
+                    color: root.mantle
+                    border.color: root.red
                     border.width: 1
 
                     Text {
                         anchors.centerIn: parent
                         text: root.icon("power")
-                        color: "#f38ba8"
+                        color: root.red
                         font.family: "Symbols Nerd Font Mono"
                         font.pixelSize: 17
                     }
@@ -681,8 +860,8 @@ Scope {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 86
                 radius: 14
-                color: "#181825"
-                border.color: "#313244"
+                color: root.mantle
+                border.color: root.surface0
                 border.width: 1
 
                 ColumnLayout {
@@ -696,7 +875,7 @@ Scope {
 
                         Text {
                             text: root.icon("volume")
-                            color: root.muted ? "#6c7086" : "#89b4fa"
+                            color: root.muted ? root.overlay0 : root.lavender
                             font.family: "Symbols Nerd Font Mono"
                             font.pixelSize: 18
                         }
@@ -713,7 +892,7 @@ Scope {
                             Layout.preferredWidth: 42
                             horizontalAlignment: Text.AlignRight
                             text: root.volumeText
-                            color: "#cdd6f4"
+                            color: root.text
                             font.pixelSize: 12
                             font.weight: Font.DemiBold
                         }
@@ -725,7 +904,7 @@ Scope {
 
                         Text {
                             text: root.icon("brightness")
-                            color: "#f9e2af"
+                            color: root.lavender
                             font.family: "Symbols Nerd Font Mono"
                             font.pixelSize: 18
                         }
@@ -742,7 +921,7 @@ Scope {
                             Layout.preferredWidth: 42
                             horizontalAlignment: Text.AlignRight
                             text: root.brightnessText
-                            color: "#cdd6f4"
+                            color: root.text
                             font.pixelSize: 12
                             font.weight: Font.DemiBold
                         }
@@ -760,8 +939,8 @@ Scope {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 68
                     radius: 14
-                    color: root.networkText === "offline" ? "#181825" : "#89b4fa"
-                    border.color: "#313244"
+                    color: root.mantle
+                    border.color: root.networkText.toLowerCase() === "offline" ? root.surface0 : root.lavender
                     border.width: 1
 
                     RowLayout {
@@ -771,7 +950,7 @@ Scope {
 
                         Text {
                             text: root.icon("network")
-                            color: root.networkText === "offline" ? "#6c7086" : "#11111b"
+                            color: root.networkText.toLowerCase() === "offline" ? root.overlay0 : root.lavender
                             font.family: "Symbols Nerd Font Mono"
                             font.pixelSize: 18
                         }
@@ -780,8 +959,8 @@ Scope {
                             Layout.fillWidth: true
                             spacing: 1
 
-                            Text { text: "Network"; color: root.networkText === "offline" ? "#cdd6f4" : "#11111b"; font.pixelSize: 12; font.weight: Font.DemiBold }
-                            Text { text: root.networkText; color: root.networkText === "offline" ? "#a6adc8" : "#313244"; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
+                            Text { text: "Network"; color: root.text; font.pixelSize: 12; font.weight: Font.DemiBold }
+                            Text { text: root.networkText; color: root.subtext0; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
                         }
                     }
 
@@ -795,8 +974,8 @@ Scope {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 68
                     radius: 14
-                    color: root.vpnText === "off" ? "#181825" : "#a6e3a1"
-                    border.color: "#313244"
+                    color: root.mantle
+                    border.color: root.vpnText.toLowerCase() === "off" ? root.surface0 : root.lavender
                     border.width: 1
 
                     RowLayout {
@@ -806,7 +985,7 @@ Scope {
 
                         Text {
                             text: root.icon("vpn")
-                            color: root.vpnText === "off" ? "#6c7086" : "#11111b"
+                            color: root.vpnText.toLowerCase() === "off" ? root.overlay0 : root.lavender
                             font.family: "Symbols Nerd Font Mono"
                             font.pixelSize: 18
                         }
@@ -815,8 +994,8 @@ Scope {
                             Layout.fillWidth: true
                             spacing: 1
 
-                            Text { text: "VPN"; color: root.vpnText === "off" ? "#cdd6f4" : "#11111b"; font.pixelSize: 12; font.weight: Font.DemiBold }
-                            Text { text: root.vpnText; color: root.vpnText === "off" ? "#a6adc8" : "#313244"; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
+                            Text { text: "VPN"; color: root.text; font.pixelSize: 12; font.weight: Font.DemiBold }
+                            Text { text: root.vpnText; color: root.subtext0; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
                         }
                     }
 
@@ -830,8 +1009,8 @@ Scope {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 68
                     radius: 14
-                    color: root.bluetoothText === "on" ? "#74c7ec" : "#181825"
-                    border.color: "#313244"
+                    color: root.mantle
+                    border.color: root.bluetoothText.toLowerCase() === "on" ? root.lavender : root.surface0
                     border.width: 1
 
                     RowLayout {
@@ -841,7 +1020,7 @@ Scope {
 
                         Text {
                             text: root.icon("bluetooth")
-                            color: root.bluetoothText === "on" ? "#11111b" : "#6c7086"
+                            color: root.bluetoothText.toLowerCase() === "on" ? root.lavender : root.overlay0
                             font.family: "Symbols Nerd Font Mono"
                             font.pixelSize: 18
                         }
@@ -850,8 +1029,8 @@ Scope {
                             Layout.fillWidth: true
                             spacing: 1
 
-                            Text { text: "Bluetooth"; color: root.bluetoothText === "on" ? "#11111b" : "#cdd6f4"; font.pixelSize: 12; font.weight: Font.DemiBold }
-                            Text { text: root.bluetoothText; color: root.bluetoothText === "on" ? "#313244" : "#a6adc8"; font.pixelSize: 11 }
+                            Text { text: "Bluetooth"; color: root.text; font.pixelSize: 12; font.weight: Font.DemiBold }
+                            Text { text: root.bluetoothText; color: root.subtext0; font.pixelSize: 11 }
                         }
                     }
 
@@ -865,8 +1044,8 @@ Scope {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 68
                     radius: 14
-                    color: root.doNotDisturb ? "#f38ba8" : "#181825"
-                    border.color: "#313244"
+                    color: root.mantle
+                    border.color: root.doNotDisturb ? root.lavender : root.surface0
                     border.width: 1
 
                     RowLayout {
@@ -876,7 +1055,7 @@ Scope {
 
                         Text {
                             text: root.icon("notifications")
-                            color: root.doNotDisturb ? "#11111b" : "#6c7086"
+                            color: root.doNotDisturb ? root.lavender : root.overlay0
                             font.family: "Symbols Nerd Font Mono"
                             font.pixelSize: 18
                         }
@@ -885,8 +1064,8 @@ Scope {
                             Layout.fillWidth: true
                             spacing: 1
 
-                            Text { text: "Do Not Disturb"; color: root.doNotDisturb ? "#11111b" : "#cdd6f4"; font.pixelSize: 12; font.weight: Font.DemiBold }
-                            Text { text: root.doNotDisturb ? "On" : "Off"; color: root.doNotDisturb ? "#313244" : "#a6adc8"; font.pixelSize: 11 }
+                            Text { text: "Do Not Disturb"; color: root.text; font.pixelSize: 12; font.weight: Font.DemiBold }
+                            Text { text: root.doNotDisturb ? "On" : "Off"; color: root.subtext0; font.pixelSize: 11 }
                         }
                     }
 
@@ -905,16 +1084,16 @@ Scope {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 62
                     radius: 14
-                    color: "#181825"
-                    border.color: "#313244"
+                    color: root.mantle
+                    border.color: root.surface0
                     border.width: 1
 
                     Column {
                         anchors.centerIn: parent
                         spacing: 3
 
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: root.powerProfileText; color: "#f9e2af"; font.pixelSize: 13; font.weight: Font.DemiBold }
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: "Power Mode"; color: "#a6adc8"; font.pixelSize: 11 }
+                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: root.powerProfileText; color: root.lavender; font.pixelSize: 13; font.weight: Font.DemiBold }
+                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: "Power Mode"; color: root.subtext0; font.pixelSize: 11 }
                     }
 
                     MouseArea {
@@ -927,16 +1106,16 @@ Scope {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 62
                     radius: 14
-                    color: "#181825"
-                    border.color: "#313244"
+                    color: root.mantle
+                    border.color: root.surface0
                     border.width: 1
 
                     Column {
                         anchors.centerIn: parent
                         spacing: 3
 
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: root.batteryText; color: "#a6e3a1"; font.pixelSize: 13; font.weight: Font.DemiBold }
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: "Battery"; color: "#a6adc8"; font.pixelSize: 11 }
+                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: root.batteryText; color: root.green; font.pixelSize: 13; font.weight: Font.DemiBold }
+                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: "Battery"; color: root.subtext0; font.pixelSize: 11 }
                     }
                 }
             }
@@ -947,9 +1126,9 @@ Scope {
 
                 Repeater {
                     model: [
-                        { label: "CPU", value: root.cpuText, color: "#89b4fa" },
-                        { label: "MEM", value: root.memText, color: "#94e2d5" },
-                        { label: "TEMP", value: root.tempText, color: "#fab387" }
+                        { label: "CPU", value: root.cpuText, color: root.blue },
+                        { label: "MEM", value: root.memText, color: root.teal },
+                        { label: "TEMP", value: root.tempText, color: root.peach }
                     ]
 
                     delegate: Rectangle {
@@ -958,8 +1137,8 @@ Scope {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 56
                         radius: 14
-                        color: "#181825"
-                        border.color: "#313244"
+                        color: root.mantle
+                        border.color: root.surface0
                         border.width: 1
 
                         Column {
@@ -967,7 +1146,7 @@ Scope {
                             spacing: 2
 
                             Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.value; color: modelData.color; font.pixelSize: 13; font.weight: Font.DemiBold }
-                            Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.label; color: "#a6adc8"; font.pixelSize: 10 }
+                            Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.label; color: root.subtext0; font.pixelSize: 10 }
                         }
                     }
                 }
@@ -986,7 +1165,7 @@ Scope {
 
                 Text {
                     text: "System Tray"
-                    color: "#f5e0dc"
+                    color: root.text
                     font.pixelSize: 16
                     font.weight: Font.DemiBold
                 }
@@ -995,7 +1174,7 @@ Scope {
 
                 Text {
                     text: root.trayItemCount + " active"
-                    color: "#6c7086"
+                    color: root.overlay0
                     font.pixelSize: 12
                 }
             }
@@ -1018,8 +1197,8 @@ Scope {
                             width: parent.width
                             height: 42
                             radius: 10
-                            color: trayItemMouse.containsMouse ? "#313244" : "#181825"
-                            border.color: modelData.status === Status.NeedsAttention ? "#f38ba8" : "#313244"
+                            color: trayItemMouse.containsMouse ? root.surface0 : root.mantle
+                            border.color: modelData.status === Status.NeedsAttention ? root.red : root.surface0
                             border.width: 1
 
                             RowLayout {
@@ -1031,7 +1210,7 @@ Scope {
                                     Layout.preferredWidth: 24
                                     Layout.preferredHeight: 24
                                     radius: 7
-                                    color: "#11111b"
+                                    color: root.crust
 
                                     Image {
                                         id: trayItemIcon
@@ -1050,7 +1229,7 @@ Scope {
                                         anchors.centerIn: parent
                                         visible: trayItemIcon.status !== Image.Ready
                                         text: (modelData.title || modelData.id || "?").slice(0, 1).toUpperCase()
-                                        color: "#cba6f7"
+                                        color: root.lavender
                                         font.pixelSize: 12
                                         font.weight: Font.DemiBold
                                     }
@@ -1063,7 +1242,7 @@ Scope {
                                     Text {
                                         Layout.fillWidth: true
                                         text: modelData.tooltipTitle || modelData.title || modelData.id || "Tray item"
-                                        color: "#cdd6f4"
+                                        color: root.text
                                         font.pixelSize: 12
                                         font.weight: Font.DemiBold
                                         elide: Text.ElideRight
@@ -1073,7 +1252,7 @@ Scope {
                                     Text {
                                         Layout.fillWidth: true
                                         text: modelData.tooltipDescription || (modelData.hasMenu ? "Menu available" : "Click to activate")
-                                        color: "#a6adc8"
+                                        color: root.subtext0
                                         font.pixelSize: 11
                                         elide: Text.ElideRight
                                         textFormat: Text.PlainText
@@ -1116,14 +1295,14 @@ Scope {
 
                     Text {
                         text: root.localTime
-                        color: "#f5e0dc"
+                        color: root.text
                         font.pixelSize: 18
                         font.weight: Font.DemiBold
                     }
 
                     Text {
                         text: root.calendarTitle()
-                        color: "#a6adc8"
+                        color: root.subtext0
                         font.pixelSize: 12
                     }
                 }
@@ -1132,14 +1311,14 @@ Scope {
                     Layout.preferredWidth: 34
                     Layout.preferredHeight: 30
                     radius: 9
-                    color: "#181825"
-                    border.color: "#313244"
+                    color: root.mantle
+                    border.color: root.surface0
                     border.width: 1
 
                     Text {
                         anchors.centerIn: parent
                         text: root.icon("left")
-                        color: "#cdd6f4"
+                        color: root.text
                         font.family: "Symbols Nerd Font Mono"
                         font.pixelSize: 15
                     }
@@ -1154,14 +1333,14 @@ Scope {
                     Layout.preferredWidth: 34
                     Layout.preferredHeight: 30
                     radius: 9
-                    color: "#181825"
-                    border.color: "#313244"
+                    color: root.mantle
+                    border.color: root.surface0
                     border.width: 1
 
                     Text {
                         anchors.centerIn: parent
                         text: root.icon("right")
-                        color: "#cdd6f4"
+                        color: root.text
                         font.family: "Symbols Nerd Font Mono"
                         font.pixelSize: 15
                     }
@@ -1192,8 +1371,8 @@ Scope {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 52
                         radius: 12
-                        color: "#181825"
-                        border.color: "#313244"
+                        color: root.mantle
+                        border.color: root.surface0
                         border.width: 1
 
                         Column {
@@ -1203,7 +1382,7 @@ Scope {
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 text: modelData.time
-                                color: "#cdd6f4"
+                                color: root.text
                                 font.pixelSize: 12
                                 font.weight: Font.DemiBold
                             }
@@ -1211,7 +1390,7 @@ Scope {
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 text: modelData.city
-                                color: "#a6adc8"
+                                color: root.subtext0
                                 font.pixelSize: 10
                             }
                         }
@@ -1233,7 +1412,7 @@ Scope {
                         height: 20
                         horizontalAlignment: Text.AlignHCenter
                         text: modelData
-                        color: "#6c7086"
+                        color: root.overlay0
                         font.pixelSize: 11
                     }
                 }
@@ -1245,14 +1424,14 @@ Scope {
                         width: 46
                         height: 32
                         radius: 10
-                        color: modelData.today ? "#cba6f7" : (modelData.current ? "#181825" : "transparent")
-                        border.color: modelData.current ? "#313244" : "transparent"
+                        color: modelData.today ? root.lavender : (modelData.current ? root.mantle : "transparent")
+                        border.color: modelData.current ? root.surface0 : "transparent"
                         border.width: 1
 
                         Text {
                             anchors.centerIn: parent
                             text: modelData.day
-                            color: modelData.today ? "#11111b" : (modelData.current ? "#cdd6f4" : "#45475a")
+                            color: modelData.today ? root.base : (modelData.current ? root.text : root.surface1)
                             font.pixelSize: 12
                             font.weight: modelData.today ? Font.DemiBold : Font.Normal
                         }
@@ -1273,7 +1452,7 @@ Scope {
 
                 Text {
                     text: "Notifications"
-                    color: "#f5e0dc"
+                    color: root.text
                     font.pixelSize: 16
                     font.weight: Font.DemiBold
                 }
@@ -1306,8 +1485,8 @@ Scope {
                             width: parent.width
                             height: bodyText.text === "" ? 58 : 86
                             radius: 10
-                            color: "#181825"
-                            border.color: "#313244"
+                            color: root.mantle
+                            border.color: root.surface0
                             border.width: 1
 
                             Column {
@@ -1317,7 +1496,7 @@ Scope {
 
                                 Text {
                                     text: appName + " - " + summary
-                                    color: "#cdd6f4"
+                                    color: root.text
                                     font.pixelSize: 12
                                     font.weight: Font.DemiBold
                                     elide: Text.ElideRight
@@ -1328,7 +1507,7 @@ Scope {
                                 Text {
                                     id: bodyText
                                     text: body
-                                    color: "#a6adc8"
+                                    color: root.subtext0
                                     font.pixelSize: 11
                                     elide: Text.ElideRight
                                     width: parent.width
@@ -1351,8 +1530,8 @@ Scope {
             spacing: 14
 
             Text {
-                text: root.mediaTitle
-                color: "#f5e0dc"
+                text: root.mediaDisplayTitle
+                color: root.text
                 font.pixelSize: 16
                 font.weight: Font.DemiBold
                 elide: Text.ElideRight
@@ -1360,8 +1539,8 @@ Scope {
             }
 
             Text {
-                text: root.mediaStatus
-                color: "#a6adc8"
+                text: root.mediaStatus + " - " + root.mediaPosition + " / " + root.mediaLength
+                color: root.subtext0
                 font.pixelSize: 12
             }
 
@@ -1390,7 +1569,7 @@ Scope {
         Column {
             anchors.top: parent.top
             anchors.right: parent.right
-            anchors.topMargin: 54
+            anchors.topMargin: 58
             anchors.rightMargin: 12
             spacing: 8
 
@@ -1405,8 +1584,8 @@ Scope {
                     width: 340
                     height: body === "" ? 68 : 94
                     radius: 12
-                    color: "#11111b"
-                    border.color: "#cba6f7"
+                    color: root.crust
+                    border.color: root.lavender
                     border.width: 1
 
                     Column {
@@ -1416,7 +1595,7 @@ Scope {
 
                         Text {
                             text: appName + " - " + summary
-                            color: "#f5e0dc"
+                            color: root.text
                             font.pixelSize: 12
                             font.weight: Font.DemiBold
                             elide: Text.ElideRight
@@ -1426,7 +1605,7 @@ Scope {
 
                         Text {
                             text: body
-                            color: "#cdd6f4"
+                            color: root.text
                             font.pixelSize: 11
                             wrapMode: Text.Wrap
                             maximumLineCount: 2

@@ -178,7 +178,7 @@ in
           gaps_in = 4
           gaps_out = 8
           border_size = 2
-          col.active_border = rgb(cba6f7)
+          col.active_border = rgb(b4befe)
           col.inactive_border = rgb(313244)
           layout = dwindle
         }
@@ -244,7 +244,7 @@ in
         bind = $mod, M, exec, ${pkgs.mission-center}/bin/missioncenter
         bind = $mod, Escape, exec, ${unstable.hyprshutdown}/bin/hyprshutdown
         bind = , XF86PowerOff, exec, ${unstable.hyprshutdown}/bin/hyprshutdown
-        bind = $mod, L, exec, loginctl lock-session
+        bind = $mod, L, exec, ${pkgs.systemd}/bin/loginctl lock-session
         bind = $mod SHIFT, Q, killactive,
         bind = $mod, F, fullscreen,
         bind = $mod, V, togglefloating,
