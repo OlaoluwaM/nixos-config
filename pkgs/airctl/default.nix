@@ -40,6 +40,15 @@ python3Packages.buildPythonApplication {
     rich
   ];
 
+  pythonRelaxDeps = [
+    "nmcli"
+    "rich"
+  ];
+
+  pythonRemoveDeps = [
+    "nuitka"
+  ];
+
   postInstall = ''
     install -Dm644 airctl.desktop $out/share/applications/airctl.desktop
     install -Dm644 assets/airctl.png $out/share/icons/hicolor/256x256/apps/airctl.png
