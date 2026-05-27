@@ -333,33 +333,11 @@ in
     };
 
     xdg.configFile = {
-      # Quickshell resolves sibling QML component types relative to the resolved
-      # shell.qml store path, not just the ~/.config symlink path. Link every
-      # file from one generated store directory so types like Bar, Popovers, and
-      # Theme are visible beside the generated shell.qml.
-      "quickshell/hyprland/shell.qml".source = "${quickshellConfigDir}/shell.qml";
-      "quickshell/hyprland/qmldir".source = "${quickshellConfigDir}/qmldir";
-      "quickshell/hyprland/Theme.qml".source = "${quickshellConfigDir}/Theme.qml";
-      "quickshell/hyprland/Icons.qml".source = "${quickshellConfigDir}/Icons.qml";
-      "quickshell/hyprland/ShellIcon.qml".source = "${quickshellConfigDir}/ShellIcon.qml";
-      "quickshell/hyprland/MarqueeText.qml".source = "${quickshellConfigDir}/MarqueeText.qml";
-      "quickshell/hyprland/BarCapsule.qml".source = "${quickshellConfigDir}/BarCapsule.qml";
-      "quickshell/hyprland/IconButton.qml".source = "${quickshellConfigDir}/IconButton.qml";
-      "quickshell/hyprland/HoverTooltip.qml".source = "${quickshellConfigDir}/HoverTooltip.qml";
-      "quickshell/hyprland/ActionButton.qml".source = "${quickshellConfigDir}/ActionButton.qml";
-      "quickshell/hyprland/StyledSlider.qml".source = "${quickshellConfigDir}/StyledSlider.qml";
-      "quickshell/hyprland/NotificationActions.qml".source =
-        "${quickshellConfigDir}/NotificationActions.qml";
-      "quickshell/hyprland/Bar.qml".source = "${quickshellConfigDir}/Bar.qml";
-      "quickshell/hyprland/Popovers.qml".source = "${quickshellConfigDir}/Popovers.qml";
-      "quickshell/hyprland/QuickSettings.qml".source = "${quickshellConfigDir}/QuickSettings.qml";
-      "quickshell/hyprland/CalendarPanel.qml".source = "${quickshellConfigDir}/CalendarPanel.qml";
-      "quickshell/hyprland/MediaPanel.qml".source = "${quickshellConfigDir}/MediaPanel.qml";
-      "quickshell/hyprland/TrayPanel.qml".source = "${quickshellConfigDir}/TrayPanel.qml";
-      "quickshell/hyprland/NotificationPanel.qml".source = "${quickshellConfigDir}/NotificationPanel.qml";
-      "quickshell/hyprland/ToastNotifications.qml".source =
-        "${quickshellConfigDir}/ToastNotifications.qml";
-      "quickshell/hyprland/OsdOverlay.qml".source = "${quickshellConfigDir}/OsdOverlay.qml";
+      # Quickshell resolves sibling QML component types relative to the loaded
+      # shell.qml. Keep the generated shell, generated theme, and copied
+      # components in one managed directory so local types such as Bar and
+      # Popovers are visible.
+      "quickshell/hyprland".source = quickshellConfigDir;
 
       # Some desktop tools look at xdg-terminals.list to decide which terminal
       # app should be treated as the default.

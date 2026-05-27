@@ -139,9 +139,6 @@ Item {
                         text: bar.shell.cpuText
                         color: Theme.statsCpu
                         font.pixelSize: 13
-                        horizontalAlignment: Text.AlignLeft
-
-                        Layout.preferredWidth: 30
                     }
                 }
 
@@ -177,9 +174,6 @@ Item {
                         text: bar.shell.memText
                         color: Theme.statsMem
                         font.pixelSize: 13
-                        horizontalAlignment: Text.AlignLeft
-
-                        Layout.preferredWidth: 30
                     }
                 }
 
@@ -215,9 +209,6 @@ Item {
                         text: bar.shell.tempText
                         color: Theme.statsTemp
                         font.pixelSize: 13
-                        horizontalAlignment: Text.AlignLeft
-
-                        Layout.preferredWidth: 30
                     }
                 }
 

@@ -5,6 +5,7 @@
   wrapGAppsHook4,
   gobject-introspection,
   gtk4,
+  gtk4-layer-shell,
   networkmanager,
   ...
 }:
@@ -28,6 +29,7 @@ python3Packages.buildPythonApplication {
 
   buildInputs = [
     gtk4
+    gtk4-layer-shell
   ];
 
   build-system = with python3Packages; [
@@ -49,6 +51,11 @@ python3Packages.buildPythonApplication {
     "nuitka"
   ];
 
+  postPatch = ''
+    substituteInPlace pyproject.toml \
+      --replace-fail 'packages = ["airctl"]' 'packages = { find = { include = ["airctl*"] } }'
+  '';
+
   postInstall = ''
     install -Dm644 airctl.desktop $out/share/applications/airctl.desktop
     install -Dm644 assets/airctl.png $out/share/icons/hicolor/256x256/apps/airctl.png
@@ -68,6 +75,9 @@ python3Packages.buildPythonApplication {
 
   pythonImportsCheck = [
     "airctl"
+    "airctl.ui.nm_error_widget"
+    "airctl.utils.cli_help_messages"
+    "airctl.window.overlay"
   ];
 
   meta = {
