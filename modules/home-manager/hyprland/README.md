@@ -362,7 +362,7 @@ The quick settings popover shows the current power profile and cycles it on clic
 The widget is intentionally backend-generic:
 
 - primary backend: `powerprofilesctl`, provided by `power-profiles-daemon`;
-- fallback backend: `asusctl`, only if the command is already available and the generic backend cannot be used.
+- fallback backend: `asusctl`, only if the command is already available, the machine reports itself as ASUS hardware, and the generic backend cannot be used.
 
 This keeps Quickshell decoupled from host-specific ASUS policy. On Boreas, the system profile already enables `power-profiles-daemon` and `asusd`, with ASUS power behavior defined in `hosts/boreas/default.nix`.
 
@@ -373,7 +373,14 @@ hypr-shell-power-profile status
 hypr-shell-power-profile cycle
 powerprofilesctl get
 powerprofilesctl list
+asusctl profile get
+asusctl profile next
+asusctl profile set Balanced
 ```
+
+The TTY test uses the host's current PATH instead of Home Manager's Nix wrapper.
+Power profile switching in the TTY test only works if the host already has a
+usable `powerprofilesctl` or a working `asusctl`/`asusd` setup.
 
 ## Removable Media
 

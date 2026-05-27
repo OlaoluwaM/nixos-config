@@ -24,13 +24,29 @@ read_powerprofilesctl() {
 	powerprofilesctl get 2>/dev/null || true
 }
 
-# ASUS-specific fallback. If asusctl is not installed, return failure so callers
-# can ignore it.
+# ASUS-specific fallback. Nix can put asusctl on any machine, so checking only
+# for the command is not enough. Only try it when the hardware says it is ASUS.
+is_asus_machine() {
+	vendor="$(cat /sys/class/dmi/id/sys_vendor 2>/dev/null || true)"
+	case "$vendor" in
+	*ASUS* | *ASUSTeK*) return 0 ;;
+	*) return 1 ;;
+	esac
+}
+
 read_asusctl() {
 	command -v asusctl >/dev/null 2>&1 || return 1
-	asusctl profile get 2>/dev/null |
-		sed -n 's/.*Active profile: //p' |
-		head -n 1
+	is_asus_machine || return 1
+
+	profile="$(asusctl profile get 2>/dev/null || true)"
+	case "$profile" in
+	Quiet | Balanced | Performance) printf '%s\n' "$profile" ;;
+	*)
+		printf '%s\n' "$profile" |
+			sed -n -e 's/.*Active profile: //p' -e 's/.*Active profile is //p' |
+			head -n 1
+		;;
+	esac
 }
 
 # Produce the short label shown in the UI.
@@ -72,7 +88,8 @@ cycle_powerprofilesctl() {
 # ASUS fallback cycle command.
 cycle_asusctl() {
 	command -v asusctl >/dev/null 2>&1 || return 1
-	asusctl profile -n
+	is_asus_machine || return 1
+	asusctl profile next
 }
 
 set_powerprofilesctl() {
@@ -89,6 +106,7 @@ set_powerprofilesctl() {
 
 set_asusctl() {
 	command -v asusctl >/dev/null 2>&1 || return 1
+	is_asus_machine || return 1
 
 	case "$1" in
 	power-saver) profile="Quiet" ;;
@@ -100,7 +118,7 @@ set_asusctl() {
 		;;
 	esac
 
-	asusctl profile -P "$profile"
+	asusctl profile set "$profile"
 }
 
 case "${1:-status}" in
@@ -108,10 +126,17 @@ status)
 	current_profile
 	;;
 cycle)
-	if ! cycle_powerprofilesctl 2>/dev/null; then
-		cycle_asusctl 2>/dev/null || true
+	changed=0
+	if cycle_powerprofilesctl 2>/dev/null; then
+		changed=1
+	elif cycle_asusctl 2>/dev/null; then
+		changed=1
 	fi
 	current_profile
+	if [ "$changed" -eq 0 ]; then
+		printf 'hypr-shell-power-profile: no usable power profile backend found\n' >&2
+		exit 1
+	fi
 	;;
 set)
 	if [ -z "${2:-}" ]; then
@@ -119,10 +144,17 @@ set)
 		exit 64
 	fi
 
-	if ! set_powerprofilesctl "$2" 2>/dev/null; then
-		set_asusctl "$2" 2>/dev/null || true
+	changed=0
+	if set_powerprofilesctl "$2" 2>/dev/null; then
+		changed=1
+	elif set_asusctl "$2" 2>/dev/null; then
+		changed=1
 	fi
 	current_profile
+	if [ "$changed" -eq 0 ]; then
+		printf 'hypr-shell-power-profile: no usable power profile backend found\n' >&2
+		exit 1
+	fi
 	;;
 *)
 	printf 'Usage: %s [status|cycle|set PROFILE]\n' "$0" >&2

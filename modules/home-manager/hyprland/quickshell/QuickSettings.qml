@@ -133,24 +133,25 @@ ColumnLayout {
 
         Repeater {
             model: [
-                { icon: "lock",     action: "lock",     danger: false, toggle: false },
-                { icon: "logout",   action: "logout",   danger: false, toggle: false },
-                { icon: "airplane", action: "airplane", danger: false, toggle: true  },
-                { icon: "power",    action: "power",    danger: true,  toggle: false }
+                { icon: "lock",             activeIcon: "lock",             action: "lock",     danger: false, toggle: false },
+                { icon: "notifications",    activeIcon: "notificationsOff", action: "dnd",      danger: false, toggle: true  },
+                { icon: "airplane",         activeIcon: "airplane",         action: "airplane", danger: false, toggle: true  },
+                { icon: "power",            activeIcon: "power",            action: "power",    danger: true,  toggle: false }
             ]
 
             delegate: IconButton {
                 id: toggleBtn
                 required property var modelData
 
-                active: (modelData.toggle && quickSettings.shell.airplaneMode)
+                active: (modelData.action === "dnd" && quickSettings.shell.doNotDisturb)
+                    || (modelData.action === "airplane" && quickSettings.shell.airplaneMode)
                     || (modelData.action === "power" && quickSettings.showPowerMenu)
                 activeColor: modelData.danger ? Theme.error : Theme.primary
                 accessibleName: modelData.action
                 bordered: true
                 buttonSize: 42
                 danger: modelData.danger
-                iconName: modelData.icon
+                iconName: toggleBtn.active ? modelData.activeIcon : modelData.icon
                 iconSize: 15
                 normalColor: "transparent"
 
@@ -159,7 +160,7 @@ ColumnLayout {
 
                 onClicked: {
                     if (toggleBtn.modelData.action === "lock") quickSettings.shell.runLockCommand();
-                    else if (toggleBtn.modelData.action === "logout") quickSettings.shell.runLogoutCommand();
+                    else if (toggleBtn.modelData.action === "dnd") quickSettings.shell.doNotDisturb = !quickSettings.shell.doNotDisturb;
                     else if (toggleBtn.modelData.action === "airplane") quickSettings.shell.toggleAirplaneMode();
                     else if (toggleBtn.modelData.action === "power") quickSettings.showPowerMenu = !quickSettings.showPowerMenu;
                 }
@@ -176,6 +177,7 @@ ColumnLayout {
 
         Repeater {
             model: [
+                { label: qsTr("Log Out"),   icon: "logout",  action: "logout" },
                 { label: qsTr("Reboot"),    icon: "refresh", action: "reboot" },
                 { label: qsTr("Suspend"),   icon: "sleep",   action: "suspend" },
                 { label: qsTr("Power Off"), icon: "power",   action: "poweroff" }
@@ -199,7 +201,8 @@ ColumnLayout {
                 Layout.preferredHeight: 42
 
                 onClicked: {
-                    if (powerBtn.modelData.action === "reboot") quickSettings.shell.runRebootCommand();
+                    if (powerBtn.modelData.action === "logout") quickSettings.shell.runLogoutCommand();
+                    else if (powerBtn.modelData.action === "reboot") quickSettings.shell.runRebootCommand();
                     else if (powerBtn.modelData.action === "suspend") quickSettings.shell.runSleepCommand();
                     else if (powerBtn.modelData.action === "poweroff") quickSettings.shell.runPowerOffCommand();
                 }
