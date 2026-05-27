@@ -29,7 +29,7 @@ read_powerprofilesctl() {
 is_asus_machine() {
 	vendor="$(cat /sys/class/dmi/id/sys_vendor 2>/dev/null || true)"
 	case "$vendor" in
-	*ASUS* | *ASUSTeK*) return 0 ;;
+	*ASUS*) return 0 ;;
 	*) return 1 ;;
 	esac
 }
