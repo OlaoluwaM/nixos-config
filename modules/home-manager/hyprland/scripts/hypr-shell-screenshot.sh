@@ -15,15 +15,36 @@ set -euo pipefail
 # - jq extracts values from Hyprland's JSON.
 # - satty opens the screenshot editor/annotator.
 # - wl-copy copies the result to the Wayland clipboard.
+# - notify-send shows a short completion message after Satty closes.
+# - xdg-open opens the screenshots folder when the notification action is used.
 #
 # The colors in area_geometry are the selection overlay colors. They were tuned
 # to match the lavender/accent direction of the ricing.
 
 mode="${1:-area}"
 screenshot_dir="${XDG_PICTURES_DIR:-"$HOME/Pictures"}/Screenshots"
-output_pattern="$screenshot_dir/Screenshot-%Y%m%d-%H%M%S.png"
+output_pattern="$screenshot_dir/screenshot-%Y%m%d-%H%M%S.png"
 
 mkdir -p "$screenshot_dir"
+
+notify_location() {
+	local title="$1"
+	local body="$2"
+	local location="$3"
+
+	(
+		action="$(notify-send \
+			--app-name "Hypr Shell" \
+			--icon folder-pictures \
+			--action=open="Open Folder" \
+			"$title" \
+			"$body" || true)"
+
+		if [[ "$action" == "open" ]]; then
+			xdg-open "$location" >/dev/null 2>&1 &
+		fi
+	) &
+}
 
 # Shared satty options. These control editor behavior after a screenshot is
 # taken. For example, --initial-tool arrow means satty opens with the arrow tool
@@ -73,6 +94,7 @@ capture_region() {
 
 	[[ -n "$geometry" ]] || exit 0
 	grim -g "$geometry" -t ppm - | satty "${satty_args[@]}"
+	notify_location "Screenshot saved" "$screenshot_dir" "$screenshot_dir"
 }
 
 case "$mode" in
@@ -81,6 +103,7 @@ area)
 	;;
 full)
 	grim -t ppm - | satty "${satty_args[@]}"
+	notify_location "Screenshot saved" "$screenshot_dir" "$screenshot_dir"
 	;;
 window)
 	capture_region "$(window_geometry || true)"

@@ -227,6 +227,9 @@ To remove this temporary TTY test harness after it has served its purpose:
 | `F6` | Region screenshot, then annotate/copy/save in Satty |
 | `Shift+F6` | Full screenshot, then annotate/copy/save in Satty |
 | `Ctrl+F6` | Active-window screenshot, then annotate/copy/save in Satty |
+| `Super+Shift+R` | Record a selected region |
+| `Super+Ctrl+R` | Record the full screen |
+| `Super+Alt+R` | Stop the active screen recording |
 | `Super+E` | Open Nautilus |
 | `Super+Q` | Toggle Quickshell quick settings |
 | `Super+N` | Open network connection editor |
@@ -308,6 +311,38 @@ Screenshots are piped into Satty for annotation. Pressing Enter copies the edite
 ```
 
 The selection UI uses Catppuccin-ish colors to match the shell.
+
+After Satty closes successfully, the script sends a short "Screenshot saved"
+notification. Use the `Open Folder` action on that notification to open the
+screenshots folder in the file manager.
+
+## Screen Recording
+
+Lightweight recording uses `wf-recorder`.
+
+Recordings are saved under:
+
+```text
+~/Videos/Screencasts/
+```
+
+The recording command sends a notification when recording starts. The same
+command keeps running while `wf-recorder` records. When `Super+Alt+R` stops
+`wf-recorder`, the recorder finalizes the video file, the original command
+continues, and then it sends the "Recording saved" notification.
+Use the `Open Folder` action on that notification to open the screencasts folder
+in the file manager.
+
+Useful commands:
+
+```sh
+hypr-shell-record area
+hypr-shell-record full
+hypr-shell-record stop
+```
+
+OBS is still the better tool for scene-based recording, streaming, camera
+layouts, and audio mixing. `wf-recorder` is the quick clip tool.
 
 ## Lock And Idle
 

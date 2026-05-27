@@ -15,8 +15,9 @@ let
   music = xdgDirs.music;
   pictures = xdgDirs.pictures;
   videos = xdgDirs.videos;
-  screenshots = "${pictures}/screenshots";
-  screencasts = "${videos}/screencasts";
+  # Upper case because that is how Gnome has it and changing it isn't easy and we want it to be unified across desktop profiles, that is all screenshots and screencasts should be stored in the same place
+  screenshots = "${pictures}/Screenshots";
+  screencasts = "${videos}/Screencasts";
   wallpapers = "${pictures}/wallpapers";
   enableAsusRogKeybindings = hostConfig.enableAsusRogKeybindings or false;
   # dconf stores GNOME settings as typed GVariant values; these helpers
@@ -91,7 +92,7 @@ let
     file://${screencasts}
     file://${screenshots}
     file://${xdgDirs.desktop}
-    file://${wallpapers} wallpapers
+    file://${wallpapers}
     file://${documents}/library/non-technical-shelf
     file://${documents}/library/technical-shelf
     file://${documents}

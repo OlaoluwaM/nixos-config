@@ -127,11 +127,26 @@ let
       grim
       hyprland
       jq
+      libnotify
       satty
       slurp
       wl-clipboard
+      xdg-utils
     ];
     text = builtins.readFile ./scripts/hypr-shell-screenshot.sh;
+  };
+
+  screenrecordScript = pkgs.writeShellApplication {
+    name = "hypr-shell-record";
+    runtimeInputs = with pkgs; [
+      coreutils
+      procps
+      slurp
+      wf-recorder
+      libnotify
+      xdg-utils
+    ];
+    text = builtins.readFile ./scripts/hypr-shell-screenrecord.sh;
   };
 
   # themeQml is the generated Theme.qml singleton. Colors come from
@@ -285,6 +300,9 @@ in
       statusScript
       timezoneScript
       screenshotScript
+      screenrecordScript
+
+      wf-recorder
     ];
 
     home.sessionVariables = {
@@ -489,6 +507,9 @@ in
         bind = , F6, exec, ${screenshotScript}/bin/hypr-shell-screenshot area
         bind = SHIFT, F6, exec, ${screenshotScript}/bin/hypr-shell-screenshot full
         bind = CTRL, F6, exec, ${screenshotScript}/bin/hypr-shell-screenshot window
+        bind = $mod SHIFT, R, exec, ${screenrecordScript}/bin/hypr-shell-record area
+        bind = $mod CTRL, R, exec, ${screenrecordScript}/bin/hypr-shell-record full
+        bind = $mod ALT, R, exec, ${screenrecordScript}/bin/hypr-shell-record stop
         bind = $mod, E, exec, ${pkgs.nautilus}/bin/nautilus
         bind = $mod, Q, exec, ${popupScript}/bin/hypr-shell-popup quick-settings
         bind = $mod, N, exec, ${airctl}/bin/airctl

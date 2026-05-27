@@ -18,8 +18,9 @@ let
     "${data}/icons"
     "${data}/themes"
     "${data}/fonts"
-    "${config.xdg.userDirs.videos}/screencasts"
-    "${pictures}/screenshots"
+    # See ./gnome/default.nix on why these two need to be title caseed
+    "${config.xdg.userDirs.videos}/Screencasts"
+    "${pictures}/Screenshots"
     "${pictures}/wallpapers"
     "${home}/sys-bak"
   ];
@@ -74,54 +75,57 @@ in
       # foo.desktop.
       # Existing local launchers are skipped on purpose so hand-written entries
       # and app-created entries are not overwritten.
-      home.activation.linkProfileDesktopFiles = lib.hm.dag.entryAfter [
-        "installPackages"
-        "linkGeneration"
-      ] ''
-        applicationsDir=${lib.escapeShellArg applicationsDir}
-        profileApplicationsDir=${lib.escapeShellArg profileApplicationsDir}
+      home.activation.linkProfileDesktopFiles =
+        lib.hm.dag.entryAfter
+          [
+            "installPackages"
+            "linkGeneration"
+          ]
+          ''
+            applicationsDir=${lib.escapeShellArg applicationsDir}
+            profileApplicationsDir=${lib.escapeShellArg profileApplicationsDir}
 
-        # Make sure the user-local launcher directory exists.
-        run mkdir -p $VERBOSE_ARG "$applicationsDir"
+            # Make sure the user-local launcher directory exists.
+            run mkdir -p $VERBOSE_ARG "$applicationsDir"
 
-        # Remove the older "applications/nix" shortcut if it is still around.
-        # It helped launchers notice apps, but it also renamed launcher IDs to
-        # nix-*.desktop and could create duplicate results.
-        if [[ -L "$applicationsDir/nix" ]]; then
-          run rm $VERBOSE_ARG "$applicationsDir/nix"
-        fi
-
-        # Remove links this activation created for apps that are no longer in
-        # the current Home Manager profile.
-        for linkedDesktopFile in "$applicationsDir"/*.desktop; do
-          [[ -L "$linkedDesktopFile" ]] || continue
-
-          linkTarget="$(readlink "$linkedDesktopFile")"
-
-          if [[ "$linkTarget" == "$profileApplicationsDir"/*.desktop && ! -e "$linkTarget" ]]; then
-            run rm $VERBOSE_ARG "$linkedDesktopFile"
-          fi
-        done
-
-        # Put each Home Manager launcher directly in the local launcher
-        # directory, keeping the same filename and therefore the same app ID.
-        for desktopFile in "$profileApplicationsDir"/*.desktop; do
-          [[ -e "$desktopFile" ]] || continue
-
-          target="$applicationsDir/$(basename "$desktopFile")"
-
-          # Leave local launchers alone unless they are links we created before.
-          if [[ -e "$target" || -L "$target" ]]; then
-            if [[ ! -L "$target" || "$(readlink "$target")" != "$profileApplicationsDir"/*.desktop ]]; then
-              _i "Skipping unmanaged desktop entry $target"
-              continue
+            # Remove the older "applications/nix" shortcut if it is still around.
+            # It helped launchers notice apps, but it also renamed launcher IDs to
+            # nix-*.desktop and could create duplicate results.
+            if [[ -L "$applicationsDir/nix" ]]; then
+              run rm $VERBOSE_ARG "$applicationsDir/nix"
             fi
-          fi
 
-          # Refresh the link so it follows the currently active generation.
-          run ln -sfnT $VERBOSE_ARG "$desktopFile" "$target"
-        done
-      '';
+            # Remove links this activation created for apps that are no longer in
+            # the current Home Manager profile.
+            for linkedDesktopFile in "$applicationsDir"/*.desktop; do
+              [[ -L "$linkedDesktopFile" ]] || continue
+
+              linkTarget="$(readlink "$linkedDesktopFile")"
+
+              if [[ "$linkTarget" == "$profileApplicationsDir"/*.desktop && ! -e "$linkTarget" ]]; then
+                run rm $VERBOSE_ARG "$linkedDesktopFile"
+              fi
+            done
+
+            # Put each Home Manager launcher directly in the local launcher
+            # directory, keeping the same filename and therefore the same app ID.
+            for desktopFile in "$profileApplicationsDir"/*.desktop; do
+              [[ -e "$desktopFile" ]] || continue
+
+              target="$applicationsDir/$(basename "$desktopFile")"
+
+              # Leave local launchers alone unless they are links we created before.
+              if [[ -e "$target" || -L "$target" ]]; then
+                if [[ ! -L "$target" || "$(readlink "$target")" != "$profileApplicationsDir"/*.desktop ]]; then
+                  _i "Skipping unmanaged desktop entry $target"
+                  continue
+                fi
+              fi
+
+              # Refresh the link so it follows the currently active generation.
+              run ln -sfnT $VERBOSE_ARG "$desktopFile" "$target"
+            done
+          '';
     }
   ];
 }
