@@ -36,7 +36,7 @@ ColumnLayout {
     RowLayout {
         Layout.fillWidth: true
 
-        Text {
+        StyledText {
             text: qsTr("Notifications")
             color: Theme.text
             font.pixelSize: 16
@@ -44,7 +44,7 @@ ColumnLayout {
             Layout.alignment: Qt.AlignBaseline
         }
 
-        Text {
+        StyledText {
             text: root.notifications.historyModel.count
             color: Theme.textDim
             font.pixelSize: 13
@@ -54,7 +54,7 @@ ColumnLayout {
 
         Item { Layout.fillWidth: true }
 
-        Text {
+        StyledText {
             text: qsTr("Clear")
             color: clearMouse.containsMouse ? Theme.text : Theme.textSecondary
             font.pixelSize: 13
@@ -88,7 +88,7 @@ ColumnLayout {
                 Layout.alignment: Qt.AlignHCenter
             }
 
-            Text {
+            StyledText {
                 text: qsTr("All clear")
                 color: Theme.textDim
                 font.pixelSize: 14

@@ -123,7 +123,7 @@ BarCapsule {
                     font.weight: Font.DemiBold
                 }
 
-                Text {
+                StyledText {
                     width: parent.width
                     text: root.status.mediaPosition + " / " + root.status.mediaLength
                     color: Theme.capsuleTextColor(root.popups.activePopup === "media", root.hovered)

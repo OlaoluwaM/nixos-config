@@ -82,7 +82,7 @@ ColumnLayout {
             onClicked: trayPanel.activeMenuSource = null
         }
 
-        Text {
+        StyledText {
             text: trayPanel.activeMenuSource
                 ? trayPanel.cleanTrayName(trayPanel.activeMenuSource)
                 : "System Tray"
@@ -143,7 +143,7 @@ ColumnLayout {
                             visible: status === Image.Ready
                         }
 
-                        Text {
+                        StyledText {
                             anchors.centerIn: parent
                             visible: trayIcon.status !== Image.Ready
                             text: (trayDelegate.modelData.title || trayDelegate.modelData.id || "?").slice(0, 1).toUpperCase()
@@ -232,7 +232,7 @@ ColumnLayout {
                                     asynchronous: true
                                 }
 
-                                Text {
+                                StyledText {
                                     text: menuEntry.modelData.text || ""
                                     color: menuEntry.modelData.enabled ? Theme.text : Theme.textSecondary
                                     font.pixelSize: 13
@@ -240,7 +240,7 @@ ColumnLayout {
                                     Layout.fillWidth: true
                                 }
 
-                                Text {
+                                StyledText {
                                     visible: menuEntry.modelData.checkState === Qt.Checked
                                     text: "✓"
                                     color: Theme.primary

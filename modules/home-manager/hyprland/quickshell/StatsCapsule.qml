@@ -27,7 +27,7 @@ BarCapsule {
                 spacing: 5
 
                 ShellIcon { name: "cpu"; iconColor: Theme.metricCpu; implicitSize: 16 }
-                Text {
+                StyledText {
                     text: root.status.cpuText
                     color: Theme.metricCpu
                     font.pixelSize: 13
@@ -62,7 +62,7 @@ BarCapsule {
                 spacing: 5
 
                 ShellIcon { name: "memory"; iconColor: Theme.metricMemory; implicitSize: 16 }
-                Text {
+                StyledText {
                     text: root.status.memText
                     color: Theme.metricMemory
                     font.pixelSize: 13
@@ -97,7 +97,7 @@ BarCapsule {
                 spacing: 5
 
                 ShellIcon { name: "temp"; iconColor: Theme.metricTemperature; implicitSize: 16 }
-                Text {
+                StyledText {
                     text: root.status.tempText
                     color: Theme.metricTemperature
                     font.pixelSize: 13

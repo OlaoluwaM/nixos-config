@@ -90,14 +90,14 @@ Rectangle {
             spacing: 6
             Layout.fillWidth: true
 
-            Text {
+            StyledText {
                 text: root.appName
                 color: Theme.textSecondary
                 font.pixelSize: 12
                 font.weight: root.contentCentered ? Font.DemiBold : Font.Normal
             }
 
-            Text {
+            StyledText {
                 text: root.timeText
                 color: Theme.textDim
                 font.pixelSize: 12
@@ -135,7 +135,7 @@ Rectangle {
             }
         }
 
-        Text {
+        StyledText {
             text: root.summary
             color: Theme.text
             font.pixelSize: 13
@@ -146,7 +146,7 @@ Rectangle {
             Layout.fillWidth: true
         }
 
-        Text {
+        StyledText {
             text: root.body
             color: Theme.textSecondary
             font.pixelSize: 12

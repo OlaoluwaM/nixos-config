@@ -16,7 +16,7 @@ Item {
     readonly property real overflow: Math.max(0, label.implicitWidth - root.width)
     readonly property bool scrolling: overflow > 0 && root.width > 0
 
-    Text {
+    StyledText {
         id: label
         y: 0
 

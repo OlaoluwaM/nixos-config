@@ -9,7 +9,7 @@ ColumnLayout {
     required property var status
     spacing: 14
 
-    Text {
+    StyledText {
         text: status.mediaDisplayTitle
         color: Theme.text
         font.pixelSize: 16
@@ -18,7 +18,7 @@ ColumnLayout {
         Layout.fillWidth: true
     }
 
-    Text {
+    StyledText {
         text: status.mediaStatus + " — " + status.mediaPosition + " / " + status.mediaLength
         color: Theme.textSecondary
         font.pixelSize: 12

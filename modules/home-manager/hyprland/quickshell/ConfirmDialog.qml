@@ -166,7 +166,7 @@ PanelWindow {
                 implicitSize: 28
             }
 
-            Text {
+            StyledText {
                 Layout.alignment: Qt.AlignHCenter
                 text: confirmWindow.dialogTitle
                 color: Theme.text
@@ -174,7 +174,7 @@ PanelWindow {
                 font.weight: Font.DemiBold
             }
 
-            Text {
+            StyledText {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.maximumWidth: contentCol.width
                 text: confirmWindow.dialogDescription
@@ -214,7 +214,7 @@ PanelWindow {
                     }
                 }
 
-                Text {
+                StyledText {
                     Layout.alignment: Qt.AlignHCenter
                     text: qsTr("Confirming in %1s").arg(countdown.remaining)
                     color: Theme.textDim

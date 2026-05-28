@@ -29,6 +29,10 @@ QtObject {
     readonly property color metricMemory:   "#94e2d5"
     readonly property color metricTemperature: "#fab387"
 
+    // ── Fonts ───────────────────────────────────────────────────────────
+    readonly property string fontFamily:     "SF Pro Display"
+    readonly property string monoFontFamily: "Berkeley Mono"
+
     // ── Capsule geometry ────────────────────────────────────────────────
     readonly property int capsuleHeight:        46
     readonly property int capsuleRadius:        10

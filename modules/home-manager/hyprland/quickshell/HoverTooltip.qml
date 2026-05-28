@@ -21,7 +21,7 @@ Rectangle {
     border.width: 1
     z: 10
 
-    Text {
+    StyledText {
         id: tooltipText
 
         anchors.centerIn: parent

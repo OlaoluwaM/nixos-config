@@ -28,6 +28,7 @@ let
 
   cfg = config.local.hyprland;
   theme = config.local.theme.colors;
+  fonts = config.local.fonts;
   stripHash = s: lib.removePrefix "#" s;
 
   airctl = pkgs.callPackage ../../../pkgs/airctl { };
@@ -178,6 +179,10 @@ let
         readonly property color metricMemory:   "${theme.metricMemory}"
         readonly property color metricTemperature: "${theme.metricTemperature}"
 
+        // ── Fonts (generated from local.fonts) ──────────────────────────
+        readonly property string fontFamily:     "${fonts.shell.family}"
+        readonly property string monoFontFamily: "${fonts.mono.family}"
+
         // ── Capsule geometry ────────────────────────────────────────────
         readonly property int capsuleHeight:        46
         readonly property int capsuleRadius:        10
@@ -258,11 +263,9 @@ let
     "${pkgs.libnotify}/bin/notify-send"
   ];
 
-  generatedCommandsQml =
-    builtins.replaceStrings
-      commandPlaceholders
-      commandReplacements
-      (builtins.readFile ./quickshell/GeneratedCommands.qml);
+  generatedCommandsQml = builtins.replaceStrings commandPlaceholders commandReplacements (
+    builtins.readFile ./quickshell/GeneratedCommands.qml
+  );
 
   quickshellConfigDir = pkgs.runCommandLocal "hypr-shell-quickshell-config" { } ''
     mkdir -p "$out"

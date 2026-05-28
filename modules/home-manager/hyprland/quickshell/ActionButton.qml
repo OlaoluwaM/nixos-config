@@ -55,7 +55,7 @@ Rectangle {
         }
     }
 
-    Text {
+    StyledText {
         id: actionLabel
 
         anchors.centerIn: parent

@@ -37,32 +37,6 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # Tell GTK/libadwaita apps to prefer dark UI, with Adwaita-dark as a
-    # conservative fallback for older GTK apps that still read theme names.
-    gtk = {
-      enable = true;
-      colorScheme = "dark";
-      theme = {
-        name = "Adwaita-dark";
-        package = pkgs.gnome-themes-extra;
-      };
-    };
-
-    # dconf is the setting store many GTK/GNOME-adjacent apps read for the
-    # system color preference, even outside a full GNOME session.
-    dconf.settings."org/gnome/desktop/interface" = {
-      color-scheme = "prefer-dark";
-      gtk-theme = "Adwaita-dark";
-    };
-
-    # Enables Home Manager's Qt integration. This helps Qt/QML applications find
-    # themes, plugins, and platform support in the user session.
-    qt = {
-      enable = true;
-      platformTheme.name = "adwaita";
-      style.name = "adwaita-dark";
-    };
-
     # Baseline user packages for the Hyprland profile. These are not all visible
     # apps; some are fonts and Qt support libraries that make the UI render
     # correctly.

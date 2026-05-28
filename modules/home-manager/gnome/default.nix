@@ -171,18 +171,10 @@ in
       # };
 
       "org/gnome/desktop/interface" = {
-        color-scheme = "prefer-dark";
-        # cursor-theme = "catppuccin-mocha-dark-cursors"; TODO: Enable once the catppuccin-mocha-dark-cursors cursor pack is install (alongside icons)
-        # TODO: Uncomment these once fonts have been restored on system
-        # document-font-name = "SF Pro Display Medium 10";
         enable-animations = true;
         enable-hot-corners = false;
         font-antialiasing = "rgba";
         font-hinting = "medium";
-        # font-name = "SF Pro Display Medium 10";
-        gtk-theme = "Adwaita-dark";
-        # icon-theme = "Colloid-Dark"; TODO: Enable once the colliod dark icon theme has been installed
-        monospace-font-name = "Berkeley Mono Medium 10";
         toolkit-accessibility = false;
       };
 

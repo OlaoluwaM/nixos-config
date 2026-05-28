@@ -15,7 +15,7 @@ BarCapsule {
         anchors.centerIn: parent
         spacing: 10
 
-        Text {
+        StyledText {
             text: {
                 let parts = root.status.clockText.split(" ");
                 return parts.slice(0, 2).join(" ");
@@ -27,7 +27,7 @@ BarCapsule {
             Behavior on color { ColorAnimation { duration: Theme.animFast } }
         }
 
-        Text {
+        StyledText {
             text: {
                 let parts = root.status.clockText.split(" ");
                 return parts.slice(2).join(" ");

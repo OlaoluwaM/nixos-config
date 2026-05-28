@@ -7,6 +7,7 @@
 let
   cfg = config.local.hyprland;
   theme = config.local.theme.colors;
+  fonts = config.local.fonts;
   stripHash = s: lib.removePrefix "#" s;
 in
 {
@@ -78,7 +79,7 @@ in
             text = "$TIME";
             color = "rgb(${stripHash theme.lockClockColor})";
             font_size = 64;
-            font_family = "sans-serif";
+            font_family = fonts.shell.family;
             position = "0, 90";
             halign = "center";
             valign = "center";
@@ -90,7 +91,7 @@ in
             text = "cmd[update:30000] date '+%A, %B %d'";
             color = "rgb(${stripHash theme.lockDateColor})";
             font_size = 18;
-            font_family = "sans-serif";
+            font_family = fonts.shell.family;
             position = "0, 35";
             halign = "center";
             valign = "center";

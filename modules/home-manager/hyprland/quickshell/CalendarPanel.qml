@@ -99,7 +99,7 @@ Item {
                         onClicked: calPanel.monthOffset -= 1
                     }
 
-                    Text {
+                    StyledText {
                         anchors.verticalCenter: parent.verticalCenter
                         text: calPanel.calendarTitle().toUpperCase()
                         color: Theme.text
@@ -128,7 +128,7 @@ Item {
 
                     Repeater {
                         model: ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
-                        delegate: Text {
+                        delegate: StyledText {
                             required property string modelData
                             width: 34
                             height: 18
@@ -149,7 +149,7 @@ Item {
                             radius: 8
                             color: modelData.today ? Theme.primary : "transparent"
 
-                            Text {
+                            StyledText {
                                 anchors.centerIn: parent
                                 text: modelData.day
                                 color: modelData.today   ? Theme.primaryForeground
@@ -185,7 +185,7 @@ Item {
                     width: bigTime.implicitWidth + bigSec.implicitWidth
                     height: bigTime.implicitHeight
 
-                    Text {
+                    StyledText {
                         id: bigTime
                         text: calPanel.hoursMinutes
                         color: Theme.text
@@ -193,7 +193,7 @@ Item {
                         font.weight: Font.DemiBold
                     }
 
-                    Text {
+                    StyledText {
                         id: bigSec
                         text: calPanel.seconds
                         color: Theme.textSecondary
@@ -203,7 +203,7 @@ Item {
                     }
                 }
 
-                Text {
+                StyledText {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: calPanel.dateLine
                     color: Theme.textSecondary

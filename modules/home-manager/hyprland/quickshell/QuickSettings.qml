@@ -43,7 +43,7 @@ ColumnLayout {
                 implicitWidth: bigPct.implicitWidth + pctSign.implicitWidth
                 implicitHeight: bigPct.implicitHeight
 
-                Text {
+                StyledText {
                     id: bigPct
                     text: quickSettings.batteryPercent.toString()
                     color: Theme.text
@@ -51,7 +51,7 @@ ColumnLayout {
                     font.weight: Font.DemiBold
                 }
 
-                Text {
+                StyledText {
                     id: pctSign
                     text: "%"
                     color: Theme.textSecondary
@@ -68,10 +68,10 @@ ColumnLayout {
                 ShellIcon {
                     name: quickSettings.isCharging ? "batteryCharging" : "battery"
                     iconColor: quickSettings.batteryStateColor
-                    implicitSize: 12
+                    implicitSize: 16
                 }
 
-                Text {
+                StyledText {
                     text: quickSettings.batteryStatusLabel
                     color: quickSettings.batteryStateColor
                     font.pixelSize: 13
