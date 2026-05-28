@@ -6,7 +6,7 @@ import Quickshell.Wayland
 
 PanelWindow {
     id: osdWindow
-    required property var shell
+    required property var osd
 
     color: "transparent"
     aboveWindows: true
@@ -77,7 +77,7 @@ PanelWindow {
 
             ShellIcon {
                 anchors.verticalCenter: parent.verticalCenter
-                name: osdWindow.shell.osdIcon
+                name: osdWindow.osd.iconName
                 iconColor: Theme.text
                 implicitSize: 20
             }
@@ -90,7 +90,7 @@ PanelWindow {
                 color: Theme.surfaceVariant
 
                 Rectangle {
-                    width: Math.max(0, Math.min(1, osdWindow.shell.osdValue / 100)) * parent.width
+                    width: Math.max(0, Math.min(1, osdWindow.osd.value / 100)) * parent.width
                     height: parent.height
                     radius: 3
                     color: Theme.primary
@@ -115,8 +115,8 @@ PanelWindow {
         }
 
         Connections {
-            target: osdWindow.shell
-            function onOsdTriggered() {
+            target: osdWindow.osd
+            function onTriggered() {
                 hideAnim.stop();
                 osdState.windowVisible = true;
                 showAnim.stop();

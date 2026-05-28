@@ -20,11 +20,6 @@ Scope {
 
     property bool airplaneMode: false
 
-    // ── OSD overlay state ──────────────────────────────────────────────
-    property string osdIcon: "volume"
-    property real osdValue: 0
-    signal osdTriggered()
-
     property string popupCommandToken: ""
     property string popupCommandFile: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/hypr-shell/popup-command"
 
@@ -107,12 +102,6 @@ Scope {
 
     function setBrightness(value) {
         root.runAndRefresh("@BRIGHTNESS_COMMAND@ set " + Math.round(value) + "%");
-    }
-
-    function showOsd(icon, value) {
-        root.osdIcon = icon;
-        root.osdValue = value;
-        root.osdTriggered();
     }
 
     function adjustVolume(delta) {
@@ -258,11 +247,11 @@ Scope {
 
                 let t = osdRefreshTimer.osdType;
                 if (t === "volume") {
-                    root.showOsd(muted ? "volumeMuted" : "volume", vol);
+                    osdController.show(muted ? "volumeMuted" : "volume", vol);
                 } else if (t === "brightness") {
-                    root.showOsd("brightness", bri);
+                    osdController.show("brightness", bri);
                 } else if (t === "keyboard") {
-                    root.showOsd("keyboard", kbd);
+                    osdController.show("keyboard", kbd);
                 }
             }
         }
@@ -327,6 +316,9 @@ Scope {
         trayItemCount: SystemTray.items.values.length
     }
 
+    // ── OSD controller ────────────────────────────────────────────────
+    OsdController { id: osdController }
+
     // ── Top bar ────────────────────────────────────────────────────────
     PanelWindow {
         visible: true
@@ -364,7 +356,7 @@ Scope {
     ToastNotifications { notifications: notificationService }
 
     // ── OSD overlay (volume / brightness / keyboard backlight) ─────────
-    OsdOverlay { shell: root }
+    OsdOverlay { osd: osdController }
 
     // ── Confirm dialog ────────────────────────────────────────────────
     ConfirmDialog {
