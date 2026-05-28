@@ -10,6 +10,10 @@ ActionButton 1.0 ActionButton.qml
 StyledSlider 1.0 StyledSlider.qml
 NotificationActions 1.0 NotificationActions.qml
 NotificationService 1.0 NotificationService.qml
+AudioStatus 1.0 AudioStatus.qml
+BatteryStatus 1.0 BatteryStatus.qml
+MediaStatus 1.0 MediaStatus.qml
+SystemStatus 1.0 SystemStatus.qml
 StatusController 1.0 StatusController.qml
 CommandRunner 1.0 CommandRunner.qml
 AudioActions 1.0 AudioActions.qml

@@ -12,6 +12,10 @@ parts of those windows and receive only the service objects they need.
 - `shell.qml`: top-level service wiring, timers, data pipes, and windows.
 - `GeneratedCommands.qml`: generated command/script paths from Nix.
 - `CommandRunner.qml`: shared command execution and refresh signaling.
+- `StatusController.qml`: public status façade passed to UI modules.
+- `AudioStatus.qml`, `BatteryStatus.qml`, `MediaStatus.qml`,
+  `SystemStatus.qml`: private status-domain controllers used by
+  `StatusController`.
 - `AudioActions.qml`, `BrightnessActions.qml`, `MediaActions.qml`,
   `PowerActions.qml`, `ConnectivityActions.qml`: domain APIs used by UI
   components. Audio/media use native Quickshell services; the others wrap
