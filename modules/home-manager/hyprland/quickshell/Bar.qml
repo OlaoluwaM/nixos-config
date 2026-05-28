@@ -10,6 +10,7 @@ import Quickshell.Services.SystemTray
 Item {
     id: bar
     required property var shell
+    required property var status
     required property var notifications
     required property var popups
     readonly property int statsSlotWidth: 54
@@ -138,7 +139,7 @@ Item {
 
                     ShellIcon { name: "cpu"; iconColor: Theme.statsCpu; implicitSize: 16 }
                     Text {
-                        text: bar.shell.cpuText
+                        text: bar.status.cpuText
                         color: Theme.statsCpu
                         font.pixelSize: 13
                     }
@@ -150,7 +151,7 @@ Item {
 
                 HoverTooltip {
                     active: cpuHover.hovered
-                    text: qsTr("CPU: %1").arg(bar.shell.cpuText)
+                    text: qsTr("CPU: %1").arg(bar.status.cpuText)
                     anchors {
                         horizontalCenter: parent.horizontalCenter
                         top: parent.bottom
@@ -173,7 +174,7 @@ Item {
 
                     ShellIcon { name: "memory"; iconColor: Theme.statsMem; implicitSize: 16 }
                     Text {
-                        text: bar.shell.memText
+                        text: bar.status.memText
                         color: Theme.statsMem
                         font.pixelSize: 13
                     }
@@ -185,7 +186,7 @@ Item {
 
                 HoverTooltip {
                     active: memoryHover.hovered
-                    text: qsTr("Memory: %1").arg(bar.shell.memText)
+                    text: qsTr("Memory: %1").arg(bar.status.memText)
                     anchors {
                         horizontalCenter: parent.horizontalCenter
                         top: parent.bottom
@@ -208,7 +209,7 @@ Item {
 
                     ShellIcon { name: "temp"; iconColor: Theme.statsTemp; implicitSize: 16 }
                     Text {
-                        text: bar.shell.tempText
+                        text: bar.status.tempText
                         color: Theme.statsTemp
                         font.pixelSize: 13
                     }
@@ -220,7 +221,7 @@ Item {
 
                 HoverTooltip {
                     active: tempHover.hovered
-                    text: qsTr("Temperature: %1").arg(bar.shell.tempText)
+                    text: qsTr("Temperature: %1").arg(bar.status.tempText)
                     anchors {
                         horizontalCenter: parent.horizontalCenter
                         top: parent.bottom
@@ -239,8 +240,8 @@ Item {
         anchors.left: statsCapsule.right
         anchors.leftMargin: 10
         anchors.verticalCenter: parent.verticalCenter
-        visible: bar.shell.mediaActive
-        width: bar.shell.mediaActive ? 280 : 0
+        visible: bar.status.mediaActive
+        width: bar.status.mediaActive ? 280 : 0
         active: bar.popups.activePopup === "media"
         clipped: true
 
@@ -260,18 +261,18 @@ Item {
                 Image {
                     id: mediaArtwork
                     anchors.fill: parent
-                    source: bar.shell.mediaAlbumArt
+                    source: bar.status.mediaAlbumArt
                     sourceSize.width: 30
                     sourceSize.height: 30
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
-                    visible: bar.shell.mediaAlbumArt !== "" && mediaArtwork.status === Image.Ready
+                    visible: bar.status.mediaAlbumArt !== "" && mediaArtwork.status === Image.Ready
                 }
 
                 ShellIcon {
                     anchors.centerIn: parent
-                    visible: bar.shell.mediaAlbumArt === "" || mediaArtwork.status !== Image.Ready
-                    name: bar.shell.mediaStatus === "Playing" ? "play" : "music"
+                    visible: bar.status.mediaAlbumArt === "" || mediaArtwork.status !== Image.Ready
+                    name: bar.status.mediaStatus === "Playing" ? "play" : "music"
                     iconColor: Theme.text
                     implicitSize: 16
                 }
@@ -290,7 +291,7 @@ Item {
                     MarqueeText {
                         width: parent.width
                         height: implicitHeight
-                        text: bar.shell.mediaDisplayTitle
+                        text: bar.status.mediaDisplayTitle
                         color: Theme.capsuleTextColor(bar.popups.activePopup === "media", mediaCapsule.hovered)
                         font.pixelSize: 12
                         font.weight: Font.DemiBold
@@ -298,7 +299,7 @@ Item {
 
                     Text {
                         width: parent.width
-                        text: bar.shell.mediaPosition + " / " + bar.shell.mediaLength
+                        text: bar.status.mediaPosition + " / " + bar.status.mediaLength
                         color: Theme.capsuleTextColor(bar.popups.activePopup === "media", mediaCapsule.hovered)
                         font.pixelSize: 11
                         elide: Text.ElideRight
@@ -322,7 +323,7 @@ Item {
                 Repeater {
                     model: [
                         { action: "previous",   icon: "previous" },
-                        { action: "play-pause",  icon: bar.shell.mediaStatus === "Playing" ? "pause" : "play" },
+                        { action: "play-pause",  icon: bar.status.mediaStatus === "Playing" ? "pause" : "play" },
                         { action: "next",        icon: "next" }
                     ]
 
@@ -366,7 +367,7 @@ Item {
 
                 Text {
                     text: {
-                        let parts = bar.shell.clockText.split(" ");
+                        let parts = bar.status.clockText.split(" ");
                         return parts.slice(0, 2).join(" ");
                     }
                     color: Theme.capsuleTextColor(bar.popups.activePopup === "calendar", clockPill.hovered)
@@ -378,7 +379,7 @@ Item {
 
                 Text {
                     text: {
-                        let parts = bar.shell.clockText.split(" ");
+                        let parts = bar.status.clockText.split(" ");
                         return parts.slice(2).join(" ");
                     }
                     color: Theme.capsuleTextColor(bar.popups.activePopup === "calendar", clockPill.hovered)
@@ -466,8 +467,8 @@ Item {
 
         // ── Airplane mode capsule (visible when active) ────────────────
         Rectangle {
-            visible: bar.shell.airplaneMode
-            width: bar.shell.airplaneMode ? Theme.capsuleHeight : 0
+            visible: bar.status.airplaneMode
+            width: bar.status.airplaneMode ? Theme.capsuleHeight : 0
             height: Theme.capsuleHeight
             radius: Theme.capsuleRadius
             color: Theme.primary
@@ -486,7 +487,7 @@ Item {
         BarCapsule {
             id: wifiCapsule
             width: Math.max(Theme.capsuleHeight, wifiContent.implicitWidth + 20)
-            opacity: bar.shell.airplaneMode ? 0.35 : 1.0
+            opacity: bar.status.airplaneMode ? 0.35 : 1.0
 
             Behavior on opacity     { OpacityAnimator { duration: Theme.animNormal } }
 
@@ -496,15 +497,15 @@ Item {
                 spacing: 5
 
                 ShellIcon {
-                    name: bar.shell.airplaneMode || bar.shell.networkText === "Offline" ? "networkOff" : "network"
+                    name: bar.status.airplaneMode || bar.status.networkText === "Offline" ? "networkOff" : "network"
                     iconColor: Theme.capsuleTextColor(false, wifiCapsule.hovered)
                     implicitSize: 15
                 }
 
                 MarqueeText {
                     Layout.alignment: Qt.AlignVCenter
-                    visible: !bar.shell.airplaneMode && bar.shell.networkText !== "Offline"
-                    text: bar.shell.networkText
+                    visible: !bar.status.airplaneMode && bar.status.networkText !== "Offline"
+                    text: bar.status.networkText
                     color: Theme.capsuleTextColor(false, wifiCapsule.hovered)
                     font.pixelSize: 13
                     font.weight: Font.DemiBold
@@ -526,7 +527,7 @@ Item {
         BarCapsule {
             id: btCapsule
             width: Math.max(Theme.capsuleHeight, btContent.implicitWidth + 20)
-            opacity: bar.shell.airplaneMode ? 0.35 : 1.0
+            opacity: bar.status.airplaneMode ? 0.35 : 1.0
 
             Behavior on opacity     { OpacityAnimator { duration: Theme.animNormal } }
 
@@ -543,8 +544,8 @@ Item {
 
                 MarqueeText {
                     Layout.alignment: Qt.AlignVCenter
-                    visible: !bar.shell.airplaneMode && bar.shell.bluetoothDevice !== ""
-                    text: bar.shell.bluetoothDevice
+                    visible: !bar.status.airplaneMode && bar.status.bluetoothDevice !== ""
+                    text: bar.status.bluetoothDevice
                     color: Theme.capsuleTextColor(false, btCapsule.hovered)
                     font.pixelSize: 13
                     font.weight: Font.DemiBold

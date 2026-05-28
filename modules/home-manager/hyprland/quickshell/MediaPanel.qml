@@ -6,10 +6,11 @@ import QtQuick.Layouts
 // Media popover content — larger view of now-playing info and controls.
 ColumnLayout {
     required property var shell
+    required property var status
     spacing: 14
 
     Text {
-        text: shell.mediaDisplayTitle
+        text: status.mediaDisplayTitle
         color: Theme.text
         font.pixelSize: 16
         font.weight: Font.DemiBold
@@ -18,7 +19,7 @@ ColumnLayout {
     }
 
     Text {
-        text: shell.mediaStatus + " — " + shell.mediaPosition + " / " + shell.mediaLength
+        text: status.mediaStatus + " — " + status.mediaPosition + " / " + status.mediaLength
         color: Theme.textSecondary
         font.pixelSize: 12
     }

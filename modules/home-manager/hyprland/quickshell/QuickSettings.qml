@@ -6,25 +6,26 @@ import QtQuick.Layouts
 ColumnLayout {
     id: quickSettings
     required property var shell
+    required property var status
     required property var notifications
     spacing: 18
 
-    property int batteryPercent: parseInt(shell.batteryText) || 0
+    property int batteryPercent: parseInt(status.batteryText) || 0
     property bool isCharging: {
-        let t = shell.batteryText.toLowerCase();
+        let t = status.batteryText.toLowerCase();
         return t.indexOf("charging") >= 0
             && t.indexOf("not charging") < 0
             && t.indexOf("discharging") < 0;
     }
     property bool showPowerMenu: false
     property string normalizedPowerProfile: {
-        let p = shell.powerProfileText.toLowerCase();
+        let p = status.powerProfileText.toLowerCase();
         if (p === "saver" || p === "quiet") return "power-saver";
         return p;
     }
 
     property string batteryStatusLabel: {
-        let t = shell.batteryText.toLowerCase();
+        let t = status.batteryText.toLowerCase();
         if (t === "ac") return "AC Power";
         if (isCharging) return "Charging";
         if (t.indexOf("not charging") >= 0) return "Plugged In";
@@ -100,7 +101,7 @@ ColumnLayout {
             id: brightnessSlider
             Layout.fillWidth: true
             from: 1; to: 100
-            value: Number(quickSettings.shell.brightnessText.replace("%", "")) || 50
+            value: Number(quickSettings.status.brightnessText.replace("%", "")) || 50
             accentColor: Theme.primary
             onMoved: quickSettings.shell.setBrightness(value)
         }
@@ -112,8 +113,8 @@ ColumnLayout {
         spacing: 12
 
         ShellIcon {
-            name: quickSettings.shell.muted || volumeSlider.value <= 0 ? "volumeMuted" : "volume"
-            iconColor: quickSettings.shell.muted || volumeSlider.value <= 0 ? Theme.textDim : Theme.textSecondary
+            name: quickSettings.status.muted || volumeSlider.value <= 0 ? "volumeMuted" : "volume"
+            iconColor: quickSettings.status.muted || volumeSlider.value <= 0 ? Theme.textDim : Theme.textSecondary
             implicitSize: 16
         }
 
@@ -121,7 +122,7 @@ ColumnLayout {
             id: volumeSlider
             Layout.fillWidth: true
             from: 0; to: 100
-            value: Number(quickSettings.shell.volumeText.replace("%", "")) || 0
+            value: Number(quickSettings.status.volumeText.replace("%", "")) || 0
             accentColor: Theme.primary
             onMoved: quickSettings.shell.setVolume(value)
         }
@@ -145,7 +146,7 @@ ColumnLayout {
                 required property var modelData
 
                 active: (modelData.action === "dnd" && quickSettings.notifications.doNotDisturb)
-                    || (modelData.action === "airplane" && quickSettings.shell.airplaneMode)
+                    || (modelData.action === "airplane" && quickSettings.status.airplaneMode)
                     || (modelData.action === "power" && quickSettings.showPowerMenu)
                 activeColor: modelData.danger ? Theme.error : Theme.primary
                 accessibleName: modelData.action

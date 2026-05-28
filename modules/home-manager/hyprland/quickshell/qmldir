@@ -9,6 +9,7 @@ ActionButton 1.0 ActionButton.qml
 StyledSlider 1.0 StyledSlider.qml
 NotificationActions 1.0 NotificationActions.qml
 NotificationService 1.0 NotificationService.qml
+StatusController 1.0 StatusController.qml
 PopupController 1.0 PopupController.qml
 OsdController 1.0 OsdController.qml
 Bar 1.0 Bar.qml
