@@ -14,11 +14,18 @@ ColumnLayout {
     property real gridOpacity: 1
     property real menuOpacity: 0
 
+    function updateMenuContentHeight() {
+        if (trayPanel.activeMenuSource) {
+            trayPanel.popups.trayMenuContentHeight = Math.ceil(headerRow.implicitHeight + trayPanel.spacing + menuColumn.implicitHeight);
+        }
+    }
+
     onActiveMenuSourceChanged: {
         if (activeMenuSource) {
             openMenuAnim.stop();
             closeMenuAnim.stop();
             openMenuAnim.start();
+            Qt.callLater(updateMenuContentHeight);
         } else {
             openMenuAnim.stop();
             closeMenuAnim.stop();
@@ -31,10 +38,6 @@ ColumnLayout {
         ParallelAnimation {
             NumberAnimation { target: trayPanel; property: "gridOpacity"; to: 0; duration: 100; easing.type: Easing.InQuad }
             NumberAnimation { target: trayPanel; property: "menuOpacity"; to: 1; duration: 140; easing.type: Easing.OutQuad }
-        }
-        PauseAnimation { duration: 30 }
-        ScriptAction {
-            script: trayPanel.popups.trayMenuContentHeight = menuColumn.implicitHeight + 44
         }
     }
 
@@ -62,6 +65,7 @@ ColumnLayout {
     }
 
     RowLayout {
+        id: headerRow
         Layout.fillWidth: true
         spacing: 10
 
@@ -97,9 +101,11 @@ ColumnLayout {
         clip: true
 
         Flickable {
+            id: trayGridView
             anchors.fill: parent
             opacity: trayPanel.gridOpacity
             visible: opacity > 0
+            contentWidth: width
             contentHeight: trayGrid.implicitHeight
             clip: true
             boundsBehavior: Flickable.StopAtBounds
@@ -141,7 +147,7 @@ ColumnLayout {
                             anchors.centerIn: parent
                             visible: trayIcon.status !== Image.Ready
                             text: (trayDelegate.modelData.title || trayDelegate.modelData.id || "?").slice(0, 1).toUpperCase()
-                            color: trayItemMouse.containsMouse ? Theme.tertiary : Theme.textSecondary
+                            color: trayItemMouse.containsMouse ? Theme.text : Theme.textSecondary
                             font.pixelSize: 16
                             font.weight: Font.DemiBold
 
@@ -175,17 +181,20 @@ ColumnLayout {
         }
 
         Flickable {
+            id: menuView
             anchors.fill: parent
             opacity: trayPanel.menuOpacity
             visible: opacity > 0
+            contentWidth: width
             contentHeight: menuColumn.implicitHeight
             clip: true
             boundsBehavior: Flickable.StopAtBounds
 
             Column {
                 id: menuColumn
-                width: parent.width
+                width: menuView.width
                 spacing: 2
+                onImplicitHeightChanged: trayPanel.updateMenuContentHeight()
 
                 Repeater {
                     model: menuOpener.children

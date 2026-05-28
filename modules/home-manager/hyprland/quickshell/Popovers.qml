@@ -234,8 +234,9 @@ PanelWindow {
             }
             function onTrayMenuContentHeightChanged() {
                 if (root.popups.activePopup === "tray") {
+                    let trayMargin = root.popupSpec("tray").margin;
                     let target = root.popups.trayMenuContentHeight > 0
-                        ? Math.min(root.popups.trayMenuContentHeight + 72, 500)
+                        ? Math.min(root.popups.trayMenuContentHeight + trayMargin * 2, root.implicitHeight)
                         : 260;
                     trayHeightAnim.stop();
                     trayHeightAnim.from = popoverCard.trayCardHeight;

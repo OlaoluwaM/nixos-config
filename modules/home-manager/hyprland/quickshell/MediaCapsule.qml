@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Shapes
 
 BarCapsule {
     id: root
@@ -19,34 +20,93 @@ BarCapsule {
         spacing: 8
 
         Rectangle {
+            id: recordDisc
             width: 30
-            height: Theme.capsuleButtonSize
-            radius: Theme.capsuleButtonRadius
-            color: Theme.outline
-            clip: true
+            height: 30
+            anchors.verticalCenter: parent.verticalCenter
+            radius: 15
+            color: "#15161a"
+            border.color: Theme.outline
+            border.width: 1
 
-            Image {
-                id: mediaArtwork
-                anchors.fill: parent
-                source: root.status.mediaAlbumArt
-                sourceSize.width: 30
-                sourceSize.height: 30
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
-                visible: root.status.mediaAlbumArt.length > 0 && mediaArtwork.status === Image.Ready
+            Rectangle {
+                anchors.centerIn: parent
+                width: 22
+                height: 22
+                radius: 11
+                color: "transparent"
+                border.color: Theme.surfaceHover
+                border.width: 1
+                opacity: 0.55
             }
 
-            ShellIcon {
+            Item {
+                id: artworkLens
                 anchors.centerIn: parent
-                visible: root.status.mediaAlbumArt.length === 0 || !(mediaArtwork.status === Image.Ready)
-                name: root.status.mediaStatus === "Playing" ? "play" : "music"
-                iconColor: Theme.text
-                implicitSize: 16
+                width: 14
+                height: 14
+
+                Image {
+                    id: mediaArtwork
+                    anchors.fill: parent
+                    source: root.status.mediaAlbumArt
+                    sourceSize.width: 24
+                    sourceSize.height: 24
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    visible: false
+                }
+
+                Shape {
+                    anchors.fill: parent
+                    visible: root.status.mediaAlbumArt.length > 0 && mediaArtwork.status === Image.Ready
+
+                    ShapePath {
+                        fillItem: mediaArtwork
+                        strokeWidth: -1
+                        startX: artworkLens.width
+                        startY: artworkLens.height / 2
+
+                        PathAngleArc {
+                            centerX: artworkLens.width / 2
+                            centerY: artworkLens.height / 2
+                            radiusX: artworkLens.width / 2
+                            radiusY: artworkLens.height / 2
+                            startAngle: 0
+                            sweepAngle: 360
+                        }
+                    }
+                }
+
+                ShellIcon {
+                    anchors.centerIn: parent
+                    visible: root.status.mediaAlbumArt.length === 0 || !(mediaArtwork.status === Image.Ready)
+                    name: root.status.mediaStatus === "Playing" ? "play" : "music"
+                    iconColor: Theme.text
+                    implicitSize: 9
+                }
+            }
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: 4
+                height: 4
+                radius: 2
+                color: "#0b0c0f"
+                opacity: root.status.mediaAlbumArt.length > 0 && mediaArtwork.status === Image.Ready ? 0.65 : 0
+            }
+
+            RotationAnimation on rotation {
+                from: 0
+                to: 360
+                duration: 6000
+                loops: Animation.Infinite
+                running: root.visible && root.status.mediaStatus === "Playing"
             }
         }
 
         Item {
-            width: 132
+            width: 120
             height: 30
 
             Column {
@@ -81,49 +141,46 @@ BarCapsule {
         }
 
         Row {
-            width: 74
+            width: 98
             height: 30
             spacing: 4
 
             IconButton {
                 accessibleName: qsTr("Previous")
-                buttonWidth: 22
-                buttonHeight: Theme.capsuleButtonSize
+                buttonSize: 30
                 width: implicitWidth
                 height: implicitHeight
                 iconName: "previous"
                 iconSize: 15
-                iconColor: hovered ? Theme.tertiaryContrast
+                iconColor: hovered ? Theme.text
                     : Theme.capsuleTextColor(root.popups.activePopup === "media", root.hovered)
-                normalColor: "transparent"
+                normalColor: Theme.surfaceVariant
                 onClicked: root.mediaActions.perform("previous")
             }
 
             IconButton {
                 accessibleName: qsTr("Play or pause")
-                buttonWidth: 22
-                buttonHeight: Theme.capsuleButtonSize
+                buttonSize: 30
                 width: implicitWidth
                 height: implicitHeight
                 iconName: root.status.mediaStatus === "Playing" ? "pause" : "play"
                 iconSize: 15
-                iconColor: hovered ? Theme.tertiaryContrast
+                iconColor: hovered ? Theme.text
                     : Theme.capsuleTextColor(root.popups.activePopup === "media", root.hovered)
-                normalColor: "transparent"
+                normalColor: Theme.surfaceVariant
                 onClicked: root.mediaActions.perform("play-pause")
             }
 
             IconButton {
                 accessibleName: qsTr("Next")
-                buttonWidth: 22
-                buttonHeight: Theme.capsuleButtonSize
+                buttonSize: 30
                 width: implicitWidth
                 height: implicitHeight
                 iconName: "next"
                 iconSize: 15
-                iconColor: hovered ? Theme.tertiaryContrast
+                iconColor: hovered ? Theme.text
                     : Theme.capsuleTextColor(root.popups.activePopup === "media", root.hovered)
-                normalColor: "transparent"
+                normalColor: Theme.surfaceVariant
                 onClicked: root.mediaActions.perform("next")
             }
         }
