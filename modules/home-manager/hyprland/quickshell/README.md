@@ -31,6 +31,7 @@ parts of those windows and receive only the service objects they need.
 - `QuickSettings.qml`, `CalendarPanel.qml`, `TrayPanel.qml`, `MediaPanel.qml`,
   `NotificationPanel.qml`: popup contents.
 - `ToastNotifications.qml`: temporary notification cards.
+- `NotificationCard.qml`: shared notification/toast card body.
 - `OsdOverlay.qml`: volume, brightness, and keyboard-backlight overlay.
 - `Theme.qml`: colors, sizes, animation durations, and shared color helpers.
 - `Icons.qml` and `ShellIcon.qml`: SVG icon data and icon rendering.
@@ -50,6 +51,8 @@ The small reusable files keep common visual patterns in one place:
 - `HoverTooltip.qml`: hover label bubble.
 - `StyledSlider.qml`: quick-settings slider skin.
 - `NotificationActions.qml`: notification action buttons.
+- `NotificationCard.qml`: shared notification card shell used by toasts and
+  the notification panel.
 - `MarqueeText.qml`: text that scrolls only when it is too wide.
 
 If two panels need the same button, tooltip, slider, or bar capsule styling,

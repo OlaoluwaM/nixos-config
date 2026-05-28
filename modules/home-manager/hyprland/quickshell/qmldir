@@ -18,6 +18,7 @@ IconButton 1.0 IconButton.qml
 HoverTooltip 1.0 HoverTooltip.qml
 ActionButton 1.0 ActionButton.qml
 StyledSlider 1.0 StyledSlider.qml
+NotificationCard 1.0 NotificationCard.qml
 NotificationActions 1.0 NotificationActions.qml
 NotificationService 1.0 NotificationService.qml
 AudioStatus 1.0 AudioStatus.qml
