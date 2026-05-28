@@ -6,9 +6,18 @@ import QtQuick.Layouts
 ColumnLayout {
     id: notifPanel
     required property var notifications
+    property bool heightAnimationsReady: false
+    property bool _tick: false
+
     spacing: 16
 
-    property bool _tick: false
+    Timer {
+        interval: 150
+        running: true
+        repeat: false
+        onTriggered: notifPanel.heightAnimationsReady = true
+    }
+
     Timer {
         interval: 30000
         running: true
@@ -130,6 +139,7 @@ ColumnLayout {
                     clip: true
 
                     Behavior on height {
+                        enabled: notifPanel.heightAnimationsReady
                         NumberAnimation {
                             duration: 300
                             easing.type: Theme.easingType

@@ -18,7 +18,9 @@ PanelWindow {
     readonly property int topbarBottom: 70
     readonly property int topbarGap: 18
     readonly property int popoverTop: root.topbarBottom + root.topbarGap
+    readonly property int popoverWindowHeight: 780
     property string renderedPopup: ""
+    property string pendingPopup: ""
 
     // One row per popup. This keeps sizing decisions visible in one place
     // instead of scattering the same activePopup checks through the file.
@@ -39,7 +41,10 @@ PanelWindow {
     focusable: root.visible
     visible: root.renderedPopup.length > 0
 
-    implicitHeight: root.popupSpec(root.renderedPopup).windowHeight - root.popoverTop
+    // Keep the layer surface stable when switching between popups. Resizing the
+    // PanelWindow itself can look like a stretch animation even when the card is
+    // swapped without an explicit height animation.
+    implicitHeight: root.popoverWindowHeight - root.popoverTop
 
     exclusionMode: ExclusionMode.Ignore
 
@@ -67,8 +72,10 @@ PanelWindow {
         id: popoverCard
 
         property real trayCardHeight: 260
+        property bool cardShown: true
 
         z: 1
+        visible: popoverCard.cardShown
         width: root.popupSpec(root.renderedPopup).width
         height: root.renderedPopup === "tray"
             ? popoverCard.trayCardHeight
@@ -87,6 +94,36 @@ PanelWindow {
         opacity: 0
         scale: 0.92
         focus: root.visible
+
+        function loadPopup(name) {
+            root.renderedPopup = name;
+            if (name === "tray") {
+                popoverCard.trayCardHeight = 260;
+            }
+            popoverLoader.loadPanel();
+        }
+
+        function fadeInSwitchedPopup(expectedPopup) {
+            if (root.popups.activePopup !== expectedPopup || root.pendingPopup !== expectedPopup) {
+                return;
+            }
+
+            popoverCard.loadPopup(expectedPopup);
+            root.pendingPopup = "";
+            popoverCard.cardShown = true;
+            popoverCard.opacity = 0;
+            popoverCard.scale = 1.0;
+            switchInAnim.start();
+        }
+
+        function showOpenedPopup(name) {
+            popoverCard.loadPopup(name);
+            popoverCard.cardShown = true;
+            popoverCard.opacity = 0;
+            popoverCard.scale = 0.92;
+            openAnim.start();
+            popoverCard.forceActiveFocus();
+        }
 
         Keys.onEscapePressed: function(event) {
             root.popups.close();
@@ -135,6 +172,28 @@ PanelWindow {
         }
 
         NumberAnimation {
+            id: switchOutAnim
+            target: popoverCard
+            property: "opacity"
+            from: popoverCard.opacity
+            to: 0
+            duration: 120
+            easing.type: Easing.OutCubic
+            onFinished: popoverCard.fadeInSwitchedPopup(root.pendingPopup)
+        }
+
+        NumberAnimation {
+            id: switchInAnim
+            target: popoverCard
+            property: "opacity"
+            from: 0
+            to: 1
+            duration: 150
+            easing.type: Easing.OutCubic
+            onFinished: popoverCard.forceActiveFocus()
+        }
+
+        NumberAnimation {
             id: trayHeightAnim
             target: popoverCard
             property: "trayCardHeight"
@@ -148,20 +207,29 @@ PanelWindow {
             function onActivePopupChanged() {
                 if (root.popups.activePopup === "") {
                     root.popups.trayMenuContentHeight = 0;
+                    root.pendingPopup = "";
+                    switchOutAnim.stop();
+                    switchInAnim.stop();
+                    popoverCard.cardShown = true;
                     closeAnim.start();
                     return;
                 }
 
                 if (root.popups.activePopup.length > 0) {
+                    let wasVisible = root.renderedPopup.length > 0;
+                    let targetPopup = root.popups.activePopup;
                     closeAnim.stop();
-                    root.renderedPopup = root.popups.activePopup;
-                    if (root.popups.activePopup === "tray") {
-                        popoverCard.trayCardHeight = 260;
+                    openAnim.stop();
+                    switchInAnim.stop();
+                    if (wasVisible) {
+                        root.pendingPopup = targetPopup;
+                        popoverCard.cardShown = true;
+                        switchOutAnim.restart();
+                    } else {
+                        root.pendingPopup = "";
+                        switchOutAnim.stop();
+                        popoverCard.showOpenedPopup(targetPopup);
                     }
-                    popoverCard.opacity = 0;
-                    popoverCard.scale = 0.92;
-                    openAnim.start();
-                    popoverLoader.loadPanel();
                 }
             }
             function onTrayMenuContentHeightChanged() {
