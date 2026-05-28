@@ -6,7 +6,11 @@ import Quickshell.Wayland
 
 PanelWindow {
     id: popoverWindow
-    required property var shell
+    required property var audioActions
+    required property var brightnessActions
+    required property var connectivityActions
+    required property var mediaActions
+    required property var powerActions
     required property var status
     required property var notifications
     required property var popups
@@ -145,11 +149,17 @@ PanelWindow {
                 let src = popoverWindow.popupSpec(popup).source;
                 if (src) {
                     let props = {};
-                    if (popup !== "calendar" && popup !== "notifications" && popup !== "tray") {
-                        props.shell = popoverWindow.shell;
-                    }
                     if (popup === "quickSettings" || popup === "media") {
                         props.status = popoverWindow.status;
+                    }
+                    if (popup === "quickSettings") {
+                        props.audioActions = popoverWindow.audioActions;
+                        props.brightnessActions = popoverWindow.brightnessActions;
+                        props.connectivityActions = popoverWindow.connectivityActions;
+                        props.powerActions = popoverWindow.powerActions;
+                    }
+                    if (popup === "media") {
+                        props.mediaActions = popoverWindow.mediaActions;
                     }
                     if (popup === "quickSettings" || popup === "notifications") {
                         props.notifications = popoverWindow.notifications;

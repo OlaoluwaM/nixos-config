@@ -5,7 +5,10 @@ import QtQuick.Layouts
 
 ColumnLayout {
     id: quickSettings
-    required property var shell
+    required property var audioActions
+    required property var brightnessActions
+    required property var connectivityActions
+    required property var powerActions
     required property var status
     required property var notifications
     spacing: 18
@@ -103,7 +106,7 @@ ColumnLayout {
             from: 1; to: 100
             value: Number(quickSettings.status.brightnessText.replace("%", "")) || 50
             accentColor: Theme.primary
-            onMoved: quickSettings.shell.setBrightness(value)
+            onMoved: quickSettings.brightnessActions.setBrightness(value)
         }
     }
 
@@ -124,7 +127,7 @@ ColumnLayout {
             from: 0; to: 100
             value: Number(quickSettings.status.volumeText.replace("%", "")) || 0
             accentColor: Theme.primary
-            onMoved: quickSettings.shell.setVolume(value)
+            onMoved: quickSettings.audioActions.setVolume(value)
         }
     }
 
@@ -162,9 +165,9 @@ ColumnLayout {
 
                 onClicked: {
                     switch (toggleBtn.modelData.action) {
-                        case "lock": quickSettings.shell.runLockCommand(); break;
+                        case "lock": quickSettings.powerActions.runLockCommand(); break;
                         case "dnd": quickSettings.notifications.toggleDoNotDisturb(); break;
-                        case "airplane": quickSettings.shell.toggleAirplaneMode(); break;
+                        case "airplane": quickSettings.connectivityActions.toggleAirplaneMode(); break;
                         case "power": quickSettings.showPowerMenu = !quickSettings.showPowerMenu; break;
                     }
                 }
@@ -207,24 +210,16 @@ ColumnLayout {
                 onClicked: {
                     switch (powerBtn.modelData.action) {
                         case "logout":
-                            quickSettings.shell.requestConfirmation(
-                                qsTr("Log Out"), qsTr("Your session will end."),
-                                "logout", false, 60, "logout");
+                            quickSettings.powerActions.requestLogout();
                             break;
                         case "reboot":
-                            quickSettings.shell.requestConfirmation(
-                                qsTr("Restart"), qsTr("The system will restart."),
-                                "refresh", false, 60, "reboot");
+                            quickSettings.powerActions.requestReboot();
                             break;
                         case "suspend":
-                            quickSettings.shell.requestConfirmation(
-                                qsTr("Suspend"), qsTr("The system will go to sleep."),
-                                "sleep", false, 60, "suspend");
+                            quickSettings.powerActions.requestSuspend();
                             break;
                         case "poweroff":
-                            quickSettings.shell.requestConfirmation(
-                                qsTr("Power Off"), qsTr("The system will shut down."),
-                                "power", true, 60, "poweroff");
+                            quickSettings.powerActions.requestPowerOff();
                             break;
                     }
                 }
@@ -272,7 +267,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 42
 
-                onClicked: quickSettings.shell.runPowerProfileSet(profileBtn.modelData.value)
+                onClicked: quickSettings.powerActions.runPowerProfileSet(profileBtn.modelData.value)
 
                 HoverTooltip {
                     active: profileBtn.hovered

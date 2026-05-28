@@ -218,59 +218,65 @@ let
     }
   '';
 
-  # shellQml is the final QML text written to ~/.config/quickshell/hyprland.
+  # GeneratedCommands.qml is the final command/config singleton written to
+  # ~/.config/quickshell/hyprland.
   #
-  # shell.qml contains placeholders like @STATUS_SCRIPT@ instead of hardcoded
-  # paths. replaceStrings swaps those placeholders for exact Nix store paths.
+  # GeneratedCommands.qml contains placeholders like @STATUS_SCRIPT@ instead of
+  # hardcoded paths. replaceStrings swaps those placeholders for exact Nix store
+  # paths.
   # This matters because Nix packages live at long immutable paths such as
   # /nix/store/.../bin/playerctl, not simply /usr/bin/playerctl.
-  shellQml =
+  commandPlaceholders = [
+    "@STATUS_SCRIPT@"
+    "@TIMEZONE_SCRIPT@"
+    "@VICINAE_COMMAND@"
+    "@NETWORK_COMMAND@"
+    "@BLUETOOTH_COMMAND@"
+    "@POWER_COMMAND@"
+    "@REBOOT_COMMAND@"
+    "@POWER_PROFILE_COMMAND@"
+    "@PAMIXER_COMMAND@"
+    "@BRIGHTNESS_COMMAND@"
+    "@PLAYERCTL_COMMAND@"
+    "@LOCK_COMMAND@"
+    "@SLEEP_COMMAND@"
+    "@REFRESH_COMMAND@"
+    "@RFKILL_COMMAND@"
+    "@LOGOUT_COMMAND@"
+    "@NOTIFY_SEND_COMMAND@"
+  ];
+
+  commandReplacements = [
+    "${statusScript}/bin/hypr-shell-status"
+    "${timezoneScript}/bin/hypr-shell-timezones"
+    "${pkgs.vicinae}/bin/vicinae"
+    "${airctl}/bin/airctl"
+    "${unstable.overskride}/bin/overskride"
+    "${unstable.hyprshutdown}/bin/hyprshutdown -t 'Shutting down...' --post-cmd 'shutdown -P 0'"
+    "${unstable.hyprshutdown}/bin/hyprshutdown -t 'Restarting...' --post-cmd 'reboot'"
+    "${powerProfileScript}/bin/hypr-shell-power-profile"
+    "${pkgs.pamixer}/bin/pamixer"
+    "${pkgs.brightnessctl}/bin/brightnessctl"
+    "${pkgs.playerctl}/bin/playerctl"
+    "${pkgs.systemd}/bin/loginctl lock-session"
+    "${pkgs.systemd}/bin/systemctl suspend"
+    "${pkgs.hyprland}/bin/hyprctl reload"
+    "${pkgs.util-linux}/bin/rfkill"
+    "${unstable.hyprshutdown}/bin/hyprshutdown"
+    "${pkgs.libnotify}/bin/notify-send"
+  ];
+
+  generatedCommandsQml =
     builtins.replaceStrings
-      [
-        "@STATUS_SCRIPT@"
-        "@TIMEZONE_SCRIPT@"
-        "@VICINAE_COMMAND@"
-        "@NETWORK_COMMAND@"
-        "@BLUETOOTH_COMMAND@"
-        "@POWER_COMMAND@"
-        "@REBOOT_COMMAND@"
-        "@POWER_PROFILE_COMMAND@"
-        "@PAMIXER_COMMAND@"
-        "@BRIGHTNESS_COMMAND@"
-        "@PLAYERCTL_COMMAND@"
-        "@LOCK_COMMAND@"
-        "@SLEEP_COMMAND@"
-        "@REFRESH_COMMAND@"
-        "@RFKILL_COMMAND@"
-        "@LOGOUT_COMMAND@"
-        "@NOTIFY_SEND_COMMAND@"
-      ]
-      [
-        "${statusScript}/bin/hypr-shell-status"
-        "${timezoneScript}/bin/hypr-shell-timezones"
-        "${pkgs.vicinae}/bin/vicinae"
-        "${airctl}/bin/airctl"
-        "${unstable.overskride}/bin/overskride"
-        "${unstable.hyprshutdown}/bin/hyprshutdown -t 'Shutting down...' --post-cmd 'shutdown -P 0'"
-        "${unstable.hyprshutdown}/bin/hyprshutdown -t 'Restarting...' --post-cmd 'reboot'"
-        "${powerProfileScript}/bin/hypr-shell-power-profile"
-        "${pkgs.pamixer}/bin/pamixer"
-        "${pkgs.brightnessctl}/bin/brightnessctl"
-        "${pkgs.playerctl}/bin/playerctl"
-        "${pkgs.systemd}/bin/loginctl lock-session"
-        "${pkgs.systemd}/bin/systemctl suspend"
-        "${pkgs.hyprland}/bin/hyprctl reload"
-        "${pkgs.util-linux}/bin/rfkill"
-        "${unstable.hyprshutdown}/bin/hyprshutdown"
-        "${pkgs.libnotify}/bin/notify-send"
-      ]
-      (builtins.readFile ./quickshell/shell.qml);
+      commandPlaceholders
+      commandReplacements
+      (builtins.readFile ./quickshell/GeneratedCommands.qml);
 
   quickshellConfigDir = pkgs.runCommandLocal "hypr-shell-quickshell-config" { } ''
     mkdir -p "$out"
     cp -R ${./quickshell}/. "$out/"
     chmod -R u+w "$out"
-    cp ${pkgs.writeText "hypr-shell-shell.qml" shellQml} "$out/shell.qml"
+    cp ${pkgs.writeText "hypr-shell-generated-commands.qml" generatedCommandsQml} "$out/GeneratedCommands.qml"
     cp ${pkgs.writeText "hypr-shell-theme.qml" themeQml} "$out/Theme.qml"
   '';
 in

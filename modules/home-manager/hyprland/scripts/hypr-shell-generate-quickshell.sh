@@ -7,11 +7,11 @@ set -euo pipefail
 #
 # It does not start Quickshell and it does not preview anything by itself.
 # Its only job is to generate a temporary Quickshell config from the editable
-# repo copy of shell.qml.
+# repo copy of the Quickshell QML directory.
 #
 # Why this helper exists:
-# The real shell.qml contains placeholders such as @STATUS_SCRIPT@ and
-# @PLAYERCTL_COMMAND@. During a normal Home Manager switch, quickshell.nix
+# The real GeneratedCommands.qml contains placeholders such as @STATUS_SCRIPT@
+# and @PLAYERCTL_COMMAND@. During a normal Home Manager switch, quickshell.nix
 # replaces those placeholders with exact Nix store paths. For host-side TTY
 # testing, we are not doing a Home Manager switch, so this helper substitutes
 # those placeholders with small wrapper scripts in a temporary runtime folder.
@@ -200,7 +200,8 @@ Scope {
 EOF
 else
 	# Copy all QML files and the qmldir manifest from the source directory.
-	# Only shell.qml gets placeholder substitution (below); siblings are verbatim.
+	# GeneratedCommands.qml gets placeholder substitution below; the rest are
+	# copied verbatim.
 	for f in "$qml_dir"/*.qml "$qml_dir"/qmldir; do
 		[ -f "$f" ] && cp "$f" "$output_dir/$(basename "$f")"
 	done
@@ -214,31 +215,37 @@ else
 fi
 
 replace_placeholder() {
-	local placeholder="$1"
-	local replacement="$2"
+	local file="$1"
+	local placeholder="$2"
+	local replacement="$3"
 
-	sed -i "s|$placeholder|$replacement|g" "$output_dir/shell.qml"
+	[ -f "$file" ] || return 0
+	sed -i "s|$placeholder|$replacement|g" "$file"
 }
 
-replace_placeholder '@STATUS_SCRIPT@' "$bin_dir/hypr-shell-status"
-replace_placeholder '@TIMEZONE_SCRIPT@' "$bin_dir/hypr-shell-timezones"
-replace_placeholder '@VICINAE_COMMAND@' "$bin_dir/vicinae"
-replace_placeholder '@NETWORK_COMMAND@' "$bin_dir/airctl"
-replace_placeholder '@BLUETOOTH_COMMAND@' "$bin_dir/overskride"
-replace_placeholder '@POWER_COMMAND@' "$bin_dir/hyprshutdown -t 'Shutting down...' --post-cmd 'systemctl poweroff'"
-replace_placeholder '@POWER_PROFILE_COMMAND@' "$bin_dir/hypr-shell-power-profile"
-replace_placeholder '@PAMIXER_COMMAND@' "$bin_dir/pamixer"
-replace_placeholder '@BRIGHTNESS_COMMAND@' "$bin_dir/brightnessctl"
-replace_placeholder '@PLAYERCTL_COMMAND@' "$bin_dir/playerctl"
-replace_placeholder '@REBOOT_COMMAND@' "$bin_dir/hyprshutdown -t 'Restarting...' --post-cmd 'systemctl reboot'"
-replace_placeholder '@LOCK_COMMAND@' "loginctl lock-session"
-replace_placeholder '@SLEEP_COMMAND@' "systemctl suspend"
-replace_placeholder '@REFRESH_COMMAND@' "hyprctl reload"
-replace_placeholder '@RFKILL_COMMAND@' "rfkill"
-replace_placeholder '@LOGOUT_COMMAND@' "$bin_dir/hyprshutdown"
-replace_placeholder '@NOTIFY_SEND_COMMAND@' "notify-send"
+replace_command_placeholder() {
+	replace_placeholder "$output_dir/GeneratedCommands.qml" "$1" "$2"
+}
 
-if grep -n '@[A-Z_]*@' "$output_dir/shell.qml" >&2; then
+replace_command_placeholder '@STATUS_SCRIPT@' "$bin_dir/hypr-shell-status"
+replace_command_placeholder '@TIMEZONE_SCRIPT@' "$bin_dir/hypr-shell-timezones"
+replace_command_placeholder '@VICINAE_COMMAND@' "$bin_dir/vicinae"
+replace_command_placeholder '@NETWORK_COMMAND@' "$bin_dir/airctl"
+replace_command_placeholder '@BLUETOOTH_COMMAND@' "$bin_dir/overskride"
+replace_command_placeholder '@POWER_COMMAND@' "$bin_dir/hyprshutdown -t 'Shutting down...' --post-cmd 'systemctl poweroff'"
+replace_command_placeholder '@POWER_PROFILE_COMMAND@' "$bin_dir/hypr-shell-power-profile"
+replace_command_placeholder '@PAMIXER_COMMAND@' "$bin_dir/pamixer"
+replace_command_placeholder '@BRIGHTNESS_COMMAND@' "$bin_dir/brightnessctl"
+replace_command_placeholder '@PLAYERCTL_COMMAND@' "$bin_dir/playerctl"
+replace_command_placeholder '@REBOOT_COMMAND@' "$bin_dir/hyprshutdown -t 'Restarting...' --post-cmd 'systemctl reboot'"
+replace_command_placeholder '@LOCK_COMMAND@' "loginctl lock-session"
+replace_command_placeholder '@SLEEP_COMMAND@' "systemctl suspend"
+replace_command_placeholder '@REFRESH_COMMAND@' "hyprctl reload"
+replace_command_placeholder '@RFKILL_COMMAND@' "rfkill"
+replace_command_placeholder '@LOGOUT_COMMAND@' "$bin_dir/hyprshutdown"
+replace_command_placeholder '@NOTIFY_SEND_COMMAND@' "notify-send"
+
+if grep -R -n --include='*.qml' '@[A-Z_]*@' "$output_dir" >&2; then
 	printf 'hypr-shell-generate-quickshell: generated QML still contains placeholders\n' >&2
 	exit 70
 fi

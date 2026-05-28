@@ -1,5 +1,6 @@
 singleton Theme Theme.qml
 singleton Icons Icons.qml
+singleton GeneratedCommands GeneratedCommands.qml
 ShellIcon 1.0 ShellIcon.qml
 MarqueeText 1.0 MarqueeText.qml
 BarCapsule 1.0 BarCapsule.qml
@@ -10,6 +11,12 @@ StyledSlider 1.0 StyledSlider.qml
 NotificationActions 1.0 NotificationActions.qml
 NotificationService 1.0 NotificationService.qml
 StatusController 1.0 StatusController.qml
+CommandRunner 1.0 CommandRunner.qml
+AudioActions 1.0 AudioActions.qml
+BrightnessActions 1.0 BrightnessActions.qml
+MediaActions 1.0 MediaActions.qml
+PowerActions 1.0 PowerActions.qml
+ConnectivityActions 1.0 ConnectivityActions.qml
 PopupController 1.0 PopupController.qml
 OsdController 1.0 OsdController.qml
 Bar 1.0 Bar.qml

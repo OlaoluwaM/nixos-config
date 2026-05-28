@@ -2,10 +2,10 @@ pragma ComponentBehavior: Bound
 
 //  Root shell configuration.
 //
-//  This file holds shared state, data pipes (shell script → QML), timers,
+//  This file wires shared services, data pipes (shell script → QML), timers,
 //  and the three PanelWindows that make up the desktop shell. Visual content
-//  lives in Bar.qml, Popovers.qml, and ToastNotifications.qml. Colors and
-//  sizing live in Theme.qml.
+//  lives in Bar.qml, Popovers.qml, and ToastNotifications.qml. Colors, sizing,
+//  and generated command paths live in Theme.qml and GeneratedCommands.qml.
 
 import QtQuick
 import QtQuick.Layouts
@@ -31,92 +31,6 @@ Scope {
         confirmDialog.dismiss();
     }
 
-    // ── Command helpers (keep here — Nix substitutes the paths) ────────
-    function shellQuote(value) {
-        return "'" + String(value).replace(/'/g, "'\\''") + "'";
-    }
-
-    function run(command) {
-        // Run a command, showing a notification if it fails.
-        let script = command
-            + "\nstatus=$?"
-            + "\nif [ \"$status\" -ne 0 ]; then"
-            + "\n  @NOTIFY_SEND_COMMAND@ --app-name=Quickshell --urgency=normal "
-            + root.shellQuote(qsTr("Quickshell command failed"))
-            + " \"Exit status: $status; Command: \""
-            + root.shellQuote(command)
-            + "\nfi"
-            + "\nexit \"$status\"";
-
-        Quickshell.execDetached(["sh", "-c", script]);
-    }
-
-    function refreshStatusSoon() {
-        statusRefreshTimer.restart();
-    }
-
-    function runAndRefresh(command) {
-        root.run(command);
-        root.refreshStatusSoon();
-    }
-
-    function setVolume(value) {
-        root.runAndRefresh("@PAMIXER_COMMAND@ --set-volume " + Math.round(value));
-    }
-
-    function setBrightness(value) {
-        root.runAndRefresh("@BRIGHTNESS_COMMAND@ set " + Math.round(value) + "%");
-    }
-
-    function adjustVolume(delta) {
-        let flag = delta > 0 ? "-i" : "-d";
-        root.run("@PAMIXER_COMMAND@ " + flag + " " + Math.abs(delta));
-        osdRefreshTimer.osdType = "volume";
-        osdRefreshTimer.restart();
-    }
-
-    function adjustBrightness(delta) {
-        let op = delta > 0 ? (delta + "%+") : (Math.abs(delta) + "%-");
-        root.run("@BRIGHTNESS_COMMAND@ set " + op);
-        osdRefreshTimer.osdType = "brightness";
-        osdRefreshTimer.restart();
-    }
-
-    function adjustKbBacklight(delta) {
-        let device = "--device='*::kbd_backlight'";
-        let op = delta > 0 ? (delta + "%+") : (Math.abs(delta) + "%-");
-        root.run("@BRIGHTNESS_COMMAND@ " + device + " set " + op);
-        osdRefreshTimer.osdType = "keyboard";
-        osdRefreshTimer.restart();
-    }
-
-    function toggleMute() {
-        root.run("@PAMIXER_COMMAND@ -t");
-        osdRefreshTimer.osdType = "volume";
-        osdRefreshTimer.restart();
-    }
-
-    function runPlayerctl(action) {
-        root.runAndRefresh("@PLAYERCTL_COMMAND@ " + action);
-    }
-
-    // Named command wrappers — child components call these instead of
-    // using raw command strings, keeping substitution targets in this file.
-    function runPowerOffCommand()      { root.run("@POWER_COMMAND@"); }
-    function runRebootCommand()        { root.run("@REBOOT_COMMAND@"); }
-    function runNetworkCommand()      { root.run("@NETWORK_COMMAND@"); }
-    function runBluetoothCommand()    { root.run("@BLUETOOTH_COMMAND@"); }
-    function runPowerProfileCycle()   { root.runAndRefresh("@POWER_PROFILE_COMMAND@ cycle"); }
-    function runPowerProfileSet(profile) { root.runAndRefresh("@POWER_PROFILE_COMMAND@ set " + profile); }
-    function runLockCommand()         { root.run("@LOCK_COMMAND@"); }
-    function runSleepCommand()        { root.run("@SLEEP_COMMAND@"); }
-    function runRefreshCommand()      { root.run("@REFRESH_COMMAND@"); }
-    function runLogoutCommand()       { root.run("@LOGOUT_COMMAND@"); }
-    function toggleAirplaneMode() {
-        statusController.airplaneMode = !statusController.airplaneMode;
-        root.runAndRefresh("@RFKILL_COMMAND@ " + (statusController.airplaneMode ? "block" : "unblock") + " all");
-    }
-
     // ── Popup command channel (keybind → shell file → QML) ─────────────
     function handlePopupCommand(text) {
         let trimmed = text.trim();
@@ -128,17 +42,17 @@ Scope {
         root.popupCommandToken = token;
         switch (command) {
             case "quickSettings": popupController.toggle("quickSettings"); break;
-            case "osd-volume": osdRefreshTimer.osdType = "volume"; osdRefreshTimer.restart(); break;
-            case "osd-brightness": osdRefreshTimer.osdType = "brightness"; osdRefreshTimer.restart(); break;
-            case "osd-keyboard": osdRefreshTimer.osdType = "keyboard"; osdRefreshTimer.restart(); break;
-            case "osd-mute": osdRefreshTimer.osdType = "volume"; osdRefreshTimer.restart(); break;
+            case "osd-volume": commandRunner.refreshOsd("volume"); break;
+            case "osd-brightness": commandRunner.refreshOsd("brightness"); break;
+            case "osd-keyboard": commandRunner.refreshOsd("keyboard"); break;
+            case "osd-mute": commandRunner.refreshOsd("volume"); break;
         }
     }
 
     // ── Data pipes (shell scripts → QML properties) ────────────────────
     Process {
         id: statusProcess
-        command: ["@STATUS_SCRIPT@"]
+        command: [GeneratedCommands.statusScript]
         running: true
         stdout: StdioCollector {
             onStreamFinished: {
@@ -165,10 +79,10 @@ Scope {
     Process {
         id: osdReadProcess
         command: ["sh", "-c",
-            "vol=$(@PAMIXER_COMMAND@ --get-volume 2>/dev/null || echo -1);" +
-            "mute=$(@PAMIXER_COMMAND@ --get-mute 2>/dev/null || echo false);" +
-            "bri=$(@BRIGHTNESS_COMMAND@ -m 2>/dev/null | awk -F, '{print $4}' | tr -d '%');" +
-            "kbd=$(@BRIGHTNESS_COMMAND@ -m -d '*::kbd_backlight' 2>/dev/null | awk -F, '{print $4}' | tr -d '%');" +
+            "vol=$(" + GeneratedCommands.pamixerCommand + " --get-volume 2>/dev/null || echo -1);" +
+            "mute=$(" + GeneratedCommands.pamixerCommand + " --get-mute 2>/dev/null || echo false);" +
+            "bri=$(" + GeneratedCommands.brightnessCommand + " -m 2>/dev/null | awk -F, '{print $4}' | tr -d '%');" +
+            "kbd=$(" + GeneratedCommands.brightnessCommand + " -m -d '*::kbd_backlight' 2>/dev/null | awk -F, '{print $4}' | tr -d '%');" +
             "printf '%s %s %s %s' \"$vol\" \"$mute\" \"${bri:--1}\" \"${kbd:--1}\""
         ]
         stdout: StdioCollector {
@@ -195,7 +109,7 @@ Scope {
 
     Process {
         id: timezoneProcess
-        command: ["@TIMEZONE_SCRIPT@"]
+        command: [GeneratedCommands.timezoneScript]
         running: true
         stdout: StdioCollector {
             onStreamFinished: {
@@ -245,6 +159,31 @@ Scope {
     // ── Status controller ─────────────────────────────────────────────
     StatusController { id: statusController }
 
+    // ── Command runner and domain actions ─────────────────────────────
+    CommandRunner {
+        id: commandRunner
+        onOsdRefreshRequested: function(osdType) {
+            osdRefreshTimer.osdType = osdType;
+            osdRefreshTimer.restart();
+        }
+
+        onStatusRefreshRequested: statusRefreshTimer.restart()
+    }
+
+    AudioActions { id: audioActions; runner: commandRunner }
+    BrightnessActions { id: brightnessActions; runner: commandRunner }
+    MediaActions { id: mediaActions; runner: commandRunner }
+    ConnectivityActions { id: connectivityActions; runner: commandRunner; status: statusController }
+
+    PowerActions {
+        id: powerActions
+        runner: commandRunner
+
+        onConfirmationRequested: function(title, description, icon, danger, timeout, action) {
+            root.requestConfirmation(title, description, icon, danger, timeout, action);
+        }
+    }
+
     // ── Popup controller ──────────────────────────────────────────────
     PopupController {
         id: popupController
@@ -272,7 +211,8 @@ Scope {
         anchors { top: true; left: true; right: true }
 
         Bar {
-            shell: root
+            connectivityActions: connectivityActions
+            mediaActions: mediaActions
             status: statusController
             notifications: notificationService
             popups: popupController
@@ -283,7 +223,11 @@ Scope {
 
     // ── Popovers ───────────────────────────────────────────────────────
     Popovers {
-        shell: root
+        audioActions: audioActions
+        brightnessActions: brightnessActions
+        connectivityActions: connectivityActions
+        mediaActions: mediaActions
+        powerActions: powerActions
         status: statusController
         notifications: notificationService
         popups: popupController
@@ -301,10 +245,10 @@ Scope {
 
         onAccepted: function(action) {
             switch (action) {
-                case "logout": root.runLogoutCommand(); break;
-                case "reboot": root.runRebootCommand(); break;
-                case "suspend": root.runSleepCommand(); break;
-                case "poweroff": root.runPowerOffCommand(); break;
+                case "logout": powerActions.runLogoutCommand(); break;
+                case "reboot": powerActions.runRebootCommand(); break;
+                case "suspend": powerActions.runSleepCommand(); break;
+                case "poweroff": powerActions.runPowerOffCommand(); break;
             }
         }
     }

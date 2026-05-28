@@ -9,7 +9,8 @@ import Quickshell.Services.SystemTray
 // This Item fills the bar PanelWindow; the PanelWindow itself lives in shell.qml.
 Item {
     id: bar
-    required property var shell
+    required property var connectivityActions
+    required property var mediaActions
     required property var status
     required property var notifications
     required property var popups
@@ -340,7 +341,7 @@ Item {
                         iconColor: hovered ? Theme.tertiaryContrast
                             : Theme.capsuleTextColor(bar.popups.activePopup === "media", mediaCapsule.hovered)
                         normalColor: "transparent"
-                        onClicked: bar.shell.runPlayerctl(modelData.action)
+                        onClicked: bar.mediaActions.runPlayerctl(modelData.action)
                     }
                 }
             }
@@ -519,7 +520,7 @@ Item {
                 id: wifiMouse
                 anchors.fill: parent
                 hoverEnabled: true
-                onClicked: bar.shell.runNetworkCommand()
+                onClicked: bar.connectivityActions.runNetworkCommand()
             }
         }
 
@@ -559,7 +560,7 @@ Item {
                 id: btMouse
                 anchors.fill: parent
                 hoverEnabled: true
-                onClicked: bar.shell.runBluetoothCommand()
+                onClicked: bar.connectivityActions.runBluetoothCommand()
             }
         }
 

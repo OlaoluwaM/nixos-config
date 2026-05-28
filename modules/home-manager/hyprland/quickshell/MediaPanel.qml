@@ -5,7 +5,7 @@ import QtQuick.Layouts
 
 // Media popover content — larger view of now-playing info and controls.
 ColumnLayout {
-    required property var shell
+    required property var mediaActions
     required property var status
     spacing: 14
 
@@ -43,7 +43,7 @@ ColumnLayout {
                 Layout.preferredWidth: 72
                 Layout.preferredHeight: 34
                 buttonHeight: 34
-                onClicked: shell.runPlayerctl(modelData.action)
+                onClicked: mediaActions.runPlayerctl(modelData.action)
             }
         }
     }

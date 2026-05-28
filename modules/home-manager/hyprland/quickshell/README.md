@@ -3,13 +3,18 @@
 This directory contains the QML for the Hyprland desktop shell: the top bar,
 popovers, notifications, tray, and OSD.
 
-Quickshell runs `shell.qml` first. That file owns shared state, starts small
-helper commands, and creates the windows. The other QML files draw the visible
-parts of those windows.
+Quickshell runs `shell.qml` first. That file wires shared services, starts
+small data pipes, and creates the windows. The other QML files draw the visible
+parts of those windows and receive only the service objects they need.
 
 ## Files To Start With
 
-- `shell.qml`: state, command wrappers, timers, notification models, and windows.
+- `shell.qml`: top-level service wiring, timers, data pipes, and windows.
+- `GeneratedCommands.qml`: generated command/script paths from Nix.
+- `CommandRunner.qml`: shared command execution and refresh signaling.
+- `AudioActions.qml`, `BrightnessActions.qml`, `MediaActions.qml`,
+  `PowerActions.qml`, `ConnectivityActions.qml`: domain command APIs used by
+  UI components.
 - `Bar.qml`: the top bar content.
 - `Popovers.qml`: the popup window and the Loader that swaps popup panels.
 - `QuickSettings.qml`, `CalendarPanel.qml`, `TrayPanel.qml`, `MediaPanel.qml`,
@@ -39,13 +44,15 @@ prefer changing one of these components instead of copying a new local block.
 Every new QML file must be added to `qmldir`. This directory has a `qmldir`
 manifest, so Qt does not auto-discover new files.
 
-Every new QML file that should be installed by Home Manager must also be added
-to `modules/home-manager/hyprland/quickshell.nix` under `xdg.configFile`.
+Home Manager copies this directory as the Quickshell config. Generated files
+such as `Theme.qml` and `GeneratedCommands.qml` are copied first, then
+overwritten by `quickshell.nix` with generated content.
 
-Keep command placeholders such as `@STATUS_SCRIPT@` in `shell.qml` only.
-`quickshell.nix` replaces those placeholders with real Nix store paths. Child
-components should call wrapper functions on `shell`, such as
-`shell.runPowerProfileSet(...)`, instead of embedding command strings.
+Keep command placeholders such as `@STATUS_SCRIPT@` in
+`GeneratedCommands.qml` only. `quickshell.nix` replaces those placeholders
+with real Nix store paths. Child components should call methods on the narrow
+domain object they receive, such as `powerActions.runPowerProfileSet(...)`,
+instead of embedding command strings or depending on `shell.qml`.
 
 ## Popup Loading
 
