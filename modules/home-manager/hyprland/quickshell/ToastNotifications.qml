@@ -5,17 +5,17 @@ import Quickshell
 import Quickshell.Wayland
 
 PanelWindow {
-    id: toastWindow
-    required property var notifications
+    id: root
+    required property NotificationService notifications
 
     color: "transparent"
     aboveWindows: true
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.namespace: "quickshell-notifications"
-
-    visible: toastWindow.notifications.popupModel.count > 0 && !toastWindow.notifications.doNotDisturb
+    visible: root.notifications.popupModel.count > 0 && !root.notifications.doNotDisturb
     implicitWidth: 424
     exclusionMode: ExclusionMode.Ignore
+
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.namespace: "quickshell-notifications"
 
     anchors {
         top: true
@@ -25,18 +25,20 @@ PanelWindow {
 
     ListView {
         id: toastList
-        anchors.top: parent.top
-        anchors.right: parent.right
-        anchors.topMargin: 58
-        anchors.rightMargin: 12
         width: 400
         height: parent.height - 58
         spacing: 12
         interactive: false
-        model: toastWindow.notifications.popupModel
+        model: root.notifications.popupModel
+        anchors {
+            top: parent.top
+            right: parent.right
+            topMargin: 58
+            rightMargin: 12
+        }
 
         HoverHandler {
-            onHoveredChanged: toastWindow.notifications.popupsHovered = hovered
+            onHoveredChanged: root.notifications.popupsHovered = hovered
         }
 
         add: Transition {
@@ -64,9 +66,9 @@ PanelWindow {
             strokeWidth: 1
             timeText: qsTr("· now")
             dismissHoverColor: Theme.surfaceVariant
-            onDismissed: toastWindow.notifications.dismissPopup(toastItem.notifId)
+            onDismissed: root.notifications.dismissPopup(toastItem.notifId)
             onActionInvoked: function(index) {
-                toastWindow.notifications.invokeAction(toastItem.notifId, index);
+                root.notifications.invokeAction(toastItem.notifId, index);
             }
         }
     }

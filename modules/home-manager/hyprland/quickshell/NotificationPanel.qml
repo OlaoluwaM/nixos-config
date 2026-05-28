@@ -4,8 +4,8 @@ import QtQuick
 import QtQuick.Layouts
 
 ColumnLayout {
-    id: notifPanel
-    required property var notifications
+    id: root
+    required property NotificationService notifications
     property bool heightAnimationsReady: false
     property bool _tick: false
 
@@ -15,14 +15,14 @@ ColumnLayout {
         interval: 150
         running: true
         repeat: false
-        onTriggered: notifPanel.heightAnimationsReady = true
+        onTriggered: root.heightAnimationsReady = true
     }
 
     Timer {
         interval: 30000
         running: true
         repeat: true
-        onTriggered: notifPanel._tick = !notifPanel._tick
+        onTriggered: root._tick = !root._tick
     }
 
     function timeAgo(ts) {
@@ -38,28 +38,28 @@ ColumnLayout {
 
         Text {
             text: qsTr("Notifications")
-            Layout.alignment: Qt.AlignBaseline
             color: Theme.text
             font.pixelSize: 16
             font.weight: Font.DemiBold
+            Layout.alignment: Qt.AlignBaseline
         }
 
         Text {
-            text: notifPanel.notifications.historyModel.count
-            Layout.alignment: Qt.AlignBaseline
+            text: root.notifications.historyModel.count
             color: Theme.textDim
             font.pixelSize: 13
-            visible: notifPanel.notifications.historyModel.count > 0
+            visible: root.notifications.historyModel.count > 0
+            Layout.alignment: Qt.AlignBaseline
         }
 
         Item { Layout.fillWidth: true }
 
         Text {
             text: qsTr("Clear")
-            Layout.alignment: Qt.AlignBaseline
             color: clearMouse.containsMouse ? Theme.tertiary : Theme.textSecondary
             font.pixelSize: 13
-            visible: notifPanel.notifications.historyModel.count > 0
+            visible: root.notifications.historyModel.count > 0
+            Layout.alignment: Qt.AlignBaseline
 
             Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Easing.InOutQuad } }
 
@@ -67,44 +67,44 @@ ColumnLayout {
                 id: clearMouse
                 anchors.fill: parent
                 hoverEnabled: true
-                onClicked: notifPanel.notifications.clearAll()
+                onClicked: root.notifications.clearAll()
             }
         }
     }
 
     Item {
+        visible: root.notifications.historyModel.count === 0
         Layout.fillWidth: true
         Layout.fillHeight: true
-        visible: notifPanel.notifications.historyModel.count === 0
 
         ColumnLayout {
             anchors.centerIn: parent
             spacing: 12
 
             ShellIcon {
-                Layout.alignment: Qt.AlignHCenter
                 name: "notifications"
                 iconColor: Theme.textDim
                 implicitSize: 28
+                Layout.alignment: Qt.AlignHCenter
             }
 
             Text {
-                Layout.alignment: Qt.AlignHCenter
                 text: qsTr("All clear")
                 color: Theme.textDim
                 font.pixelSize: 14
+                Layout.alignment: Qt.AlignHCenter
             }
         }
     }
 
     Flickable {
         id: notifFlickable
-        Layout.fillWidth: true
-        Layout.fillHeight: true
         contentHeight: notifColumn.implicitHeight
         clip: true
-        visible: notifPanel.notifications.historyModel.count > 0
+        visible: root.notifications.historyModel.count > 0
         boundsBehavior: Flickable.StopAtBounds
+        Layout.fillWidth: true
+        Layout.fillHeight: true
 
         Column {
             id: notifColumn
@@ -112,7 +112,7 @@ ColumnLayout {
             spacing: 12
 
             Repeater {
-                model: notifPanel.notifications.historyModel
+                model: root.notifications.historyModel
 
                 delegate: NotificationCard {
                     id: notifItem
@@ -122,19 +122,19 @@ ColumnLayout {
                     width: notifColumn.width
                     radius: 10
                     expandable: true
-                    heightAnimationEnabled: notifPanel.heightAnimationsReady
+                    heightAnimationEnabled: root.heightAnimationsReady
                     backgroundColor: Theme.surfaceVariant
                     dismissHoverColor: Theme.base
                     timeText: {
-                        void(notifPanel._tick);
-                        return qsTr("· %1").arg(notifPanel.timeAgo(notifItem.timestamp));
+                        void(root._tick);
+                        return qsTr("· %1").arg(root.timeAgo(notifItem.timestamp));
                     }
                     onCardClicked: {
                         notifItem.expanded = !notifItem.expanded;
                     }
-                    onDismissed: notifPanel.notifications.dismissHistory(notifItem.notifId)
+                    onDismissed: root.notifications.dismissHistory(notifItem.notifId)
                     onActionInvoked: function(index) {
-                        notifPanel.notifications.invokeAction(notifItem.notifId, index);
+                        root.notifications.invokeAction(notifItem.notifId, index);
                     }
                 }
             }
