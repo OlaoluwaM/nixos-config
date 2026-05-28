@@ -15,6 +15,12 @@ PanelWindow {
     property bool dialogDanger: false
     property int dialogTimeout: 0
     property string dialogAction: ""
+    readonly property color cancelButtonColor: "#2b2d33"
+    readonly property color cancelButtonHoverColor: "#363941"
+    readonly property color cancelButtonBorderColor: "#474b55"
+    readonly property color cancelButtonHoverBorderColor: "#5a5f6b"
+    readonly property color cancelButtonTextColor: "#c8ccd4"
+    readonly property color cancelButtonHoverTextColor: "#f0f2f5"
 
     signal accepted(string action)
 
@@ -225,6 +231,12 @@ PanelWindow {
                     Layout.fillWidth: true
                     label: qsTr("Cancel")
                     filled: false
+                    textColor: confirmWindow.cancelButtonTextColor
+                    hoverTextColor: confirmWindow.cancelButtonHoverTextColor
+                    unfilledColor: confirmWindow.cancelButtonColor
+                    unfilledHoverColor: confirmWindow.cancelButtonHoverColor
+                    unfilledBorderColor: confirmWindow.cancelButtonBorderColor
+                    unfilledHoverBorderColor: confirmWindow.cancelButtonHoverBorderColor
                     buttonHeight: 38
                     onClicked: confirmWindow.dismiss()
                 }

@@ -94,7 +94,7 @@ Item {
                         height: implicitHeight
                         hoverColor: Theme.primary
                         iconName: "left"
-                        iconColor: hovered ? Theme.primaryContrast : Theme.textSecondary
+                        iconColor: hovered ? Theme.primaryForeground : Theme.textSecondary
                         iconSize: 13
                         onClicked: calPanel.monthOffset -= 1
                     }
@@ -114,7 +114,7 @@ Item {
                         height: implicitHeight
                         hoverColor: Theme.primary
                         iconName: "right"
-                        iconColor: hovered ? Theme.primaryContrast : Theme.textSecondary
+                        iconColor: hovered ? Theme.primaryForeground : Theme.textSecondary
                         iconSize: 13
                         onClicked: calPanel.monthOffset += 1
                     }
@@ -152,7 +152,7 @@ Item {
                             Text {
                                 anchors.centerIn: parent
                                 text: modelData.day
-                                color: modelData.today   ? Theme.primaryContrast
+                                color: modelData.today   ? Theme.primaryForeground
                                      : modelData.current ? Theme.text
                                      : Theme.textDim
                                 font.pixelSize: 12

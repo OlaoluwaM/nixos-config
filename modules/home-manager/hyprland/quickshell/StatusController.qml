@@ -19,6 +19,7 @@ Scope {
     property alias brightnessText: systemStatus.brightnessText
     property alias powerProfileText: systemStatus.powerProfileText
     property alias batteryPercent: battery.batteryPercent
+    property alias batteryReady: battery.batteryReady
     property alias batteryCharging: battery.batteryCharging
     property alias batteryFull: battery.batteryFull
     property alias batteryText: battery.batteryText

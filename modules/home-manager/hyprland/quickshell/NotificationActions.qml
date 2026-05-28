@@ -15,24 +15,34 @@ Flow {
     readonly property color accentColor: root.urgency === 2 ? Theme.error
         : root.urgency === 0 ? Theme.secondary
         : Theme.primary
+    readonly property color accentTextColor: root.urgency === 2 ? Theme.errorForeground
+        : root.urgency === 0 ? Theme.secondaryForeground
+        : Theme.primaryForeground
 
     signal actionInvoked(int index)
 
     spacing: 8
     visible: root.hasActions
 
-    Repeater {
-        model: root.hasActions ? JSON.parse(root.actionLabels) : []
+    Component {
+        id: actionButtonDelegate
 
-        delegate: ActionButton {
+        ActionButton {
             required property string modelData
             required property int index
 
             label: modelData
             accentColor: root.accentColor
+            textColor: root.accentTextColor
+            hoverTextColor: root.accentTextColor
             width: implicitWidth
             height: implicitHeight
             onClicked: root.actionInvoked(index)
         }
+    }
+
+    Repeater {
+        model: root.hasActions ? JSON.parse(root.actionLabels) : []
+        delegate: actionButtonDelegate
     }
 }

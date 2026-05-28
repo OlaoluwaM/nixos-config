@@ -17,7 +17,7 @@ Rectangle {
     ShellIcon {
         anchors.centerIn: parent
         name: "airplane"
-        iconColor: Theme.primaryContrast
+        iconColor: Theme.primaryForeground
         implicitSize: 15
     }
 }

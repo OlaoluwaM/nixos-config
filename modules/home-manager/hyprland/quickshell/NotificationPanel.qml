@@ -56,7 +56,7 @@ ColumnLayout {
 
         Text {
             text: qsTr("Clear")
-            color: clearMouse.containsMouse ? Theme.tertiary : Theme.textSecondary
+            color: clearMouse.containsMouse ? Theme.text : Theme.textSecondary
             font.pixelSize: 13
             visible: root.notifications.historyModel.count > 0
             Layout.alignment: Qt.AlignBaseline

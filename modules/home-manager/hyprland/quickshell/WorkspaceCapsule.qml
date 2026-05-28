@@ -46,7 +46,7 @@ Rectangle {
                     width: !wsDelegate.isActive && wsMouse.containsMouse ? 8 : 6
                     height: width
                     radius: width / 2
-                    color: !wsDelegate.isActive && wsMouse.containsMouse ? Theme.tertiary : Theme.textSecondary
+                    color: !wsDelegate.isActive && wsMouse.containsMouse ? Theme.text : Theme.textSecondary
                     opacity: wsDelegate.isActive ? 0 : 1
 
                     Behavior on width {

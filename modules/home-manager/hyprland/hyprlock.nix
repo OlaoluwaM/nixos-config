@@ -41,7 +41,7 @@ in
             blur_size = 8;
 
             # Fallback background color if the wallpaper path cannot be read.
-            color = "rgb(${stripHash theme.lockFallbackBg})";
+            color = "rgb(${stripHash theme.lockBackground})";
           }
         ];
 
@@ -56,9 +56,9 @@ in
             position = "0, -70";
 
             outline_thickness = 2;
-            outer_color = "rgb(${stripHash theme.lockOuterColor})";
-            inner_color = "rgb(${stripHash theme.lockInnerColor})";
-            font_color = "rgb(${stripHash theme.lockFontColor})";
+            outer_color = "rgb(${stripHash theme.lockRingColor})";
+            inner_color = "rgb(${stripHash theme.lockInputColor})";
+            font_color = "rgb(${stripHash theme.lockTextColor})";
             check_color = "rgb(${stripHash theme.lockCheckColor})";
             fail_color = "rgb(${stripHash theme.lockFailColor})";
 

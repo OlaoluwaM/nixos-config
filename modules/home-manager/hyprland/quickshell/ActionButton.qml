@@ -13,8 +13,12 @@ Rectangle {
     property bool danger: false
     property bool filled: true
     property color accentColor: root.danger ? Theme.error : Theme.primary
-    property color textColor: root.filled ? Theme.primaryContrast : Theme.text
-    property color hoverTextColor: root.filled ? Theme.primaryContrast : Theme.tertiaryContrast
+    property color textColor: root.filled ? (root.danger ? Theme.errorForeground : Theme.primaryForeground) : Theme.text
+    property color hoverTextColor: root.filled ? root.textColor : Theme.text
+    property color unfilledColor: Theme.surfaceVariant
+    property color unfilledHoverColor: root.danger ? Theme.error : Theme.surfaceHover
+    property color unfilledBorderColor: Theme.outline
+    property color unfilledHoverBorderColor: root.danger ? Theme.error : Theme.outline
     readonly property bool hovered: actionMouse.containsMouse
     property int horizontalPadding: 32
     property int buttonHeight: 30
@@ -25,11 +29,11 @@ Rectangle {
     implicitHeight: root.buttonHeight
     radius: Theme.capsuleButtonRadius
     color: root.filled ? root.accentColor
-        : root.hovered ? Theme.tertiary
-        : Theme.surfaceVariant
+        : root.hovered ? root.unfilledHoverColor
+        : root.unfilledColor
     border.color: root.filled ? root.accentColor
-        : root.hovered ? (root.danger ? Theme.error : Theme.tertiary)
-        : Theme.outline
+        : root.hovered ? root.unfilledHoverBorderColor
+        : root.unfilledBorderColor
     border.width: root.filled ? 0 : 1
     opacity: root.filled && !root.hovered ? 0.85 : 1.0
     activeFocusOnTab: true

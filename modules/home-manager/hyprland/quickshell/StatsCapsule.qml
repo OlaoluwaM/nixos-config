@@ -26,10 +26,10 @@ BarCapsule {
                 anchors.centerIn: parent
                 spacing: 5
 
-                ShellIcon { name: "cpu"; iconColor: Theme.statsCpu; implicitSize: 16 }
+                ShellIcon { name: "cpu"; iconColor: Theme.metricCpu; implicitSize: 16 }
                 Text {
                     text: root.status.cpuText
-                    color: Theme.statsCpu
+                    color: Theme.metricCpu
                     font.pixelSize: 13
                 }
             }
@@ -61,10 +61,10 @@ BarCapsule {
                 anchors.centerIn: parent
                 spacing: 5
 
-                ShellIcon { name: "memory"; iconColor: Theme.statsMem; implicitSize: 16 }
+                ShellIcon { name: "memory"; iconColor: Theme.metricMemory; implicitSize: 16 }
                 Text {
                     text: root.status.memText
-                    color: Theme.statsMem
+                    color: Theme.metricMemory
                     font.pixelSize: 13
                 }
             }
@@ -96,10 +96,10 @@ BarCapsule {
                 anchors.centerIn: parent
                 spacing: 5
 
-                ShellIcon { name: "temp"; iconColor: Theme.statsTemp; implicitSize: 16 }
+                ShellIcon { name: "temp"; iconColor: Theme.metricTemperature; implicitSize: 16 }
                 Text {
                     text: root.status.tempText
-                    color: Theme.statsTemp
+                    color: Theme.metricTemperature
                     font.pixelSize: 13
                 }
             }

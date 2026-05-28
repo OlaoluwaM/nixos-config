@@ -10,6 +10,7 @@ QtObject {
     // ── Catppuccin Mocha color palette ──────────────────────────────────
     readonly property color base:           "#1e1e2e"
     readonly property color surfaceVariant: "#313244"
+    readonly property color surfaceHover:   "#3a3c52"
     readonly property color outline:        "#45475a"
     readonly property color text:           "#cdd6f4"
     readonly property color textSecondary:  "#a6adc8"
@@ -18,18 +19,15 @@ QtObject {
     readonly property color secondary:      "#cba6f7"
     readonly property color tertiary:       "#94e2d5"
     readonly property color error:          "#f38ba8"
-    readonly property color primaryContrast:      "#11111b"
-    readonly property color tertiaryContrast:     "#11111b"
-    readonly property color statsCpu:       "#89b4fa"
-    readonly property color statsMem:       "#94e2d5"
-    readonly property color statsTemp:      "#fab387"
-    readonly property color statusGreen:    "#a6e3a1"
-    readonly property color sliderBrightness: "#f9e2af"
-    readonly property color sliderVolume:     "#a6e3a1"
-    readonly property color batteryCardBg: "#181825"
-    readonly property color batteryRing:   "#a6e3a1"
-    readonly property color batteryRingBg: "#11111b"
-    readonly property color powerProfileActive: "#f5c2e7"
+    readonly property color success:        "#a6e3a1"
+    readonly property color warning:        "#f9e2af"
+    readonly property color primaryForeground: "#11111b"
+    readonly property color secondaryForeground: "#11111b"
+    readonly property color tertiaryForeground: "#11111b"
+    readonly property color errorForeground: "#11111b"
+    readonly property color metricCpu:      "#89b4fa"
+    readonly property color metricMemory:   "#94e2d5"
+    readonly property color metricTemperature: "#fab387"
 
     // ── Capsule geometry ────────────────────────────────────────────────
     readonly property int capsuleHeight:        46
@@ -55,13 +53,13 @@ QtObject {
 
     function capsuleBorderColor(active, hovered) {
         if (active)  return primary;
-        if (hovered) return tertiary;
+        if (hovered) return surfaceHover;
         return outline;
     }
 
     function capsuleTextColor(active, hovered) {
         if (active)  return primary;
-        if (hovered) return tertiary;
+        if (hovered) return text;
         return text;
     }
 }

@@ -18,10 +18,11 @@ Rectangle {
     property int buttonHeight: buttonSize
     property int iconSize: 15
     property color activeColor: root.danger ? Theme.error : Theme.primary
+    property color activeIconColor: root.danger ? Theme.errorForeground : Theme.primaryForeground
     property color normalColor: "transparent"
-    property color hoverColor: root.danger ? Theme.error : Theme.tertiary
-    property color iconColor: root.active ? Theme.primaryContrast
-        : mouseArea.containsMouse ? (root.danger ? Theme.error : Theme.tertiary)
+    property color hoverColor: root.danger ? Theme.error : Theme.surfaceHover
+    property color iconColor: root.active ? root.activeIconColor
+        : mouseArea.containsMouse ? (root.danger ? Theme.error : Theme.text)
         : Theme.textSecondary
     readonly property bool hovered: mouseArea.containsMouse
 

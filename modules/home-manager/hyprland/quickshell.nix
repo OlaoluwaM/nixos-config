@@ -157,28 +157,26 @@ let
     QtObject {
 
         // ── Color palette (generated from local.theme) ──────────────────
-        readonly property color base:              "${theme.base}"
-        readonly property color surfaceVariant:    "${theme.surfaceVariant}"
-        readonly property color outline:           "${theme.outline}"
-        readonly property color text:              "${theme.text}"
-        readonly property color textSecondary:     "${theme.textSecondary}"
-        readonly property color textDim:           "${theme.textDim}"
-        readonly property color primary:           "${theme.primary}"
-        readonly property color secondary:         "${theme.secondary}"
-        readonly property color tertiary:          "${theme.tertiary}"
-        readonly property color error:             "${theme.error}"
-        readonly property color primaryContrast:   "${theme.primaryContrast}"
-        readonly property color tertiaryContrast:  "${theme.tertiaryContrast}"
-        readonly property color statsCpu:          "${theme.statsCpu}"
-        readonly property color statsMem:          "${theme.statsMem}"
-        readonly property color statsTemp:         "${theme.statsTemp}"
-        readonly property color statusGreen:       "${theme.statusGreen}"
-        readonly property color sliderBrightness:  "${theme.sliderBrightness}"
-        readonly property color sliderVolume:      "${theme.sliderVolume}"
-        readonly property color batteryCardBg:     "${theme.batteryCardBg}"
-        readonly property color batteryRing:       "${theme.batteryRing}"
-        readonly property color batteryRingBg:     "${theme.batteryRingBg}"
-        readonly property color powerProfileActive: "${theme.powerProfileActive}"
+        readonly property color base:           "${theme.base}"
+        readonly property color surfaceVariant: "${theme.surfaceVariant}"
+        readonly property color surfaceHover:   "${theme.surfaceHover}"
+        readonly property color outline:        "${theme.outline}"
+        readonly property color text:           "${theme.text}"
+        readonly property color textSecondary:  "${theme.textSecondary}"
+        readonly property color textDim:        "${theme.textDim}"
+        readonly property color primary:        "${theme.primary}"
+        readonly property color secondary:      "${theme.secondary}"
+        readonly property color tertiary:       "${theme.tertiary}"
+        readonly property color error:          "${theme.error}"
+        readonly property color success:        "${theme.success}"
+        readonly property color warning:        "${theme.warning}"
+        readonly property color primaryForeground: "${theme.primaryForeground}"
+        readonly property color secondaryForeground: "${theme.secondaryForeground}"
+        readonly property color tertiaryForeground: "${theme.tertiaryForeground}"
+        readonly property color errorForeground: "${theme.errorForeground}"
+        readonly property color metricCpu:      "${theme.metricCpu}"
+        readonly property color metricMemory:   "${theme.metricMemory}"
+        readonly property color metricTemperature: "${theme.metricTemperature}"
 
         // ── Capsule geometry ────────────────────────────────────────────
         readonly property int capsuleHeight:        46
@@ -204,13 +202,13 @@ let
 
         function capsuleBorderColor(active, hovered) {
             if (active)  return primary;
-            if (hovered) return tertiary;
+            if (hovered) return surfaceHover;
             return outline;
         }
 
         function capsuleTextColor(active, hovered) {
             if (active)  return primary;
-            if (hovered) return tertiary;
+            if (hovered) return text;
             return text;
         }
     }

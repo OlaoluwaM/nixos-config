@@ -11,11 +11,14 @@ ColumnLayout {
     required property var powerActions
     required property var status
     required property var notifications
-    spacing: 18
 
     property int batteryPercent: status.batteryPercent
     property bool isCharging: status.batteryCharging
     property bool showPowerMenu: false
+    readonly property color batteryStateColor: !quickSettings.status.batteryReady ? Theme.textSecondary
+        : quickSettings.batteryPercent <= 20 && !quickSettings.isCharging ? Theme.warning
+        : quickSettings.isCharging || quickSettings.status.batteryFull ? Theme.success
+        : Theme.textSecondary
     property string normalizedPowerProfile: {
         let p = status.powerProfileText.toLowerCase();
         if (p === "saver" || p === "quiet") return "power-saver";
@@ -23,6 +26,7 @@ ColumnLayout {
     }
 
     property string batteryStatusLabel: status.batteryStatusLabel
+    spacing: 18
 
     // ── Battery display ──────────────────────────────────────────────
     Item {
@@ -63,13 +67,13 @@ ColumnLayout {
 
                 ShellIcon {
                     name: quickSettings.isCharging ? "batteryCharging" : "battery"
-                    iconColor: Theme.textSecondary
+                    iconColor: quickSettings.batteryStateColor
                     implicitSize: 12
                 }
 
                 Text {
                     text: quickSettings.batteryStatusLabel
-                    color: Theme.textSecondary
+                    color: quickSettings.batteryStateColor
                     font.pixelSize: 13
                 }
             }
