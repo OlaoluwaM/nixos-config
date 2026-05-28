@@ -23,6 +23,7 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell-confirm"
 
+    focusable: confirmWindow.dialogVisible
     visible: confirmWindow.dialogVisible
     exclusionMode: ExclusionMode.Ignore
 
@@ -59,6 +60,7 @@ PanelWindow {
         confirmWindow.dialogTimeout = timeout;
         confirmWindow.dialogAction = action;
         countdown.remaining = timeout;
+        closeAnim.stop();
         confirmCard.opacity = 0;
         confirmCard.scale = 0.92;
         confirmWindow.dialogVisible = true;
@@ -70,7 +72,7 @@ PanelWindow {
 
     function dismiss() {
         countdownTimer.stop();
-        confirmWindow.dialogVisible = false;
+        closeAnim.start();
     }
 
     function executeAction() {
@@ -98,6 +100,12 @@ PanelWindow {
         transformOrigin: Item.Center
         opacity: 0
         scale: 0.92
+        focus: confirmWindow.dialogVisible
+
+        Keys.onEscapePressed: function(event) {
+            confirmWindow.dismiss();
+            event.accepted = true;
+        }
 
         MouseArea { anchors.fill: parent }
 
@@ -113,6 +121,24 @@ PanelWindow {
                 target: confirmCard; property: "scale"
                 from: 0.92; to: 1.0
                 duration: Theme.animNormal
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        ParallelAnimation {
+            id: closeAnim
+            onFinished: confirmWindow.dialogVisible = false
+
+            NumberAnimation {
+                target: confirmCard; property: "opacity"
+                from: confirmCard.opacity; to: 0
+                duration: 150
+                easing.type: Easing.OutCubic
+            }
+            NumberAnimation {
+                target: confirmCard; property: "scale"
+                from: confirmCard.scale; to: 0.96
+                duration: 150
                 easing.type: Easing.OutCubic
             }
         }

@@ -18,6 +18,7 @@ PanelWindow {
     readonly property int topbarBottom: 70
     readonly property int topbarGap: 18
     readonly property int popoverTop: root.topbarBottom + root.topbarGap
+    property string renderedPopup: ""
 
     // One row per popup. This keeps sizing decisions visible in one place
     // instead of scattering the same activePopup checks through the file.
@@ -35,9 +36,10 @@ PanelWindow {
 
     color: "transparent"
     aboveWindows: true
-    visible: root.popups.activePopup.length > 0
+    focusable: root.visible
+    visible: root.renderedPopup.length > 0
 
-    implicitHeight: root.popupSpec(root.popups.activePopup).windowHeight - root.popoverTop
+    implicitHeight: root.popupSpec(root.renderedPopup).windowHeight - root.popoverTop
 
     exclusionMode: ExclusionMode.Ignore
 
@@ -67,12 +69,12 @@ PanelWindow {
         property real trayCardHeight: 260
 
         z: 1
-        width: root.popupSpec(root.popups.activePopup).width
-        height: root.popups.activePopup === "tray"
+        width: root.popupSpec(root.renderedPopup).width
+        height: root.renderedPopup === "tray"
             ? popoverCard.trayCardHeight
-            : root.popupSpec(root.popups.activePopup).height
+            : root.popupSpec(root.renderedPopup).height
 
-        x: root.popupSpec(root.popups.activePopup).align === "center"
+        x: root.popupSpec(root.renderedPopup).align === "center"
             ? Math.round((parent.width - width) / 2)
             : parent.width - width - 12
 
@@ -84,6 +86,12 @@ PanelWindow {
         transformOrigin: Item.Top
         opacity: 0
         scale: 0.92
+        focus: root.visible
+
+        Keys.onEscapePressed: function(event) {
+            root.popups.close();
+            event.accepted = true;
+        }
 
         MouseArea { anchors.fill: parent }
 
@@ -103,6 +111,29 @@ PanelWindow {
             }
         }
 
+        ParallelAnimation {
+            id: closeAnim
+            onFinished: {
+                if (root.popups.activePopup.length === 0) {
+                    popoverLoader.source = "";
+                    root.renderedPopup = "";
+                }
+            }
+
+            NumberAnimation {
+                target: popoverCard; property: "opacity"
+                from: popoverCard.opacity; to: 0
+                duration: 150
+                easing.type: Easing.OutCubic
+            }
+            NumberAnimation {
+                target: popoverCard; property: "scale"
+                from: popoverCard.scale; to: 0.96
+                duration: 150
+                easing.type: Easing.OutCubic
+            }
+        }
+
         NumberAnimation {
             id: trayHeightAnim
             target: popoverCard
@@ -117,11 +148,13 @@ PanelWindow {
             function onActivePopupChanged() {
                 if (root.popups.activePopup === "") {
                     root.popups.trayMenuContentHeight = 0;
-                    popoverLoader.source = "";
+                    closeAnim.start();
                     return;
                 }
 
                 if (root.popups.activePopup.length > 0) {
+                    closeAnim.stop();
+                    root.renderedPopup = root.popups.activePopup;
                     if (root.popups.activePopup === "tray") {
                         popoverCard.trayCardHeight = 260;
                     }
@@ -155,11 +188,11 @@ PanelWindow {
         Loader {
             id: popoverLoader
             anchors.fill: parent
-            anchors.margins: root.popupSpec(root.popups.activePopup).margin
+            anchors.margins: root.popupSpec(root.renderedPopup).margin
             asynchronous: false
 
             function loadPanel() {
-                let popup = root.popups.activePopup;
+                let popup = root.renderedPopup;
                 let src = root.popupSpec(popup).source;
                 if (src) {
                     let props = {};
@@ -189,6 +222,7 @@ PanelWindow {
 
             Component.onCompleted: {
                 if (root.popups.activePopup.length > 0) {
+                    root.renderedPopup = root.popups.activePopup;
                     loadPanel();
                 }
             }
