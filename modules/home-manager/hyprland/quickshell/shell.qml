@@ -12,7 +12,6 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
-import Quickshell.Services.Notifications
 import Quickshell.Services.SystemTray
 import Quickshell.Wayland
 
@@ -21,13 +20,11 @@ Scope {
 
     // ── Popup state ────────────────────────────────────────────────────
     property string activePopup: ""
-    property bool doNotDisturb: false
 
     property bool trayButtonHovered: false
     property bool trayPopoverHovered: false
     property bool trayPinned: false
     property bool airplaneMode: false
-    property bool toastsHovered: false
     property real trayMenuContentHeight: 0
 
     // ── OSD overlay state ──────────────────────────────────────────────
@@ -66,9 +63,6 @@ Scope {
     property string lagosTime: "..."
     property string sanFranciscoTime: "..."
 
-    property var notificationStore: ({})
-    property int nextNotifId: 0
-    readonly property int maxNotificationHistory: 20
     readonly property int trayItemCount: SystemTray.items.values.length
 
     readonly property bool mediaActive: mediaStatus === "Playing" || mediaStatus === "Paused"
@@ -76,13 +70,6 @@ Scope {
         mediaArtist !== "" && mediaTrackTitle !== ""
             ? mediaArtist + " — " + mediaTrackTitle
             : mediaTrackTitle
-
-    // ── Model aliases (so child components can bind) ───────────────────
-    property alias notificationHistoryModel: notificationHistory
-    property alias notificationPopupsModel: notificationPopups
-
-    ListModel { id: notificationHistory }
-    ListModel { id: notificationPopups  }
 
     // ── Popup helpers ──────────────────────────────────────────────────
     function togglePopup(name) {
@@ -212,53 +199,6 @@ Scope {
         root.runAndRefresh("@RFKILL_COMMAND@ " + (root.airplaneMode ? "block" : "unblock") + " all");
     }
 
-    // ── Notification helpers ───────────────────────────────────────────
-    function addNotificationEntry(entry) {
-        notificationHistory.insert(0, entry);
-        while (notificationHistory.count > root.maxNotificationHistory) {
-            let old = notificationHistory.get(notificationHistory.count - 1);
-            delete root.notificationStore[old.notifId];
-            notificationHistory.remove(notificationHistory.count - 1);
-        }
-    }
-
-    function removeFromModel(model, notifId) {
-        for (let i = model.count - 1; i >= 0; i--) {
-            if (model.get(i).notifId === notifId) {
-                model.remove(i);
-                break;
-            }
-        }
-    }
-
-    function invokeNotifAction(notifId, actionIndex) {
-        try {
-            let notif = notificationStore[notifId];
-            if (!notif || actionIndex >= notif.actions.length) return;
-            notif.actions[actionIndex].invoke();
-            if (!notif.resident) removeFromModel(notificationPopups, notifId);
-        } catch(e) {}
-    }
-
-    function dismissNotifPopup(notifId) {
-        removeFromModel(notificationPopups, notifId);
-    }
-
-    function dismissNotifHistory(notifId) {
-        try { let notif = notificationStore[notifId]; if (notif) notif.dismiss(); } catch(e) {}
-        delete notificationStore[notifId];
-        removeFromModel(notificationHistory, notifId);
-    }
-
-    function clearAllNotifications() {
-        for (let i = 0; i < notificationHistory.count; i++) {
-            let item = notificationHistory.get(i);
-            try { let notif = notificationStore[item.notifId]; if (notif) notif.dismiss(); } catch(e) {}
-            delete notificationStore[item.notifId];
-        }
-        notificationHistory.clear();
-    }
-
     // ── Popup command channel (keybind → shell file → QML) ─────────────
     function handlePopupCommand(text) {
         let trimmed = text.trim();
@@ -277,55 +217,7 @@ Scope {
         }
     }
 
-    // ── Notification server ────────────────────────────────────────────
-    NotificationServer {
-        bodySupported: true
-        imageSupported: true
-        actionsSupported: true
-
-        onNotification: function(notification) {
-            notification.tracked = true;
-            let id = root.nextNotifId++;
-            root.notificationStore[id] = notification;
-
-            let labels = [];
-            for (let i = 0; i < notification.actions.length; i++)
-                labels.push(notification.actions[i].text);
-
-            let entry = {
-                notifId: id,
-                appName: notification.appName || "System",
-                summary: notification.summary || "Notification",
-                body: notification.body || "",
-                timestamp: Date.now(),
-                hasActions: notification.actions.length > 0,
-                actionLabels: JSON.stringify(labels),
-                urgency: notification.urgency || 0
-            };
-            root.addNotificationEntry(entry);
-            if (!root.doNotDisturb) {
-                notificationPopups.insert(0, entry);
-                popupTrimTimer.restart();
-            }
-        }
-    }
-
     // ── Timers ─────────────────────────────────────────────────────────
-    Timer {
-        id: popupTrimTimer
-        interval: 5500
-        onTriggered: {
-            if (root.toastsHovered) {
-                restart();
-                return;
-            }
-            if (notificationPopups.count > 0)
-                notificationPopups.remove(notificationPopups.count - 1);
-            if (notificationPopups.count > 0)
-                restart();
-        }
-    }
-
     Timer {
         id: trayCloseTimer
         interval: 260
@@ -464,6 +356,9 @@ Scope {
     //  Windows
     // ════════════════════════════════════════════════════════════════════
 
+    // ── Notification service ──────────────────────────────────────────
+    NotificationService { id: notificationService }
+
     // ── Top bar ────────────────────────────────────────────────────────
     PanelWindow {
         visible: true
@@ -483,16 +378,20 @@ Scope {
 
         Bar {
             shell: root
+            notifications: notificationService
             height: 62
             anchors { top: parent.top; left: parent.left; right: parent.right }
         }
     }
 
     // ── Popovers ───────────────────────────────────────────────────────
-    Popovers { shell: root }
+    Popovers {
+        shell: root
+        notifications: notificationService
+    }
 
     // ── Toast notifications ────────────────────────────────────────────
-    ToastNotifications { shell: root }
+    ToastNotifications { notifications: notificationService }
 
     // ── OSD overlay (volume / brightness / keyboard backlight) ─────────
     OsdOverlay { shell: root }

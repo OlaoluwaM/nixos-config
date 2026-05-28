@@ -7,6 +7,7 @@ import Quickshell.Wayland
 PanelWindow {
     id: popoverWindow
     required property var shell
+    required property var notifications
 
     // One row per popup. This keeps sizing decisions visible in one place
     // instead of scattering the same activePopup checks through the file.
@@ -142,8 +143,11 @@ PanelWindow {
                 let src = popoverWindow.popupSpec(popup).source;
                 if (src) {
                     let props = {};
-                    if (popup !== "calendar") {
+                    if (popup !== "calendar" && popup !== "notifications") {
                         props.shell = popoverWindow.shell;
+                    }
+                    if (popup === "quickSettings" || popup === "notifications") {
+                        props.notifications = popoverWindow.notifications;
                     }
                     if (popup === "tray") {
                         props.popoverWindow = popoverWindow;

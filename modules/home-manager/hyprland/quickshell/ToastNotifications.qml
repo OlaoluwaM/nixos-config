@@ -7,20 +7,20 @@ import Quickshell.Wayland
 
 PanelWindow {
     id: toastWindow
-    required property var shell
+    required property var notifications
 
     color: "transparent"
     aboveWindows: true
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell-notifications"
 
-    visible: toastWindow.shell.notificationPopupsModel.count > 0 && !toastWindow.shell.doNotDisturb
+    visible: toastWindow.notifications.popupModel.count > 0 && !toastWindow.notifications.doNotDisturb
     implicitWidth: 424
-    implicitHeight: 800
     exclusionMode: ExclusionMode.Ignore
 
     anchors {
         top: true
+        bottom: true
         right: true
     }
 
@@ -32,12 +32,12 @@ PanelWindow {
         anchors.rightMargin: 12
         width: 400
         height: parent.height - 58
-        spacing: 8
+        spacing: 12
         interactive: false
-        model: toastWindow.shell.notificationPopupsModel
+        model: toastWindow.notifications.popupModel
 
         HoverHandler {
-            onHoveredChanged: toastWindow.shell.toastsHovered = hovered
+            onHoveredChanged: toastWindow.notifications.popupsHovered = hovered
         }
 
         add: Transition {
@@ -63,9 +63,14 @@ PanelWindow {
             required property string actionLabels
             required property int urgency
 
+            readonly property int minimumCardHeight: 104
+            readonly property int verticalPadding: 22
+
             width: toastList.width
-            height: toastContent.implicitHeight + 38
+            height: Math.max(minimumCardHeight, toastContent.implicitHeight + verticalPadding * 2)
             radius: Theme.cardRadius
+            topLeftRadius: 0
+            bottomLeftRadius: 0
             color: Theme.base
             border.color: Theme.outline
             border.width: 1
@@ -85,10 +90,9 @@ PanelWindow {
                 id: toastContent
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.top: parent.top
+                anchors.verticalCenter: parent.verticalCenter
                 anchors.leftMargin: 20
                 anchors.rightMargin: 14
-                anchors.topMargin: 14
                 spacing: 4
 
                 RowLayout {
@@ -127,7 +131,7 @@ PanelWindow {
                             id: toastDismissMouse
                             anchors.fill: parent
                             hoverEnabled: true
-                            onClicked: toastWindow.shell.dismissNotifPopup(toastItem.notifId)
+                            onClicked: toastWindow.notifications.dismissPopup(toastItem.notifId)
                         }
                     }
                 }
@@ -159,7 +163,7 @@ PanelWindow {
                     actionLabels: toastItem.actionLabels
                     urgency: toastItem.urgency
                     onActionInvoked: function(index) {
-                        toastWindow.shell.invokeNotifAction(toastItem.notifId, index);
+                        toastWindow.notifications.invokeAction(toastItem.notifId, index);
                     }
                 }
             }

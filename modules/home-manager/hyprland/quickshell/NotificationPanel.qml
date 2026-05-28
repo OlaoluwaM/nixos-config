@@ -5,7 +5,7 @@ import QtQuick.Layouts
 
 ColumnLayout {
     id: notifPanel
-    required property var shell
+    required property var notifications
     spacing: 16
 
     property bool _tick: false
@@ -36,11 +36,11 @@ ColumnLayout {
         }
 
         Text {
-            text: notifPanel.shell.notificationHistoryModel.count
+            text: notifPanel.notifications.historyModel.count
             Layout.alignment: Qt.AlignBaseline
             color: Theme.textDim
             font.pixelSize: 13
-            visible: notifPanel.shell.notificationHistoryModel.count > 0
+            visible: notifPanel.notifications.historyModel.count > 0
         }
 
         Item { Layout.fillWidth: true }
@@ -50,7 +50,7 @@ ColumnLayout {
             Layout.alignment: Qt.AlignBaseline
             color: clearMouse.containsMouse ? Theme.tertiary : Theme.textSecondary
             font.pixelSize: 13
-            visible: notifPanel.shell.notificationHistoryModel.count > 0
+            visible: notifPanel.notifications.historyModel.count > 0
 
             Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Easing.InOutQuad } }
 
@@ -58,7 +58,7 @@ ColumnLayout {
                 id: clearMouse
                 anchors.fill: parent
                 hoverEnabled: true
-                onClicked: notifPanel.shell.clearAllNotifications()
+                onClicked: notifPanel.notifications.clearAll()
             }
         }
     }
@@ -66,7 +66,7 @@ ColumnLayout {
     Item {
         Layout.fillWidth: true
         Layout.fillHeight: true
-        visible: notifPanel.shell.notificationHistoryModel.count === 0
+        visible: notifPanel.notifications.historyModel.count === 0
 
         ColumnLayout {
             anchors.centerIn: parent
@@ -94,16 +94,16 @@ ColumnLayout {
         Layout.fillHeight: true
         contentHeight: notifColumn.implicitHeight
         clip: true
-        visible: notifPanel.shell.notificationHistoryModel.count > 0
+        visible: notifPanel.notifications.historyModel.count > 0
         boundsBehavior: Flickable.StopAtBounds
 
         Column {
             id: notifColumn
             width: notifFlickable.width
-            spacing: 8
+            spacing: 12
 
             Repeater {
-                model: notifPanel.shell.notificationHistoryModel
+                model: notifPanel.notifications.historyModel
 
                 delegate: Rectangle {
                     id: notifItem
@@ -118,10 +118,14 @@ ColumnLayout {
                     required property int urgency
 
                     property bool expanded: false
+                    readonly property int minimumCardHeight: 104
+                    readonly property int verticalPadding: 17
 
                     width: notifColumn.width
-                    height: notifContent.implicitHeight + 38
+                    height: Math.max(minimumCardHeight, notifContent.implicitHeight + verticalPadding * 2)
                     radius: 10
+                    topLeftRadius: 0
+                    bottomLeftRadius: 0
                     color: Theme.surfaceVariant
                     clip: true
 
@@ -157,7 +161,7 @@ ColumnLayout {
                         anchors.top: parent.top
                         anchors.leftMargin: 20
                         anchors.rightMargin: 14
-                        anchors.topMargin: 14
+                        anchors.topMargin: notifItem.verticalPadding
                         spacing: 4
 
                         RowLayout {
@@ -207,7 +211,7 @@ ColumnLayout {
                                     id: dismissMouse
                                     anchors.fill: parent
                                     hoverEnabled: true
-                                    onClicked: notifPanel.shell.dismissNotifHistory(notifItem.notifId)
+                                    onClicked: notifPanel.notifications.dismissHistory(notifItem.notifId)
                                 }
                             }
                         }
@@ -242,7 +246,7 @@ ColumnLayout {
                             actionLabels: notifItem.actionLabels
                             urgency: notifItem.urgency
                             onActionInvoked: function(index) {
-                                notifPanel.shell.invokeNotifAction(notifItem.notifId, index);
+                                notifPanel.notifications.invokeAction(notifItem.notifId, index);
                             }
                         }
                     }

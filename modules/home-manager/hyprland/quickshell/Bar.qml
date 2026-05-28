@@ -10,6 +10,7 @@ import Quickshell.Services.SystemTray
 Item {
     id: bar
     required property var shell
+    required property var notifications
     readonly property int statsSlotWidth: 54
 
     // ════════════════════════════════════════════════════════════════════
@@ -404,13 +405,13 @@ Item {
             ShellIcon {
                 id: notifBellIcon
                 anchors.centerIn: parent
-                name: bar.shell.doNotDisturb ? "notificationsOff" : "notifications"
+                name: bar.notifications.doNotDisturb ? "notificationsOff" : "notifications"
                 iconColor: Theme.capsuleTextColor(bar.shell.activePopup === "notifications", notifCapsule.hovered)
                 implicitSize: 15
             }
 
             Rectangle {
-                visible: bar.shell.notificationHistoryModel.count > 0
+                visible: bar.notifications.historyModel.count > 0
                 width: 7
                 height: 7
                 radius: 3.5

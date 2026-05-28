@@ -8,6 +8,7 @@ HoverTooltip 1.0 HoverTooltip.qml
 ActionButton 1.0 ActionButton.qml
 StyledSlider 1.0 StyledSlider.qml
 NotificationActions 1.0 NotificationActions.qml
+NotificationService 1.0 NotificationService.qml
 Bar 1.0 Bar.qml
 Popovers 1.0 Popovers.qml
 QuickSettings 1.0 QuickSettings.qml

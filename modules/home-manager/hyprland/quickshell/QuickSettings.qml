@@ -6,6 +6,7 @@ import QtQuick.Layouts
 ColumnLayout {
     id: quickSettings
     required property var shell
+    required property var notifications
     spacing: 18
 
     property int batteryPercent: parseInt(shell.batteryText) || 0
@@ -143,7 +144,7 @@ ColumnLayout {
                 id: toggleBtn
                 required property var modelData
 
-                active: (modelData.action === "dnd" && quickSettings.shell.doNotDisturb)
+                active: (modelData.action === "dnd" && quickSettings.notifications.doNotDisturb)
                     || (modelData.action === "airplane" && quickSettings.shell.airplaneMode)
                     || (modelData.action === "power" && quickSettings.showPowerMenu)
                 activeColor: modelData.danger ? Theme.error : Theme.primary
@@ -161,7 +162,7 @@ ColumnLayout {
                 onClicked: {
                     switch (toggleBtn.modelData.action) {
                         case "lock": quickSettings.shell.runLockCommand(); break;
-                        case "dnd": quickSettings.shell.doNotDisturb = !quickSettings.shell.doNotDisturb; break;
+                        case "dnd": quickSettings.notifications.toggleDoNotDisturb(); break;
                         case "airplane": quickSettings.shell.toggleAirplaneMode(); break;
                         case "power": quickSettings.showPowerMenu = !quickSettings.showPowerMenu; break;
                     }
