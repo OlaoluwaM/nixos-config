@@ -4,6 +4,16 @@ singleton GeneratedCommands GeneratedCommands.qml
 ShellIcon 1.0 ShellIcon.qml
 MarqueeText 1.0 MarqueeText.qml
 BarCapsule 1.0 BarCapsule.qml
+AirplaneModeCapsule 1.0 AirplaneModeCapsule.qml
+BluetoothCapsule 1.0 BluetoothCapsule.qml
+ClockCapsule 1.0 ClockCapsule.qml
+MediaCapsule 1.0 MediaCapsule.qml
+NotificationCapsule 1.0 NotificationCapsule.qml
+QuickSettingsCapsule 1.0 QuickSettingsCapsule.qml
+StatsCapsule 1.0 StatsCapsule.qml
+TrayCapsule 1.0 TrayCapsule.qml
+WifiCapsule 1.0 WifiCapsule.qml
+WorkspaceCapsule 1.0 WorkspaceCapsule.qml
 IconButton 1.0 IconButton.qml
 HoverTooltip 1.0 HoverTooltip.qml
 ActionButton 1.0 ActionButton.qml
