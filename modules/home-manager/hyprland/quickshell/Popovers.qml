@@ -141,7 +141,10 @@ PanelWindow {
                 let popup = popoverWindow.shell.activePopup;
                 let src = popoverWindow.popupSpec(popup).source;
                 if (src) {
-                    let props = { shell: popoverWindow.shell };
+                    let props = {};
+                    if (popup !== "calendar") {
+                        props.shell = popoverWindow.shell;
+                    }
                     if (popup === "tray") {
                         props.popoverWindow = popoverWindow;
                         props.popoverCard = popoverCard;

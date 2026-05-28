@@ -7,12 +7,49 @@ import QtQuick.Layouts
 // Adjust popover card size in Popovers.qml if the grid is clipped.
 Item {
     id: calPanel
-    required property var shell
 
     // Live clock — ticks every second for the big display
     property string hoursMinutes: "--:--"
     property string seconds: ":--"
     property string dateLine: "Loading"
+    property int monthOffset: 0
+
+    function calendarDate() {
+        let now = new Date();
+        return new Date(now.getFullYear(), now.getMonth() + calPanel.monthOffset, 1);
+    }
+
+    function calendarTitle() {
+        let d = calPanel.calendarDate();
+        let months = ["January","February","March","April","May","June",
+                      "July","August","September","October","November","December"];
+        return months[d.getMonth()] + " " + d.getFullYear();
+    }
+
+    function calendarDays() {
+        let now = new Date();
+        let target = calPanel.calendarDate();
+        let year = target.getFullYear();
+        let month = target.getMonth();
+        let first = new Date(year, month, 1);
+        let start = (first.getDay() + 6) % 7; // Monday = 0
+        let daysInMonth = new Date(year, month + 1, 0).getDate();
+        let daysInPrev = new Date(year, month, 0).getDate();
+        let result = [];
+        for (let i = 0; i < 42; i++) {
+            let day = i - start + 1;
+            let value = day;
+            let current = true;
+            if (day < 1) { value = daysInPrev + day; current = false; }
+            else if (day > daysInMonth) { value = day - daysInMonth; current = false; }
+            result.push({
+                day: value,
+                current: current,
+                today: current && value === now.getDate() && month === now.getMonth() && year === now.getFullYear()
+            });
+        }
+        return result;
+    }
 
     Timer {
         interval: 1000
@@ -59,12 +96,12 @@ Item {
                         iconName: "left"
                         iconColor: hovered ? Theme.primaryContrast : Theme.textSecondary
                         iconSize: 13
-                        onClicked: calPanel.shell.calendarMonthOffset -= 1
+                        onClicked: calPanel.monthOffset -= 1
                     }
 
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: calPanel.shell.calendarTitle().toUpperCase()
+                        text: calPanel.calendarTitle().toUpperCase()
                         color: Theme.text
                         font.pixelSize: 15
                         font.weight: Font.DemiBold
@@ -79,7 +116,7 @@ Item {
                         iconName: "right"
                         iconColor: hovered ? Theme.primaryContrast : Theme.textSecondary
                         iconSize: 13
-                        onClicked: calPanel.shell.calendarMonthOffset += 1
+                        onClicked: calPanel.monthOffset += 1
                     }
                 }
 
@@ -103,7 +140,7 @@ Item {
                     }
 
                     Repeater {
-                        model: calPanel.shell.calendarDays()
+                        model: calPanel.calendarDays()
 
                         delegate: Rectangle {
                             required property var modelData

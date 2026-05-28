@@ -7,14 +7,23 @@ import Quickshell.Wayland
 
 PanelWindow {
     id: confirmWindow
-    required property var shell
+
+    property bool dialogVisible: false
+    property string dialogTitle: ""
+    property string dialogDescription: ""
+    property string dialogIcon: ""
+    property bool dialogDanger: false
+    property int dialogTimeout: 0
+    property string dialogAction: ""
+
+    signal accepted(string action)
 
     color: "transparent"
     aboveWindows: true
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell-confirm"
 
-    visible: shell.confirmDialogVisible
+    visible: confirmWindow.dialogVisible
     exclusionMode: ExclusionMode.Ignore
 
     anchors {
@@ -42,31 +51,32 @@ PanelWindow {
         }
     }
 
-    function executeAction() {
-        let action = shell.confirmAction;
-        shell.dismissConfirmDialog();
-        switch (action) {
-            case "logout": shell.runLogoutCommand(); break;
-            case "reboot": shell.runRebootCommand(); break;
-            case "suspend": shell.runSleepCommand(); break;
-            case "poweroff": shell.runPowerOffCommand(); break;
-        }
+    function request(title, description, icon, danger, timeout, action) {
+        confirmWindow.dialogTitle = title;
+        confirmWindow.dialogDescription = description;
+        confirmWindow.dialogIcon = icon;
+        confirmWindow.dialogDanger = danger;
+        confirmWindow.dialogTimeout = timeout;
+        confirmWindow.dialogAction = action;
+        countdown.remaining = timeout;
+        confirmCard.opacity = 0;
+        confirmCard.scale = 0.92;
+        confirmWindow.dialogVisible = true;
+        countdownTimer.stop();
+        openAnim.start();
+        if (timeout > 0)
+            countdownTimer.start();
     }
 
-    Connections {
-        target: confirmWindow.shell
-        function onConfirmDialogVisibleChanged() {
-            if (confirmWindow.shell.confirmDialogVisible) {
-                countdown.remaining = confirmWindow.shell.confirmTimeout;
-                confirmCard.opacity = 0;
-                confirmCard.scale = 0.92;
-                openAnim.start();
-                if (confirmWindow.shell.confirmTimeout > 0)
-                    countdownTimer.start();
-            } else {
-                countdownTimer.stop();
-            }
-        }
+    function dismiss() {
+        countdownTimer.stop();
+        confirmWindow.dialogVisible = false;
+    }
+
+    function executeAction() {
+        let action = confirmWindow.dialogAction;
+        confirmWindow.dismiss();
+        confirmWindow.accepted(action);
     }
 
     Rectangle {
@@ -119,14 +129,14 @@ PanelWindow {
 
             ShellIcon {
                 Layout.alignment: Qt.AlignHCenter
-                name: confirmWindow.shell.confirmIcon
-                iconColor: confirmWindow.shell.confirmDanger ? Theme.error : Theme.text
+                name: confirmWindow.dialogIcon
+                iconColor: confirmWindow.dialogDanger ? Theme.error : Theme.text
                 implicitSize: 28
             }
 
             Text {
                 Layout.alignment: Qt.AlignHCenter
-                text: confirmWindow.shell.confirmTitle
+                text: confirmWindow.dialogTitle
                 color: Theme.text
                 font.pixelSize: 22
                 font.weight: Font.DemiBold
@@ -135,7 +145,7 @@ PanelWindow {
             Text {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.maximumWidth: contentCol.width
-                text: confirmWindow.shell.confirmDescription
+                text: confirmWindow.dialogDescription
                 color: Theme.textSecondary
                 font.pixelSize: 13
                 horizontalAlignment: Text.AlignHCenter
@@ -143,7 +153,7 @@ PanelWindow {
             }
 
             ColumnLayout {
-                visible: confirmWindow.shell.confirmTimeout > 0
+                visible: confirmWindow.dialogTimeout > 0
                 Layout.fillWidth: true
                 Layout.topMargin: 4
                 spacing: 8
@@ -157,10 +167,10 @@ PanelWindow {
                     Rectangle {
                         height: parent.height
                         radius: 2
-                        color: confirmWindow.shell.confirmDanger ? Theme.error : Theme.primary
+                        color: confirmWindow.dialogDanger ? Theme.error : Theme.primary
                         opacity: 0.7
-                        width: confirmWindow.shell.confirmTimeout > 0
-                            ? parent.width * (countdown.remaining / confirmWindow.shell.confirmTimeout)
+                        width: confirmWindow.dialogTimeout > 0
+                            ? parent.width * (countdown.remaining / confirmWindow.dialogTimeout)
                             : 0
 
                         Behavior on width {
@@ -190,15 +200,15 @@ PanelWindow {
                     label: qsTr("Cancel")
                     filled: false
                     buttonHeight: 38
-                    onClicked: confirmWindow.shell.dismissConfirmDialog()
+                    onClicked: confirmWindow.dismiss()
                 }
 
                 ActionButton {
                     Layout.fillWidth: true
-                    label: confirmWindow.shell.confirmTitle
+                    label: confirmWindow.dialogTitle
                     filled: true
-                    danger: confirmWindow.shell.confirmDanger
-                    accentColor: confirmWindow.shell.confirmDanger ? Theme.error : Theme.primary
+                    danger: confirmWindow.dialogDanger
+                    accentColor: confirmWindow.dialogDanger ? Theme.error : Theme.primary
                     buttonHeight: 38
                     onClicked: confirmWindow.executeAction()
                 }
@@ -209,6 +219,6 @@ PanelWindow {
     MouseArea {
         anchors.fill: parent
         z: -1
-        onClicked: confirmWindow.shell.dismissConfirmDialog()
+        onClicked: confirmWindow.dismiss()
     }
 }

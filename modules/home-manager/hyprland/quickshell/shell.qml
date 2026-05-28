@@ -30,17 +30,6 @@ Scope {
     property bool toastsHovered: false
     property real trayMenuContentHeight: 0
 
-    property int calendarMonthOffset: 0
-
-    // ── Confirm dialog state ──────────────────────────────────────────
-    property bool confirmDialogVisible: false
-    property string confirmTitle: ""
-    property string confirmDescription: ""
-    property string confirmIcon: ""
-    property bool confirmDanger: false
-    property int confirmTimeout: 0
-    property string confirmAction: ""
-
     // ── OSD overlay state ──────────────────────────────────────────────
     property string osdIcon: "volume"
     property real osdValue: 0
@@ -120,17 +109,11 @@ Scope {
     // ── Confirm dialog helpers ────────────────────────────────────────
     function requestConfirmation(title, description, icon, danger, timeout, action) {
         activePopup = "";
-        confirmTitle = title;
-        confirmDescription = description;
-        confirmIcon = icon;
-        confirmDanger = danger;
-        confirmTimeout = timeout;
-        confirmAction = action;
-        confirmDialogVisible = true;
+        confirmDialog.request(title, description, icon, danger, timeout, action);
     }
 
     function dismissConfirmDialog() {
-        confirmDialogVisible = false;
+        confirmDialog.dismiss();
     }
 
     // ── Command helpers (keep here — Nix substitutes the paths) ────────
@@ -292,44 +275,6 @@ Scope {
             case "osd-keyboard": osdRefreshTimer.osdType = "keyboard"; osdRefreshTimer.restart(); break;
             case "osd-mute": osdRefreshTimer.osdType = "volume"; osdRefreshTimer.restart(); break;
         }
-    }
-
-    // ── Calendar helpers ───────────────────────────────────────────────
-    function calendarDate() {
-        let now = new Date();
-        return new Date(now.getFullYear(), now.getMonth() + root.calendarMonthOffset, 1);
-    }
-
-    function calendarTitle() {
-        let d = root.calendarDate();
-        let months = ["January","February","March","April","May","June",
-                      "July","August","September","October","November","December"];
-        return months[d.getMonth()] + " " + d.getFullYear();
-    }
-
-    function calendarDays() {
-        let now = new Date();
-        let target = root.calendarDate();
-        let year = target.getFullYear();
-        let month = target.getMonth();
-        let first = new Date(year, month, 1);
-        let start = (first.getDay() + 6) % 7; // Monday = 0
-        let daysInMonth = new Date(year, month + 1, 0).getDate();
-        let daysInPrev  = new Date(year, month, 0).getDate();
-        let result = [];
-        for (let i = 0; i < 42; i++) {
-            let day = i - start + 1;
-            let value = day;
-            let current = true;
-            if (day < 1) { value = daysInPrev + day; current = false; }
-            else if (day > daysInMonth) { value = day - daysInMonth; current = false; }
-            result.push({
-                day: value,
-                current: current,
-                today: current && value === now.getDate() && month === now.getMonth() && year === now.getFullYear()
-            });
-        }
-        return result;
     }
 
     // ── Notification server ────────────────────────────────────────────
@@ -553,5 +498,16 @@ Scope {
     OsdOverlay { shell: root }
 
     // ── Confirm dialog ────────────────────────────────────────────────
-    ConfirmDialog { shell: root }
+    ConfirmDialog {
+        id: confirmDialog
+
+        onAccepted: function(action) {
+            switch (action) {
+                case "logout": root.runLogoutCommand(); break;
+                case "reboot": root.runRebootCommand(); break;
+                case "suspend": root.runSleepCommand(); break;
+                case "poweroff": root.runPowerOffCommand(); break;
+            }
+        }
+    }
 }
