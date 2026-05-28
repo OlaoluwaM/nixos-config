@@ -160,14 +160,14 @@ Scope {
         visible: true
         color: "transparent"
         aboveWindows: true
-        WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.namespace: "quickshell-topbar"
-
         implicitWidth: 1200
         // The visible bar is 62px tall. The window is taller so bar tooltips
         // can draw below the capsules instead of being clipped by layer-shell.
         implicitHeight: 96
         exclusiveZone: 70
+
+        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.namespace: "quickshell-topbar"
 
         margins { top: 6; left: 10; right: 10; bottom: 0 }
         anchors { top: true; left: true; right: true }
