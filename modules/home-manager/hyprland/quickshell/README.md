@@ -13,8 +13,9 @@ parts of those windows and receive only the service objects they need.
 - `GeneratedCommands.qml`: generated command/script paths from Nix.
 - `CommandRunner.qml`: shared command execution and refresh signaling.
 - `AudioActions.qml`, `BrightnessActions.qml`, `MediaActions.qml`,
-  `PowerActions.qml`, `ConnectivityActions.qml`: domain command APIs used by
-  UI components.
+  `PowerActions.qml`, `ConnectivityActions.qml`: domain APIs used by UI
+  components. Audio/media use native Quickshell services; the others wrap
+  command-backed integrations.
 - `Bar.qml`: the top bar content.
 - `Popovers.qml`: the popup window and the Loader that swaps popup panels.
 - `QuickSettings.qml`, `CalendarPanel.qml`, `TrayPanel.qml`, `MediaPanel.qml`,
@@ -52,7 +53,9 @@ Keep command placeholders such as `@STATUS_SCRIPT@` in
 `GeneratedCommands.qml` only. `quickshell.nix` replaces those placeholders
 with real Nix store paths. Child components should call methods on the narrow
 domain object they receive, such as `powerActions.runPowerProfileSet(...)`,
-instead of embedding command strings or depending on `shell.qml`.
+instead of embedding command strings or depending on `shell.qml`. Prefer native
+Quickshell services over shell commands when Quickshell already exposes the
+domain, as it does for PipeWire audio, MPRIS media, and UPower battery state.
 
 ## Popup Loading
 

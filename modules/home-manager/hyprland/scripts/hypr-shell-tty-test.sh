@@ -205,9 +205,9 @@ bind = SUPER SHIFT, 7, movetoworkspace, 7
 bind = SUPER SHIFT, 8, movetoworkspace, 8
 bind = SUPER SHIFT, 9, movetoworkspace, 9
 
-bindel = , XF86AudioRaiseVolume, exec, pamixer -i 5 && ${tty_bin_dir}/hypr-shell-popup osd-volume
-bindel = , XF86AudioLowerVolume, exec, pamixer -d 5 && ${tty_bin_dir}/hypr-shell-popup osd-volume
-bindl = , XF86AudioMute, exec, pamixer -t && ${tty_bin_dir}/hypr-shell-popup osd-mute
+bindel = , XF86AudioRaiseVolume, exec, ${tty_bin_dir}/hypr-shell-popup audio-up
+bindel = , XF86AudioLowerVolume, exec, ${tty_bin_dir}/hypr-shell-popup audio-down
+bindl = , XF86AudioMute, exec, ${tty_bin_dir}/hypr-shell-popup audio-mute
 bindel = , XF86MonBrightnessUp, exec, brightnessctl set 5%+ && ${tty_bin_dir}/hypr-shell-popup osd-brightness
 bindel = , XF86MonBrightnessDown, exec, brightnessctl set 5%- && ${tty_bin_dir}/hypr-shell-popup osd-brightness
 bindel = , XF86KbdBrightnessUp, exec, brightnessctl -d '*::kbd_backlight' set 5%+ && ${tty_bin_dir}/hypr-shell-popup osd-keyboard

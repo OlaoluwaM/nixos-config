@@ -43,7 +43,7 @@ ColumnLayout {
                 Layout.preferredWidth: 72
                 Layout.preferredHeight: 34
                 buttonHeight: 34
-                onClicked: mediaActions.runPlayerctl(modelData.action)
+                onClicked: mediaActions.perform(modelData.action)
             }
         }
     }

@@ -2,10 +2,10 @@ pragma ComponentBehavior: Bound
 
 //  Root shell configuration.
 //
-//  This file wires shared services, data pipes (shell script → QML), timers,
-//  and the three PanelWindows that make up the desktop shell. Visual content
-//  lives in Bar.qml, Popovers.qml, and ToastNotifications.qml. Colors, sizing,
-//  and generated command paths live in Theme.qml and GeneratedCommands.qml.
+//  This file wires shared services, command-backed data pipes, timers, and the
+//  three PanelWindows that make up the desktop shell. Visual content lives in
+//  Bar.qml, Popovers.qml, and ToastNotifications.qml. Colors, sizing, and
+//  generated command paths live in Theme.qml and GeneratedCommands.qml.
 
 import QtQuick
 import QtQuick.Layouts
@@ -42,6 +42,9 @@ Scope {
         root.popupCommandToken = token;
         switch (command) {
             case "quickSettings": popupController.toggle("quickSettings"); break;
+            case "audio-up": audioActions.adjustVolume(5); break;
+            case "audio-down": audioActions.adjustVolume(-5); break;
+            case "audio-mute": audioActions.toggleMute(); break;
             case "osd-volume": commandRunner.refreshOsd("volume"); break;
             case "osd-brightness": commandRunner.refreshOsd("brightness"); break;
             case "osd-keyboard": commandRunner.refreshOsd("keyboard"); break;
@@ -79,25 +82,21 @@ Scope {
     Process {
         id: osdReadProcess
         command: ["sh", "-c",
-            "vol=$(" + GeneratedCommands.pamixerCommand + " --get-volume 2>/dev/null || echo -1);" +
-            "mute=$(" + GeneratedCommands.pamixerCommand + " --get-mute 2>/dev/null || echo false);" +
             "bri=$(" + GeneratedCommands.brightnessCommand + " -m 2>/dev/null | awk -F, '{print $4}' | tr -d '%');" +
             "kbd=$(" + GeneratedCommands.brightnessCommand + " -m -d '*::kbd_backlight' 2>/dev/null | awk -F, '{print $4}' | tr -d '%');" +
-            "printf '%s %s %s %s' \"$vol\" \"$mute\" \"${bri:--1}\" \"${kbd:--1}\""
+            "printf '%s %s' \"${bri:--1}\" \"${kbd:--1}\""
         ]
         stdout: StdioCollector {
             onStreamFinished: {
                 let parts = this.text.trim().split(" ");
-                let vol = parseInt(parts[0]) || 0;
-                let muted = parts[1] === "true";
-                let bri = parseInt(parts[2]) || 0;
-                let kbd = parseInt(parts[3]) || 0;
+                let bri = parseInt(parts[0]) || 0;
+                let kbd = parseInt(parts[1]) || 0;
 
-                statusController.updateOsdReadings(vol, muted, bri);
+                statusController.updateOsdReadings(bri);
 
                 let t = osdRefreshTimer.osdType;
                 if (t === "volume") {
-                    osdController.show(muted ? "volumeMuted" : "volume", vol);
+                    osdController.show(statusController.muted ? "volumeMuted" : "volume", statusController.volumePercent);
                 } else if (t === "brightness") {
                     osdController.show("brightness", bri);
                 } else if (t === "keyboard") {
@@ -172,7 +171,7 @@ Scope {
 
     AudioActions { id: audioActions; runner: commandRunner }
     BrightnessActions { id: brightnessActions; runner: commandRunner }
-    MediaActions { id: mediaActions; runner: commandRunner }
+    MediaActions { id: mediaActions; status: statusController }
     ConnectivityActions { id: connectivityActions; runner: commandRunner; status: statusController }
 
     PowerActions {

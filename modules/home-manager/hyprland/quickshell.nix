@@ -39,7 +39,7 @@ let
 
   # writeShellApplication builds a real executable in the Nix store. runtimeInputs
   # are packages placed on PATH when that executable runs. This is why the shell
-  # scripts can call commands like jq, playerctl, and pamixer without using
+  # scripts can call commands like jq, sensors, and nmcli without using
   # hardcoded paths inside the scripts.
   powerProfileScript = pkgs.writeShellApplication {
     name = "hypr-shell-power-profile";
@@ -55,8 +55,8 @@ let
     text = builtins.readFile ./scripts/hypr-shell-power-profile.sh;
   };
 
-  # This script is the main data source for the top bar and quick settings.
-  # It prints JSON with CPU, memory, temperature, network, media, battery, etc.
+  # This script provides command-backed status data. Native Quickshell services
+  # provide audio, media, and battery state directly inside QML.
   statusScript = pkgs.writeShellApplication {
     name = "hypr-shell-status";
     runtimeInputs = with pkgs; [
@@ -69,8 +69,6 @@ let
       jq
       lm_sensors
       networkmanager
-      pamixer
-      playerctl
       powerProfileScript
     ];
     text = builtins.readFile ./scripts/hypr-shell-status.sh;
@@ -225,7 +223,7 @@ let
   # hardcoded paths. replaceStrings swaps those placeholders for exact Nix store
   # paths.
   # This matters because Nix packages live at long immutable paths such as
-  # /nix/store/.../bin/playerctl, not simply /usr/bin/playerctl.
+  # /nix/store/.../bin/brightnessctl, not simply /usr/bin/brightnessctl.
   commandPlaceholders = [
     "@STATUS_SCRIPT@"
     "@TIMEZONE_SCRIPT@"
@@ -235,9 +233,7 @@ let
     "@POWER_COMMAND@"
     "@REBOOT_COMMAND@"
     "@POWER_PROFILE_COMMAND@"
-    "@PAMIXER_COMMAND@"
     "@BRIGHTNESS_COMMAND@"
-    "@PLAYERCTL_COMMAND@"
     "@LOCK_COMMAND@"
     "@SLEEP_COMMAND@"
     "@REFRESH_COMMAND@"
@@ -255,9 +251,7 @@ let
     "${unstable.hyprshutdown}/bin/hyprshutdown -t 'Shutting down...' --post-cmd 'shutdown -P 0'"
     "${unstable.hyprshutdown}/bin/hyprshutdown -t 'Restarting...' --post-cmd 'reboot'"
     "${powerProfileScript}/bin/hypr-shell-power-profile"
-    "${pkgs.pamixer}/bin/pamixer"
     "${pkgs.brightnessctl}/bin/brightnessctl"
-    "${pkgs.playerctl}/bin/playerctl"
     "${pkgs.systemd}/bin/loginctl lock-session"
     "${pkgs.systemd}/bin/systemctl suspend"
     "${pkgs.hyprland}/bin/hyprctl reload"
@@ -301,8 +295,6 @@ in
       lm_sensors
       mission-center
       airctl
-      pamixer
-      playerctl
       quickshell
       satty
       slurp
@@ -513,10 +505,10 @@ in
         bind = $mod, Escape, exec, ${unstable.hyprshutdown}/bin/hyprshutdown
         bind = , XF86PowerOff, exec, ${unstable.hyprshutdown}/bin/hyprshutdown
 
-        # Volume keys
-        bindel = , XF86AudioRaiseVolume, exec, ${pkgs.pamixer}/bin/pamixer -i 5 && ${popupScript}/bin/hypr-shell-popup osd-volume
-        bindel = , XF86AudioLowerVolume, exec, ${pkgs.pamixer}/bin/pamixer -d 5 && ${popupScript}/bin/hypr-shell-popup osd-volume
-        bindl = , XF86AudioMute, exec, ${pkgs.pamixer}/bin/pamixer -t && ${popupScript}/bin/hypr-shell-popup osd-mute
+        # Volume keys route through Quickshell so PipeWire stays the audio API.
+        bindel = , XF86AudioRaiseVolume, exec, ${popupScript}/bin/hypr-shell-popup audio-up
+        bindel = , XF86AudioLowerVolume, exec, ${popupScript}/bin/hypr-shell-popup audio-down
+        bindl = , XF86AudioMute, exec, ${popupScript}/bin/hypr-shell-popup audio-mute
 
         # Brightness keys
         bindel = , XF86MonBrightnessUp, exec, ${pkgs.brightnessctl}/bin/brightnessctl set 5%+ && ${popupScript}/bin/hypr-shell-popup osd-brightness

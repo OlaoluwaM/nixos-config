@@ -14,6 +14,9 @@ set -euo pipefail
 #   hypr-shell-popup quick-settings
 # opens the quick settings popover.
 #
+# Volume commands are routed through Quickshell so PipeWire remains the single
+# place where shell UI volume changes happen.
+#
 # The first value written to the file is a timestamp token. That token makes
 # every write unique, so shell.qml can tell "this is a new command" instead of
 # repeatedly handling the same old file content.
@@ -27,11 +30,11 @@ case "${1:-}" in
 quick-settings | quickSettings)
 	command="quickSettings"
 	;;
-osd-volume | osd-brightness | osd-keyboard | osd-mute)
+audio-up | audio-down | audio-mute | osd-volume | osd-brightness | osd-keyboard | osd-mute)
 	command="$1"
 	;;
 *)
-	printf 'Usage: %s <quick-settings|osd-volume|osd-brightness|osd-keyboard|osd-mute>\n' "$0" >&2
+	printf 'Usage: %s <quick-settings|audio-up|audio-down|audio-mute|osd-volume|osd-brightness|osd-keyboard|osd-mute>\n' "$0" >&2
 	exit 64
 	;;
 esac

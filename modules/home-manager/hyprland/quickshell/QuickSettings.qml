@@ -13,13 +13,8 @@ ColumnLayout {
     required property var notifications
     spacing: 18
 
-    property int batteryPercent: parseInt(status.batteryText) || 0
-    property bool isCharging: {
-        let t = status.batteryText.toLowerCase();
-        return t.indexOf("charging") >= 0
-            && t.indexOf("not charging") < 0
-            && t.indexOf("discharging") < 0;
-    }
+    property int batteryPercent: status.batteryPercent
+    property bool isCharging: status.batteryCharging
     property bool showPowerMenu: false
     property string normalizedPowerProfile: {
         let p = status.powerProfileText.toLowerCase();
@@ -27,15 +22,7 @@ ColumnLayout {
         return p;
     }
 
-    property string batteryStatusLabel: {
-        let t = status.batteryText.toLowerCase();
-        if (t === "ac") return "AC Power";
-        if (isCharging) return "Charging";
-        if (t.indexOf("not charging") >= 0) return "Plugged In";
-        if (t.indexOf("full") >= 0) return "Full";
-        if (t.indexOf("discharging") >= 0) return "On Battery";
-        return "On Battery";
-    }
+    property string batteryStatusLabel: status.batteryStatusLabel
 
     // ── Battery display ──────────────────────────────────────────────
     Item {

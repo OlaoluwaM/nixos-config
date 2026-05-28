@@ -11,15 +11,15 @@ set -euo pipefail
 #
 # Why this helper exists:
 # The real GeneratedCommands.qml contains placeholders such as @STATUS_SCRIPT@
-# and @PLAYERCTL_COMMAND@. During a normal Home Manager switch, quickshell.nix
+# and @BRIGHTNESS_COMMAND@. During a normal Home Manager switch, quickshell.nix
 # replaces those placeholders with exact Nix store paths. For host-side TTY
 # testing, we are not doing a Home Manager switch, so this helper substitutes
 # those placeholders with small wrapper scripts in a temporary runtime folder.
 #
 # The wrappers call the real host commands. That means the TTY test reads actual
-# host values: /proc CPU/memory data, sensors, NetworkManager, pamixer,
-# brightnessctl, playerctl, etc. Missing host services still show fallback text
-# like N/A, Offline, or Stopped, but there is no mock data here.
+# host values: /proc CPU/memory data, sensors, NetworkManager, brightnessctl,
+# etc. Missing host services still show fallback text like N/A or Offline, but
+# there is no mock data here.
 
 usage() {
 	cat >&2 <<'EOF'
@@ -154,9 +154,7 @@ write_command_wrapper vicinae vicinae
 write_command_wrapper airctl airctl
 write_command_wrapper overskride overskride
 write_command_wrapper hyprshutdown hyprshutdown
-write_command_wrapper pamixer pamixer
 write_command_wrapper brightnessctl brightnessctl
-write_command_wrapper playerctl playerctl
 
 if [ "${HYPR_SHELL_TTY_SMOKE:-}" = "1" ]; then
 	cat >"$output_dir/shell.qml" <<'EOF'
@@ -234,9 +232,7 @@ replace_command_placeholder '@NETWORK_COMMAND@' "$bin_dir/airctl"
 replace_command_placeholder '@BLUETOOTH_COMMAND@' "$bin_dir/overskride"
 replace_command_placeholder '@POWER_COMMAND@' "$bin_dir/hyprshutdown -t 'Shutting down...' --post-cmd 'systemctl poweroff'"
 replace_command_placeholder '@POWER_PROFILE_COMMAND@' "$bin_dir/hypr-shell-power-profile"
-replace_command_placeholder '@PAMIXER_COMMAND@' "$bin_dir/pamixer"
 replace_command_placeholder '@BRIGHTNESS_COMMAND@' "$bin_dir/brightnessctl"
-replace_command_placeholder '@PLAYERCTL_COMMAND@' "$bin_dir/playerctl"
 replace_command_placeholder '@REBOOT_COMMAND@' "$bin_dir/hyprshutdown -t 'Restarting...' --post-cmd 'systemctl reboot'"
 replace_command_placeholder '@LOCK_COMMAND@' "loginctl lock-session"
 replace_command_placeholder '@SLEEP_COMMAND@' "systemctl suspend"

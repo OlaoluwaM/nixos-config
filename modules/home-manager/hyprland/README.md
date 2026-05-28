@@ -79,9 +79,12 @@ The bar is top-aligned and includes:
   - Birmingham, UK
   - Lagos, Nigeria
   - San Francisco, CA
-- MPRIS/media indicator and basic media controls.
+- MPRIS/media indicator and basic media controls through Quickshell's native
+  MPRIS service.
 - Always-visible CPU, memory, and temperature readouts.
-- GNOME-like quick settings popover for volume, built-in backlight brightness, network/VPN, Bluetooth, DND, power profile, battery, system stats, and `hyprshutdown`.
+- GNOME-like quick settings popover for PipeWire volume, built-in backlight
+  brightness, network/VPN, Bluetooth, DND, power profile, UPower battery,
+  system stats, and `hyprshutdown`.
 - Native Quickshell notification history and popups.
 - System tray overflow, shown only when tray items exist.
 

@@ -341,7 +341,7 @@ Item {
                         iconColor: hovered ? Theme.tertiaryContrast
                             : Theme.capsuleTextColor(bar.popups.activePopup === "media", mediaCapsule.hovered)
                         normalColor: "transparent"
-                        onClicked: bar.mediaActions.runPlayerctl(modelData.action)
+                        onClicked: bar.mediaActions.perform(modelData.action)
                     }
                 }
             }
