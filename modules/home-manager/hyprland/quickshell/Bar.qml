@@ -11,6 +11,7 @@ Item {
     id: bar
     required property var shell
     required property var notifications
+    required property var popups
     readonly property int statsSlotWidth: 54
 
     // ════════════════════════════════════════════════════════════════════
@@ -240,7 +241,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         visible: bar.shell.mediaActive
         width: bar.shell.mediaActive ? 280 : 0
-        active: bar.shell.activePopup === "media"
+        active: bar.popups.activePopup === "media"
         clipped: true
 
         Row {
@@ -290,7 +291,7 @@ Item {
                         width: parent.width
                         height: implicitHeight
                         text: bar.shell.mediaDisplayTitle
-                        color: Theme.capsuleTextColor(bar.shell.activePopup === "media", mediaCapsule.hovered)
+                        color: Theme.capsuleTextColor(bar.popups.activePopup === "media", mediaCapsule.hovered)
                         font.pixelSize: 12
                         font.weight: Font.DemiBold
                     }
@@ -298,7 +299,7 @@ Item {
                     Text {
                         width: parent.width
                         text: bar.shell.mediaPosition + " / " + bar.shell.mediaLength
-                        color: Theme.capsuleTextColor(bar.shell.activePopup === "media", mediaCapsule.hovered)
+                        color: Theme.capsuleTextColor(bar.popups.activePopup === "media", mediaCapsule.hovered)
                         font.pixelSize: 11
                         elide: Text.ElideRight
                         maximumLineCount: 1
@@ -308,7 +309,7 @@ Item {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: bar.shell.togglePopup("media")
+                    onClicked: bar.popups.toggle("media")
                 }
             }
 
@@ -336,7 +337,7 @@ Item {
                         iconName: modelData.icon
                         iconSize: 15
                         iconColor: hovered ? Theme.tertiaryContrast
-                            : Theme.capsuleTextColor(bar.shell.activePopup === "media", mediaCapsule.hovered)
+                            : Theme.capsuleTextColor(bar.popups.activePopup === "media", mediaCapsule.hovered)
                         normalColor: "transparent"
                         onClicked: bar.shell.runPlayerctl(modelData.action)
                     }
@@ -356,7 +357,7 @@ Item {
         BarCapsule {
             id: clockPill
             width: clockRow.implicitWidth + 30
-            active: bar.shell.activePopup === "calendar"
+            active: bar.popups.activePopup === "calendar"
 
             Row {
                 id: clockRow
@@ -368,7 +369,7 @@ Item {
                         let parts = bar.shell.clockText.split(" ");
                         return parts.slice(0, 2).join(" ");
                     }
-                    color: Theme.capsuleTextColor(bar.shell.activePopup === "calendar", clockPill.hovered)
+                    color: Theme.capsuleTextColor(bar.popups.activePopup === "calendar", clockPill.hovered)
                     font.pixelSize: 14
                     font.weight: Font.DemiBold
 
@@ -380,7 +381,7 @@ Item {
                         let parts = bar.shell.clockText.split(" ");
                         return parts.slice(2).join(" ");
                     }
-                    color: Theme.capsuleTextColor(bar.shell.activePopup === "calendar", clockPill.hovered)
+                    color: Theme.capsuleTextColor(bar.popups.activePopup === "calendar", clockPill.hovered)
                     font.pixelSize: 14
                     font.weight: Font.DemiBold
 
@@ -392,7 +393,7 @@ Item {
                 id: clockMouse
                 anchors.fill: parent
                 hoverEnabled: true
-                onClicked: bar.shell.togglePopup("calendar")
+                onClicked: bar.popups.toggle("calendar")
             }
         }
 
@@ -400,13 +401,13 @@ Item {
         BarCapsule {
             id: notifCapsule
             width: Theme.capsuleHeight
-            active: bar.shell.activePopup === "notifications"
+            active: bar.popups.activePopup === "notifications"
 
             ShellIcon {
                 id: notifBellIcon
                 anchors.centerIn: parent
                 name: bar.notifications.doNotDisturb ? "notificationsOff" : "notifications"
-                iconColor: Theme.capsuleTextColor(bar.shell.activePopup === "notifications", notifCapsule.hovered)
+                iconColor: Theme.capsuleTextColor(bar.popups.activePopup === "notifications", notifCapsule.hovered)
                 implicitSize: 15
             }
 
@@ -426,7 +427,7 @@ Item {
                 id: notifMouse
                 anchors.fill: parent
                 hoverEnabled: true
-                onClicked: bar.shell.togglePopup("notifications")
+                onClicked: bar.popups.toggle("notifications")
             }
         }
     }
@@ -444,14 +445,14 @@ Item {
         // ── Tray capsule (hidden when empty) ───────────────────────────
         BarCapsule {
             id: trayCapsule
-            visible: bar.shell.trayItemCount > 0
-            width: bar.shell.trayItemCount > 0 ? Theme.capsuleHeight : 0
-            active: bar.shell.activePopup === "tray"
+            visible: bar.popups.trayItemCount > 0
+            width: bar.popups.trayItemCount > 0 ? Theme.capsuleHeight : 0
+            active: bar.popups.activePopup === "tray"
 
             ShellIcon {
                 anchors.centerIn: parent
                 name: "tray"
-                iconColor: Theme.capsuleTextColor(bar.shell.activePopup === "tray", trayCapsule.hovered)
+                iconColor: Theme.capsuleTextColor(bar.popups.activePopup === "tray", trayCapsule.hovered)
                 implicitSize: 16
             }
 
@@ -459,7 +460,7 @@ Item {
                 id: trayBtnMouse
                 anchors.fill: parent
                 hoverEnabled: true
-                onClicked: bar.shell.togglePopup("tray")
+                onClicked: bar.popups.toggle("tray")
             }
         }
 
@@ -565,12 +566,12 @@ Item {
         BarCapsule {
             id: quickSettingsCapsule
             width: Theme.capsuleHeight
-            active: bar.shell.activePopup === "quickSettings"
+            active: bar.popups.activePopup === "quickSettings"
 
             ShellIcon {
                 anchors.centerIn: parent
                 name: "quick"
-                iconColor: Theme.capsuleTextColor(bar.shell.activePopup === "quickSettings", quickSettingsCapsule.hovered)
+                iconColor: Theme.capsuleTextColor(bar.popups.activePopup === "quickSettings", quickSettingsCapsule.hovered)
                 implicitSize: 17
             }
 
@@ -578,7 +579,7 @@ Item {
                 id: qsMouse
                 anchors.fill: parent
                 hoverEnabled: true
-                onClicked: bar.shell.togglePopup("quickSettings")
+                onClicked: bar.popups.toggle("quickSettings")
             }
         }
     }

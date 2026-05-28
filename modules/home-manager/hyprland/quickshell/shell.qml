@@ -18,14 +18,7 @@ import Quickshell.Wayland
 Scope {
     id: root
 
-    // ── Popup state ────────────────────────────────────────────────────
-    property string activePopup: ""
-
-    property bool trayButtonHovered: false
-    property bool trayPopoverHovered: false
-    property bool trayPinned: false
     property bool airplaneMode: false
-    property real trayMenuContentHeight: 0
 
     // ── OSD overlay state ──────────────────────────────────────────────
     property string osdIcon: "volume"
@@ -63,39 +56,15 @@ Scope {
     property string lagosTime: "..."
     property string sanFranciscoTime: "..."
 
-    readonly property int trayItemCount: SystemTray.items.values.length
-
     readonly property bool mediaActive: mediaStatus === "Playing" || mediaStatus === "Paused"
     readonly property string mediaDisplayTitle:
         mediaArtist !== "" && mediaTrackTitle !== ""
             ? mediaArtist + " — " + mediaTrackTitle
             : mediaTrackTitle
 
-    // ── Popup helpers ──────────────────────────────────────────────────
-    function togglePopup(name) {
-        if (name !== "tray") trayPinned = false;
-        activePopup = activePopup === name ? "" : name;
-    }
-
-    function openTrayPopup(pinned) {
-        if (root.trayItemCount === 0) return;
-        trayPinned = pinned;
-        activePopup = "tray";
-        trayCloseTimer.stop();
-    }
-
-    function scheduleTrayClose() {
-        if (activePopup === "tray" && !trayPinned) trayCloseTimer.restart();
-    }
-
-    function maybeCloseTrayPopup() {
-        if (activePopup === "tray" && !trayPinned && !trayButtonHovered && !trayPopoverHovered)
-            activePopup = "";
-    }
-
     // ── Confirm dialog helpers ────────────────────────────────────────
     function requestConfirmation(title, description, icon, danger, timeout, action) {
-        activePopup = "";
+        popupController.close();
         confirmDialog.request(title, description, icon, danger, timeout, action);
     }
 
@@ -209,19 +178,12 @@ Scope {
         if (token === "" || token === root.popupCommandToken) return;
         root.popupCommandToken = token;
         switch (command) {
-            case "quickSettings": root.togglePopup("quickSettings"); break;
+            case "quickSettings": popupController.toggle("quickSettings"); break;
             case "osd-volume": osdRefreshTimer.osdType = "volume"; osdRefreshTimer.restart(); break;
             case "osd-brightness": osdRefreshTimer.osdType = "brightness"; osdRefreshTimer.restart(); break;
             case "osd-keyboard": osdRefreshTimer.osdType = "keyboard"; osdRefreshTimer.restart(); break;
             case "osd-mute": osdRefreshTimer.osdType = "volume"; osdRefreshTimer.restart(); break;
         }
-    }
-
-    // ── Timers ─────────────────────────────────────────────────────────
-    Timer {
-        id: trayCloseTimer
-        interval: 260
-        onTriggered: root.maybeCloseTrayPopup()
     }
 
     // ── Data pipes (shell scripts → QML properties) ────────────────────
@@ -359,6 +321,12 @@ Scope {
     // ── Notification service ──────────────────────────────────────────
     NotificationService { id: notificationService }
 
+    // ── Popup controller ──────────────────────────────────────────────
+    PopupController {
+        id: popupController
+        trayItemCount: SystemTray.items.values.length
+    }
+
     // ── Top bar ────────────────────────────────────────────────────────
     PanelWindow {
         visible: true
@@ -379,6 +347,7 @@ Scope {
         Bar {
             shell: root
             notifications: notificationService
+            popups: popupController
             height: 62
             anchors { top: parent.top; left: parent.left; right: parent.right }
         }
@@ -388,6 +357,7 @@ Scope {
     Popovers {
         shell: root
         notifications: notificationService
+        popups: popupController
     }
 
     // ── Toast notifications ────────────────────────────────────────────

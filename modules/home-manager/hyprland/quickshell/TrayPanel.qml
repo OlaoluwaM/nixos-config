@@ -7,9 +7,7 @@ import Quickshell.Services.SystemTray
 
 ColumnLayout {
     id: trayPanel
-    required property var shell
-    required property var popoverWindow
-    required property var popoverCard
+    required property var popups
     spacing: 16
 
     property var activeMenuSource: null
@@ -36,14 +34,14 @@ ColumnLayout {
         }
         PauseAnimation { duration: 30 }
         ScriptAction {
-            script: trayPanel.shell.trayMenuContentHeight = menuColumn.implicitHeight + 44
+            script: trayPanel.popups.trayMenuContentHeight = menuColumn.implicitHeight + 44
         }
     }
 
     SequentialAnimation {
         id: closeMenuAnim
         ScriptAction {
-            script: trayPanel.shell.trayMenuContentHeight = 0
+            script: trayPanel.popups.trayMenuContentHeight = 0
         }
         PauseAnimation { duration: 60 }
         ParallelAnimation {

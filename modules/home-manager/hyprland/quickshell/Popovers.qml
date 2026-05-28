@@ -8,6 +8,7 @@ PanelWindow {
     id: popoverWindow
     required property var shell
     required property var notifications
+    required property var popups
 
     // One row per popup. This keeps sizing decisions visible in one place
     // instead of scattering the same activePopup checks through the file.
@@ -28,9 +29,9 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell-popover"
 
-    visible: shell.activePopup !== ""
+    visible: popoverWindow.popups.activePopup !== ""
 
-    implicitHeight: popoverWindow.popupSpec(shell.activePopup).windowHeight
+    implicitHeight: popoverWindow.popupSpec(popoverWindow.popups.activePopup).windowHeight
 
     exclusionMode: ExclusionMode.Ignore
 
@@ -47,12 +48,12 @@ PanelWindow {
 
         property real trayCardHeight: 260
 
-        width: popoverWindow.popupSpec(shell.activePopup).width
-        height: shell.activePopup === "tray"
+        width: popoverWindow.popupSpec(popoverWindow.popups.activePopup).width
+        height: popoverWindow.popups.activePopup === "tray"
             ? popoverCard.trayCardHeight
-            : popoverWindow.popupSpec(shell.activePopup).height
+            : popoverWindow.popupSpec(popoverWindow.popups.activePopup).height
 
-        x: popoverWindow.popupSpec(shell.activePopup).align === "center"
+        x: popoverWindow.popupSpec(popoverWindow.popups.activePopup).align === "center"
             ? Math.round((parent.width - width) / 2)
             : parent.width - width - 12
 
@@ -93,16 +94,16 @@ PanelWindow {
         }
 
         Connections {
-            target: popoverWindow.shell
+            target: popoverWindow.popups
             function onActivePopupChanged() {
-                if (popoverWindow.shell.activePopup === "") {
-                    popoverWindow.shell.trayMenuContentHeight = 0;
+                if (popoverWindow.popups.activePopup === "") {
+                    popoverWindow.popups.trayMenuContentHeight = 0;
                     popoverLoader.source = "";
                     return;
                 }
 
-                if (popoverWindow.shell.activePopup !== "") {
-                    if (popoverWindow.shell.activePopup === "tray") {
+                if (popoverWindow.popups.activePopup !== "") {
+                    if (popoverWindow.popups.activePopup === "tray") {
                         popoverCard.trayCardHeight = 260;
                     }
                     popoverCard.opacity = 0;
@@ -112,9 +113,9 @@ PanelWindow {
                 }
             }
             function onTrayMenuContentHeightChanged() {
-                if (popoverWindow.shell.activePopup === "tray") {
-                    let target = popoverWindow.shell.trayMenuContentHeight > 0
-                        ? Math.min(popoverWindow.shell.trayMenuContentHeight + 72, 500)
+                if (popoverWindow.popups.activePopup === "tray") {
+                    let target = popoverWindow.popups.trayMenuContentHeight > 0
+                        ? Math.min(popoverWindow.popups.trayMenuContentHeight + 72, 500)
                         : 260;
                     trayHeightAnim.stop();
                     trayHeightAnim.from = popoverCard.trayCardHeight;
@@ -127,7 +128,7 @@ PanelWindow {
         HoverHandler {
             onHoveredChanged: {
                 if (hovered) {
-                    popoverWindow.shell.trayPopoverHovered = popoverWindow.shell.activePopup === "tray";
+                    popoverWindow.popups.trayPopoverHovered = popoverWindow.popups.activePopup === "tray";
                 }
             }
         }
@@ -135,23 +136,22 @@ PanelWindow {
         Loader {
             id: popoverLoader
             anchors.fill: parent
-            anchors.margins: popoverWindow.popupSpec(popoverWindow.shell.activePopup).margin
+            anchors.margins: popoverWindow.popupSpec(popoverWindow.popups.activePopup).margin
             asynchronous: false
 
             function loadPanel() {
-                let popup = popoverWindow.shell.activePopup;
+                let popup = popoverWindow.popups.activePopup;
                 let src = popoverWindow.popupSpec(popup).source;
                 if (src) {
                     let props = {};
-                    if (popup !== "calendar" && popup !== "notifications") {
+                    if (popup !== "calendar" && popup !== "notifications" && popup !== "tray") {
                         props.shell = popoverWindow.shell;
                     }
                     if (popup === "quickSettings" || popup === "notifications") {
                         props.notifications = popoverWindow.notifications;
                     }
                     if (popup === "tray") {
-                        props.popoverWindow = popoverWindow;
-                        props.popoverCard = popoverCard;
+                        props.popups = popoverWindow.popups;
                     }
                     popoverLoader.setSource(src, props);
                 } else {
@@ -160,7 +160,7 @@ PanelWindow {
             }
 
             Component.onCompleted: {
-                if (popoverWindow.shell.activePopup !== "") {
+                if (popoverWindow.popups.activePopup !== "") {
                     loadPanel();
                 }
             }
@@ -170,9 +170,6 @@ PanelWindow {
     MouseArea {
         anchors.fill: parent
         z: -1
-        onClicked: {
-            popoverWindow.shell.trayPinned = false;
-            popoverWindow.shell.activePopup = "";
-        }
+        onClicked: popoverWindow.popups.close()
     }
 }
