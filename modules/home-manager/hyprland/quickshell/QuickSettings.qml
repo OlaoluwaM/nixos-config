@@ -159,10 +159,12 @@ ColumnLayout {
                 Layout.preferredHeight: 42
 
                 onClicked: {
-                    if (toggleBtn.modelData.action === "lock") quickSettings.shell.runLockCommand();
-                    else if (toggleBtn.modelData.action === "dnd") quickSettings.shell.doNotDisturb = !quickSettings.shell.doNotDisturb;
-                    else if (toggleBtn.modelData.action === "airplane") quickSettings.shell.toggleAirplaneMode();
-                    else if (toggleBtn.modelData.action === "power") quickSettings.showPowerMenu = !quickSettings.showPowerMenu;
+                    switch (toggleBtn.modelData.action) {
+                        case "lock": quickSettings.shell.runLockCommand(); break;
+                        case "dnd": quickSettings.shell.doNotDisturb = !quickSettings.shell.doNotDisturb; break;
+                        case "airplane": quickSettings.shell.toggleAirplaneMode(); break;
+                        case "power": quickSettings.showPowerMenu = !quickSettings.showPowerMenu; break;
+                    }
                 }
             }
         }
@@ -201,10 +203,28 @@ ColumnLayout {
                 Layout.preferredHeight: 42
 
                 onClicked: {
-                    if (powerBtn.modelData.action === "logout") quickSettings.shell.runLogoutCommand();
-                    else if (powerBtn.modelData.action === "reboot") quickSettings.shell.runRebootCommand();
-                    else if (powerBtn.modelData.action === "suspend") quickSettings.shell.runSleepCommand();
-                    else if (powerBtn.modelData.action === "poweroff") quickSettings.shell.runPowerOffCommand();
+                    switch (powerBtn.modelData.action) {
+                        case "logout":
+                            quickSettings.shell.requestConfirmation(
+                                qsTr("Log Out"), qsTr("Your session will end."),
+                                "logout", false, 60, "logout");
+                            break;
+                        case "reboot":
+                            quickSettings.shell.requestConfirmation(
+                                qsTr("Restart"), qsTr("The system will restart."),
+                                "refresh", false, 60, "reboot");
+                            break;
+                        case "suspend":
+                            quickSettings.shell.requestConfirmation(
+                                qsTr("Suspend"), qsTr("The system will go to sleep."),
+                                "sleep", false, 60, "suspend");
+                            break;
+                        case "poweroff":
+                            quickSettings.shell.requestConfirmation(
+                                qsTr("Power Off"), qsTr("The system will shut down."),
+                                "power", true, 60, "poweroff");
+                            break;
+                    }
                 }
 
                 HoverTooltip {

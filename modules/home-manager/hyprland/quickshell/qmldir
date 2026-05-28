@@ -17,3 +17,4 @@ TrayPanel 1.0 TrayPanel.qml
 NotificationPanel 1.0 NotificationPanel.qml
 ToastNotifications 1.0 ToastNotifications.qml
 OsdOverlay 1.0 OsdOverlay.qml
+ConfirmDialog 1.0 ConfirmDialog.qml

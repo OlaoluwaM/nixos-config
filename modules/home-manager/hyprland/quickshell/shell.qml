@@ -32,6 +32,15 @@ Scope {
 
     property int calendarMonthOffset: 0
 
+    // ── Confirm dialog state ──────────────────────────────────────────
+    property bool confirmDialogVisible: false
+    property string confirmTitle: ""
+    property string confirmDescription: ""
+    property string confirmIcon: ""
+    property bool confirmDanger: false
+    property int confirmTimeout: 0
+    property string confirmAction: ""
+
     // ── OSD overlay state ──────────────────────────────────────────────
     property string osdIcon: "volume"
     property real osdValue: 0
@@ -108,9 +117,40 @@ Scope {
             activePopup = "";
     }
 
+    // ── Confirm dialog helpers ────────────────────────────────────────
+    function requestConfirmation(title, description, icon, danger, timeout, action) {
+        activePopup = "";
+        confirmTitle = title;
+        confirmDescription = description;
+        confirmIcon = icon;
+        confirmDanger = danger;
+        confirmTimeout = timeout;
+        confirmAction = action;
+        confirmDialogVisible = true;
+    }
+
+    function dismissConfirmDialog() {
+        confirmDialogVisible = false;
+    }
+
     // ── Command helpers (keep here — Nix substitutes the paths) ────────
+    function shellQuote(value) {
+        return "'" + String(value).replace(/'/g, "'\\''") + "'";
+    }
+
     function run(command) {
-        Quickshell.execDetached(["sh", "-c", command]);
+        // Run a command, showing a notification if it fails.
+        let script = command
+            + "\nstatus=$?"
+            + "\nif [ \"$status\" -ne 0 ]; then"
+            + "\n  @NOTIFY_SEND_COMMAND@ --app-name=Quickshell --urgency=normal "
+            + root.shellQuote(qsTr("Quickshell command failed"))
+            + " \"Exit status: $status; Command: \""
+            + root.shellQuote(command)
+            + "\nfi"
+            + "\nexit \"$status\"";
+
+        Quickshell.execDetached(["sh", "-c", script]);
     }
 
     function refreshStatusSoon() {
@@ -245,11 +285,13 @@ Scope {
         let command = parts[1] || "";
         if (token === "" || token === root.popupCommandToken) return;
         root.popupCommandToken = token;
-        if (command === "quickSettings") root.togglePopup("quickSettings");
-        else if (command === "osd-volume") osdRefreshTimer.osdType = "volume", osdRefreshTimer.restart();
-        else if (command === "osd-brightness") osdRefreshTimer.osdType = "brightness", osdRefreshTimer.restart();
-        else if (command === "osd-keyboard") osdRefreshTimer.osdType = "keyboard", osdRefreshTimer.restart();
-        else if (command === "osd-mute") osdRefreshTimer.osdType = "volume", osdRefreshTimer.restart();
+        switch (command) {
+            case "quickSettings": root.togglePopup("quickSettings"); break;
+            case "osd-volume": osdRefreshTimer.osdType = "volume"; osdRefreshTimer.restart(); break;
+            case "osd-brightness": osdRefreshTimer.osdType = "brightness"; osdRefreshTimer.restart(); break;
+            case "osd-keyboard": osdRefreshTimer.osdType = "keyboard"; osdRefreshTimer.restart(); break;
+            case "osd-mute": osdRefreshTimer.osdType = "volume"; osdRefreshTimer.restart(); break;
+        }
     }
 
     // ── Calendar helpers ───────────────────────────────────────────────
@@ -509,4 +551,7 @@ Scope {
 
     // ── OSD overlay (volume / brightness / keyboard backlight) ─────────
     OsdOverlay { shell: root }
+
+    // ── Confirm dialog ────────────────────────────────────────────────
+    ConfirmDialog { shell: root }
 }

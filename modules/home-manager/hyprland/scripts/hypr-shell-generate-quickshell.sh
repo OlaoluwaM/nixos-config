@@ -236,6 +236,7 @@ replace_placeholder '@SLEEP_COMMAND@' "systemctl suspend"
 replace_placeholder '@REFRESH_COMMAND@' "hyprctl reload"
 replace_placeholder '@RFKILL_COMMAND@' "rfkill"
 replace_placeholder '@LOGOUT_COMMAND@' "$bin_dir/hyprshutdown"
+replace_placeholder '@NOTIFY_SEND_COMMAND@' "notify-send"
 
 if grep -n '@[A-Z_]*@' "$output_dir/shell.qml" >&2; then
 	printf 'hypr-shell-generate-quickshell: generated QML still contains placeholders\n' >&2
