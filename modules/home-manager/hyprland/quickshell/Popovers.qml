@@ -25,11 +25,11 @@ PanelWindow {
     // One row per popup. This keeps sizing decisions visible in one place
     // instead of scattering the same activePopup checks through the file.
     readonly property var popupSpecs: ({
-        quickSettings:  { source: "QuickSettings.qml",     width: 430, height: 510, windowHeight: 600, margin: 32, align: "right"  },
-        calendar:       { source: "CalendarPanel.qml",     width: 700, height: 440, windowHeight: 530, margin: 28, align: "center" },
-        tray:           { source: "TrayPanel.qml",         width: 340, height: 260, windowHeight: 650, margin: 36, align: "right"  },
-        notifications:  { source: "NotificationPanel.qml", width: 440, height: 670, windowHeight: 780, margin: 32, align: "center" },
-        media:          { source: "MediaPanel.qml",        width: 430, height: 280, windowHeight: 430, margin: 32, align: "right"  }
+        quickSettings:  { source: "QuickSettings.qml",     width: 430, height: 510, margin: 32, align: "right"  },
+        calendar:       { source: "CalendarPanel.qml",     width: 700, height: 440, margin: 28, align: "center" },
+        tray:           { source: "TrayPanel.qml",         width: 340, height: 260, margin: 36, align: "right"  },
+        notifications:  { source: "NotificationPanel.qml", width: 440, height: 670, margin: 32, align: "center" },
+        media:          { source: "MediaPanel.qml",        width: 430, height: 280, margin: 32, align: "right"  }
     })
 
     function popupSpec(name) {
