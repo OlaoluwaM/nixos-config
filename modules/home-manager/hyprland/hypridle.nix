@@ -41,6 +41,13 @@ in
           # Wait until the lock screen reports that the session is locked before
           # allowing suspend to continue.
           inhibit_sleep = 3;
+
+          # Keep hypridle wired into the inhibitor mechanisms used by browsers,
+          # media players, wayland-pipewire-idle-inhibit, and the manual
+          # Quickshell caffeine toggle.
+          ignore_dbus_inhibit = false;
+          ignore_systemd_inhibit = false;
+          ignore_wayland_inhibit = false;
         };
 
         listener = [

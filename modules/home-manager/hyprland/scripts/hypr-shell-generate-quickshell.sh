@@ -89,7 +89,6 @@ fi
 repo_root="$(realpath "$repo_root")"
 output_dir="$(realpath -m "$output_dir")"
 qml_dir="$repo_root/modules/home-manager/hyprland/quickshell"
-qml_src="$qml_dir/shell.qml"
 scripts_dir="$repo_root/modules/home-manager/hyprland/scripts"
 bin_dir="$(dirname "$output_dir")/bin"
 
@@ -148,6 +147,7 @@ EOF
 write_repo_script_wrapper hypr-shell-status "$scripts_dir/hypr-shell-status.sh"
 write_repo_script_wrapper hypr-shell-timezones "$scripts_dir/hypr-shell-timezones.sh"
 write_repo_script_wrapper hypr-shell-power-profile "$scripts_dir/hypr-shell-power-profile.sh"
+write_repo_script_wrapper hypr-shell-caffeine "$scripts_dir/hypr-shell-caffeine.sh"
 write_repo_script_wrapper hypr-shell-popup "$scripts_dir/hypr-shell-popup.sh"
 
 write_command_wrapper vicinae vicinae
@@ -155,6 +155,7 @@ write_command_wrapper airctl airctl
 write_command_wrapper overskride overskride
 write_command_wrapper hyprshutdown hyprshutdown
 write_command_wrapper brightnessctl brightnessctl
+write_command_wrapper rfkill rfkill
 
 if [ "${HYPR_SHELL_TTY_SMOKE:-}" = "1" ]; then
 	cat >"$output_dir/shell.qml" <<'EOF'
@@ -232,12 +233,13 @@ replace_command_placeholder '@NETWORK_COMMAND@' "$bin_dir/airctl"
 replace_command_placeholder '@BLUETOOTH_COMMAND@' "$bin_dir/overskride"
 replace_command_placeholder '@POWER_COMMAND@' "$bin_dir/hyprshutdown -t 'Shutting down...' --post-cmd 'systemctl poweroff'"
 replace_command_placeholder '@POWER_PROFILE_COMMAND@' "$bin_dir/hypr-shell-power-profile"
+replace_command_placeholder '@CAFFEINE_COMMAND@' "$bin_dir/hypr-shell-caffeine"
 replace_command_placeholder '@BRIGHTNESS_COMMAND@' "$bin_dir/brightnessctl"
 replace_command_placeholder '@REBOOT_COMMAND@' "$bin_dir/hyprshutdown -t 'Restarting...' --post-cmd 'systemctl reboot'"
 replace_command_placeholder '@LOCK_COMMAND@' "loginctl lock-session"
 replace_command_placeholder '@SLEEP_COMMAND@' "systemctl suspend"
 replace_command_placeholder '@REFRESH_COMMAND@' "hyprctl reload"
-replace_command_placeholder '@RFKILL_COMMAND@' "rfkill"
+replace_command_placeholder '@RFKILL_COMMAND@' "$bin_dir/rfkill"
 replace_command_placeholder '@LOGOUT_COMMAND@' "$bin_dir/hyprshutdown"
 replace_command_placeholder '@NOTIFY_SEND_COMMAND@' "notify-send"
 

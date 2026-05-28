@@ -17,6 +17,7 @@ QtObject {
     property string vpnText: "Off"
     property string bluetoothText: "Off"
     property string bluetoothDevice: ""
+    property bool caffeineManual: false
     property string localTime: "Loading"
     property string birminghamTime: "..."
     property string lagosTime: "..."
@@ -31,11 +32,13 @@ QtObject {
         root.memText = data.mem + "%";
         root.tempText = root.isUnavailable(data.temp) ? "N/A" : data.temp + "°C";
         root.brightnessText = data.brightness;
+        root.airplaneMode = data.airplaneMode || false;
         root.networkText = data.network;
         root.vpnText = data.vpn;
         root.bluetoothText = data.bluetooth;
         root.bluetoothDevice = data.bluetoothDevice || "";
         root.powerProfileText = data.powerProfile;
+        root.caffeineManual = data.caffeineManual || false;
     }
 
     function updateOsdReadings(brightness) {

@@ -13,6 +13,7 @@ QtObject {
         brightness:       '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>',
         brightnessOff:    '<path d="M2 2l20 20M12 6a6 6 0 0 1 5.66 8.01M8.34 8.34A6 6 0 0 0 12 18M12 2v2M20 12h2M4.93 4.93l1.41 1.41M2 12h2"/>',
         close:            '<path d="M18 6L6 18M6 6l12 12"/>',
+        coffee:           '<path d="M10 2v2M14 2v2M6 8h12v6a6 6 0 0 1-12 0V8zM18 9h1a3 3 0 0 1 0 6h-1"/>',
         cpu:              '<rect x="7" y="7" width="10" height="10" rx="2"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3M10 10h4v4h-4z"/>',
         left:             '<path d="M15 18l-6-6 6-6"/>',
         memory:           '<rect x="4" y="7" width="16" height="10" rx="2"/><path d="M7 7V4M11 7V4M15 7V4M17 7V4M7 20v-3M11 20v-3M15 20v-3M17 20v-3M8 11h8"/>',

@@ -68,7 +68,7 @@ ColumnLayout {
                 ShellIcon {
                     name: quickSettings.isCharging ? "batteryCharging" : "battery"
                     iconColor: quickSettings.batteryStateColor
-                    implicitSize: 16
+                    implicitSize: 18
                 }
 
                 StyledText {

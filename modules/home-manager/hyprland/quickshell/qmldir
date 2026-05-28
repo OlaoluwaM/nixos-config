@@ -6,6 +6,7 @@ MarqueeText 1.0 MarqueeText.qml
 BarCapsule 1.0 BarCapsule.qml
 AirplaneModeCapsule 1.0 AirplaneModeCapsule.qml
 BluetoothCapsule 1.0 BluetoothCapsule.qml
+CaffeineCapsule 1.0 CaffeineCapsule.qml
 ClockCapsule 1.0 ClockCapsule.qml
 MediaCapsule 1.0 MediaCapsule.qml
 NotificationCapsule 1.0 NotificationCapsule.qml
@@ -30,6 +31,7 @@ StatusController 1.0 StatusController.qml
 CommandRunner 1.0 CommandRunner.qml
 AudioActions 1.0 AudioActions.qml
 BrightnessActions 1.0 BrightnessActions.qml
+CaffeineActions 1.0 CaffeineActions.qml
 MediaActions 1.0 MediaActions.qml
 PowerActions 1.0 PowerActions.qml
 ConnectivityActions 1.0 ConnectivityActions.qml

@@ -123,6 +123,7 @@ Scope {
 
     AudioActions { id: audioActions; runner: commandRunner }
     BrightnessActions { id: brightnessActions; runner: commandRunner }
+    CaffeineActions { id: caffeineActions; runner: commandRunner; status: statusController }
     MediaActions { id: mediaActions; status: statusController }
     ConnectivityActions { id: connectivityActions; runner: commandRunner; status: statusController }
 
@@ -173,6 +174,7 @@ Scope {
         anchors { top: true; left: true; right: true }
 
         Bar {
+            caffeineActions: caffeineActions
             connectivityActions: connectivityActions
             mediaActions: mediaActions
             status: statusController

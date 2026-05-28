@@ -56,6 +56,15 @@ let
     text = builtins.readFile ./scripts/hypr-shell-power-profile.sh;
   };
 
+  caffeineScript = pkgs.writeShellApplication {
+    name = "hypr-shell-caffeine";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.systemd
+    ];
+    text = builtins.readFile ./scripts/hypr-shell-caffeine.sh;
+  };
+
   # This script provides command-backed status data. Native Quickshell services
   # provide audio, media, and battery state directly inside QML.
   statusScript = pkgs.writeShellApplication {
@@ -70,7 +79,10 @@ let
       jq
       lm_sensors
       networkmanager
+      caffeineScript
       powerProfileScript
+      systemd
+      util-linux
     ];
     text = builtins.readFile ./scripts/hypr-shell-status.sh;
   };
@@ -236,6 +248,7 @@ let
     "@POWER_COMMAND@"
     "@REBOOT_COMMAND@"
     "@POWER_PROFILE_COMMAND@"
+    "@CAFFEINE_COMMAND@"
     "@BRIGHTNESS_COMMAND@"
     "@LOCK_COMMAND@"
     "@SLEEP_COMMAND@"
@@ -254,6 +267,7 @@ let
     "${unstable.hyprshutdown}/bin/hyprshutdown -t 'Shutting down...' --post-cmd 'shutdown -P 0'"
     "${unstable.hyprshutdown}/bin/hyprshutdown -t 'Restarting...' --post-cmd 'reboot'"
     "${powerProfileScript}/bin/hypr-shell-power-profile"
+    "${caffeineScript}/bin/hypr-shell-caffeine"
     "${pkgs.brightnessctl}/bin/brightnessctl"
     "${pkgs.systemd}/bin/loginctl lock-session"
     "${pkgs.systemd}/bin/systemctl suspend"
@@ -296,11 +310,13 @@ in
       lm_sensors
       mission-center
       airctl
+      caffeineScript
       quickshell
       satty
       slurp
       vicinae
       unstable.waypaper
+      wayland-pipewire-idle-inhibit
       wl-clipboard
       unstable.hyprshutdown
 
@@ -397,6 +413,7 @@ in
         exec-once = systemctl --user start hypr-shell-waypaper-restore.service
         exec-once = systemctl --user start hypr-shell-quickshell.service
         exec-once = systemctl --user start hypr-shell-vicinae.service
+        exec-once = systemctl --user start hypr-shell-media-idle-inhibit.service
 
         # Standalone clipboard service is intentionally commented out because
         # Vicinae handles clipboard history. Uncomment this only if you want
@@ -619,6 +636,29 @@ in
           ExecStart = "${pkgs.quickshell}/bin/quickshell --config hyprland";
           Restart = "on-failure";
           Environment = [ "WALLPAPERS_DIR=${wallpapersDir}" ];
+        };
+      };
+
+      hypr-shell-media-idle-inhibit = {
+        Unit = {
+          Description = "Inhibit idle while PipeWire media is playing";
+          PartOf = [ "graphical-session.target" ];
+        };
+
+        Service = {
+          ExecStart = "${pkgs.wayland-pipewire-idle-inhibit}/bin/wayland-pipewire-idle-inhibit";
+          Restart = "on-failure";
+        };
+      };
+
+      hypr-shell-caffeine = {
+        Unit = {
+          Description = "Manual Hypr Shell idle inhibitor";
+          PartOf = [ "graphical-session.target" ];
+        };
+
+        Service = {
+          ExecStart = "${pkgs.systemd}/bin/systemd-inhibit --what=idle --who=HyprShell --why=Manual-caffeine-mode --mode=block ${pkgs.coreutils}/bin/sleep infinity";
         };
       };
 

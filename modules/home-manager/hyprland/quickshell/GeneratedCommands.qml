@@ -16,6 +16,7 @@ QtObject {
     readonly property string powerCommand: "@POWER_COMMAND@"
     readonly property string rebootCommand: "@REBOOT_COMMAND@"
     readonly property string powerProfileCommand: "@POWER_PROFILE_COMMAND@"
+    readonly property string caffeineCommand: "@CAFFEINE_COMMAND@"
     readonly property string brightnessCommand: "@BRIGHTNESS_COMMAND@"
     readonly property string lockCommand: "@LOCK_COMMAND@"
     readonly property string sleepCommand: "@SLEEP_COMMAND@"

@@ -30,6 +30,7 @@ Scope {
     property alias vpnText: systemStatus.vpnText
     property alias bluetoothText: systemStatus.bluetoothText
     property alias bluetoothDevice: systemStatus.bluetoothDevice
+    property alias caffeineManual: systemStatus.caffeineManual
     property alias mediaPlayer: media.mediaPlayer
     property alias mediaStatus: media.mediaStatus
     property alias mediaTitle: media.mediaTitle

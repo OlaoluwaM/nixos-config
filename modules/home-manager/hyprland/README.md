@@ -43,6 +43,7 @@ The explicit service startup list is:
 - `hypr-shell-waypaper-restore.service`
 - `hypr-shell-quickshell.service`
 - `hypr-shell-vicinae.service`
+- `hypr-shell-media-idle-inhibit.service`
 - `hypridle.service`
 - `hyprpolkitagent.service`
 - `hyprsunset.service`
@@ -82,6 +83,7 @@ The bar is top-aligned and includes:
 - MPRIS/media indicator and basic media controls through Quickshell's native
   MPRIS service.
 - Always-visible CPU, memory, and temperature readouts.
+- Caffeine capsule for manually blocking idle lock/timeout.
 - GNOME-like quick settings popover for PipeWire volume, built-in backlight
   brightness, network/VPN, Bluetooth, DND, power profile, UPower battery,
   system stats, and `hyprshutdown`.
@@ -352,9 +354,16 @@ layouts, and audio mixing. `wf-recorder` is the quick clip tool.
 `hypridle` handles idle behavior:
 
 - after 15 minutes, lock the session;
-- after 20 minutes, turn displays off;
-- on resume, turn displays back on;
 - before sleep, lock the session.
+
+Idle inhibitors are honored explicitly. `hypr-shell-media-idle-inhibit.service`
+uses `wayland-pipewire-idle-inhibit` to block idle while PipeWire media is
+playing. The top-bar caffeine capsule controls `hypr-shell-caffeine.service`,
+which holds a manual systemd idle inhibitor until toggled off.
+
+Display-off-on-idle is present as a commented `hypridle` listener because VM
+displays can fail to wake cleanly after DPMS off. Re-enable it on bare metal if
+that behavior is wanted.
 
 `hyprlock` uses the current wallpaper symlink as its background, with blur, a centered password field, and time/date labels. NixOS defines `security.pam.services.hyprlock = { };` so hyprlock can authenticate.
 

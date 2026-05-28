@@ -116,6 +116,22 @@ if [ -z "$network" ]; then
 	network="Offline"
 fi
 
+# Airplane mode is represented by all rfkill devices being soft-blocked. If the
+# host has no rfkill devices, keep the UI off instead of treating it as blocked.
+airplane_mode="$(
+	rfkill -n -o SOFT list 2>/dev/null |
+		awk '
+      { total++; if ($1 == "blocked") blocked++ }
+      END {
+        if (total > 0 && total == blocked) print "true";
+        else print "false";
+      }
+    ' || true
+)"
+if [ -z "$airplane_mode" ]; then
+	airplane_mode="false"
+fi
+
 # VPN status is also read from NetworkManager. It checks active connections
 # whose type is vpn or wireguard.
 vpn="$(
@@ -150,6 +166,14 @@ if [ -z "$power_profile" ]; then
 	power_profile="Unavailable"
 fi
 
+# Manual caffeine mode is backed by a user service that holds a systemd idle
+# inhibitor. Automatic media inhibition is handled by a separate daemon and is
+# not reflected here.
+caffeine_manual="false"
+if [ "$(hypr-shell-caffeine status 2>/dev/null || true)" = "on" ]; then
+	caffeine_manual="true"
+fi
+
 # jq -cn builds JSON safely. Each --arg passes a shell variable into jq as a
 # string. The final quoted block names the JSON keys that shell.qml expects.
 #
@@ -160,19 +184,23 @@ jq -cn \
 	--arg mem "$mem" \
 	--arg temp "$temp" \
 	--arg brightness "$brightness" \
+	--argjson airplaneMode "$airplane_mode" \
 	--arg network "$network" \
 	--arg vpn "$vpn" \
 	--arg bluetooth "$bluetooth" \
 	--arg bluetoothDevice "$bluetooth_device" \
 	--arg powerProfile "$power_profile" \
+	--argjson caffeineManual "$caffeine_manual" \
 	'{
     cpu: $cpu,
     mem: $mem,
     temp: $temp,
     brightness: $brightness,
+    airplaneMode: $airplaneMode,
     network: $network,
     vpn: $vpn,
     bluetooth: $bluetooth,
     bluetoothDevice: $bluetoothDevice,
-    powerProfile: $powerProfile
+    powerProfile: $powerProfile,
+    caffeineManual: $caffeineManual
   }'
