@@ -16,10 +16,7 @@ BarCapsule {
         implicitSize: 17
     }
 
-    MouseArea {
-        id: qsMouse
-        anchors.fill: parent
-        hoverEnabled: true
-        onClicked: root.popups.toggle("quickSettings")
+    TapHandler {
+        onTapped: root.popups.toggle("quickSettings")
     }
 }

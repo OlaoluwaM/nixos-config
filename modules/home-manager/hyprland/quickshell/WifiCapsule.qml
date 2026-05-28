@@ -38,10 +38,7 @@ BarCapsule {
         }
     }
 
-    MouseArea {
-        id: wifiMouse
-        anchors.fill: parent
-        hoverEnabled: true
-        onClicked: root.connectivityActions.runNetworkCommand()
+    TapHandler {
+        onTapped: root.connectivityActions.runNetworkCommand()
     }
 }

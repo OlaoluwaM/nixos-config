@@ -85,7 +85,7 @@ ColumnLayout {
         StyledText {
             text: trayPanel.activeMenuSource
                 ? trayPanel.cleanTrayName(trayPanel.activeMenuSource)
-                : "System Tray"
+                : qsTr("System Tray")
             color: Theme.text
             font.pixelSize: 16
             font.weight: Font.DemiBold

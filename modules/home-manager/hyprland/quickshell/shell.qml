@@ -41,11 +41,15 @@ Scope {
                 } catch (e) {
                     console.log("hypr-shell status parse failed:", e);
                 }
+                statusPollTimer.restart();
             }
         }
     }
 
-    Timer { interval: 2000; running: true; repeat: true; onTriggered: statusProcess.running = true }
+    // The periodic poll is self-scheduling: each run arms the next one 2s after
+    // it finishes (above), so a slow poll can never overlap or stack with the
+    // next. statusProcess.running starts the first poll at launch.
+    Timer { id: statusPollTimer; interval: 2000; onTriggered: statusProcess.running = true }
     Timer { id: statusRefreshTimer; interval: 450; onTriggered: statusProcess.running = true }
 
     Timer {

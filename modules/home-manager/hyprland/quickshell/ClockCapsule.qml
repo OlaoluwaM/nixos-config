@@ -40,10 +40,7 @@ BarCapsule {
         }
     }
 
-    MouseArea {
-        id: clockMouse
-        anchors.fill: parent
-        hoverEnabled: true
-        onClicked: root.popups.toggle("calendar")
+    TapHandler {
+        onTapped: root.popups.toggle("calendar")
     }
 }

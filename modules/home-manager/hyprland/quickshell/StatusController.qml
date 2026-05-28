@@ -33,7 +33,6 @@ Scope {
     property alias caffeineManual: systemStatus.caffeineManual
     property alias mediaPlayer: media.mediaPlayer
     property alias mediaStatus: media.mediaStatus
-    property alias mediaTitle: media.mediaTitle
     property alias mediaArtist: media.mediaArtist
     property alias mediaTrackTitle: media.mediaTrackTitle
     property alias mediaAlbumArt: media.mediaAlbumArt

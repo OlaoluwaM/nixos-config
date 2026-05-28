@@ -19,7 +19,7 @@ ColumnLayout {
     }
 
     StyledText {
-        text: status.mediaStatus + " — " + status.mediaPosition + " / " + status.mediaLength
+        text: qsTr("%1 — %2 / %3").arg(status.mediaStatus).arg(status.mediaPosition).arg(status.mediaLength)
         color: Theme.textSecondary
         font.pixelSize: 12
     }

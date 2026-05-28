@@ -11,7 +11,7 @@ Item {
     // Live clock — ticks every second for the big display
     property string hoursMinutes: "--:--"
     property string seconds: ":--"
-    property string dateLine: "Loading"
+    property string dateLine: qsTr("Loading")
     property int monthOffset: 0
 
     function calendarDate() {

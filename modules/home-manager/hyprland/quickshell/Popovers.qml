@@ -19,6 +19,7 @@ PanelWindow {
     readonly property int topbarGap: 18
     readonly property int popoverTop: root.topbarBottom + root.topbarGap
     readonly property int popoverWindowHeight: 780
+    readonly property real trayDefaultHeight: 260
     property string renderedPopup: ""
     property string pendingPopup: ""
 
@@ -27,7 +28,7 @@ PanelWindow {
     readonly property var popupSpecs: ({
         quickSettings:  { source: "QuickSettings.qml",     width: 430, height: 510, margin: 32, align: "right"  },
         calendar:       { source: "CalendarPanel.qml",     width: 700, height: 440, margin: 28, align: "center" },
-        tray:           { source: "TrayPanel.qml",         width: 340, height: 260, margin: 36, align: "right"  },
+        tray:           { source: "TrayPanel.qml",         width: 340, height: root.trayDefaultHeight, margin: 36, align: "right"  },
         notifications:  { source: "NotificationPanel.qml", width: 440, height: 670, margin: 32, align: "center" },
         media:          { source: "MediaPanel.qml",        width: 430, height: 280, margin: 32, align: "right"  }
     })
@@ -71,7 +72,7 @@ PanelWindow {
     Rectangle {
         id: popoverCard
 
-        property real trayCardHeight: 260
+        property real trayCardHeight: root.trayDefaultHeight
         property bool cardShown: true
 
         z: 1
@@ -98,7 +99,7 @@ PanelWindow {
         function loadPopup(name) {
             root.renderedPopup = name;
             if (name === "tray") {
-                popoverCard.trayCardHeight = 260;
+                popoverCard.trayCardHeight = root.trayDefaultHeight;
             }
             popoverLoader.loadPanel();
         }
@@ -237,7 +238,7 @@ PanelWindow {
                     let trayMargin = root.popupSpec("tray").margin;
                     let target = root.popups.trayMenuContentHeight > 0
                         ? Math.min(root.popups.trayMenuContentHeight + trayMargin * 2, root.implicitHeight)
-                        : 260;
+                        : root.trayDefaultHeight;
                     trayHeightAnim.stop();
                     trayHeightAnim.from = popoverCard.trayCardHeight;
                     trayHeightAnim.to = target;

@@ -17,10 +17,7 @@ BarCapsule {
         implicitSize: 16
     }
 
-    MouseArea {
-        id: trayBtnMouse
-        anchors.fill: parent
-        hoverEnabled: true
-        onClicked: root.popups.toggle("tray")
+    TapHandler {
+        onTapped: root.popups.toggle("tray")
     }
 }

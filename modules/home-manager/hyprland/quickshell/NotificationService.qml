@@ -13,6 +13,7 @@ Scope {
     property int nextNotifId: 0
 
     readonly property int maxHistory: 20
+    readonly property int popupDuration: 5500
     property alias historyModel: notificationHistory
     property alias popupModel: notificationPopups
 
@@ -30,6 +31,20 @@ Scope {
             delete root.notificationStore[old.notifId];
             notificationHistory.remove(notificationHistory.count - 1);
         }
+    }
+
+    // Each popup carries its own expiresAt timestamp, so the trim timer always
+    // fires for the soonest-expiring toast rather than a single shared window.
+    function scheduleTrim() {
+        if (notificationPopups.count === 0) {
+            popupTrimTimer.stop();
+            return;
+        }
+        let soonest = Infinity;
+        for (let i = 0; i < notificationPopups.count; i++)
+            soonest = Math.min(soonest, notificationPopups.get(i).expiresAt);
+        popupTrimTimer.interval = Math.max(50, soonest - Date.now());
+        popupTrimTimer.restart();
     }
 
     function removeFromModel(model, notifId) {
@@ -101,24 +116,33 @@ Scope {
             };
             root.addEntry(entry);
             if (!root.doNotDisturb) {
-                notificationPopups.insert(0, entry);
-                popupTrimTimer.restart();
+                notificationPopups.insert(0, Object.assign({}, entry, {
+                    expiresAt: Date.now() + root.popupDuration
+                }));
+                root.scheduleTrim();
             }
         }
     }
 
     Timer {
         id: popupTrimTimer
-        interval: 5500
+        interval: root.popupDuration
         onTriggered: {
+            // While hovered, keep every toast alive and re-check after one
+            // full duration once the pointer leaves.
             if (root.popupsHovered) {
-                restart();
+                let until = Date.now() + root.popupDuration;
+                for (let i = 0; i < notificationPopups.count; i++)
+                    notificationPopups.setProperty(i, "expiresAt", until);
+                root.scheduleTrim();
                 return;
             }
-            if (notificationPopups.count > 0)
-                notificationPopups.remove(notificationPopups.count - 1);
-            if (notificationPopups.count > 0)
-                restart();
+            let now = Date.now();
+            for (let i = notificationPopups.count - 1; i >= 0; i--) {
+                if (notificationPopups.get(i).expiresAt <= now)
+                    notificationPopups.remove(i);
+            }
+            root.scheduleTrim();
         }
     }
 }

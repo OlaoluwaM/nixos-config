@@ -10,7 +10,6 @@ Scope {
     readonly property var mediaPlayers: Mpris.players.values
     readonly property var mediaPlayer: root.pickMediaPlayer(root.mediaPlayers)
     readonly property string mediaStatus: root.mediaPlaybackStatus(root.mediaPlayer)
-    readonly property string mediaTitle: root.mediaTrackTitle
     readonly property string mediaArtist: root.mediaPlayer !== null ? root.mediaPlayer.trackArtist : ""
     readonly property string mediaTrackTitle: root.mediaPlayer !== null
         ? (root.mediaPlayer.trackTitle || qsTr("No media"))

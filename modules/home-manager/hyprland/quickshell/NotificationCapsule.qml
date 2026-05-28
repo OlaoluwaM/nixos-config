@@ -32,10 +32,7 @@ BarCapsule {
         }
     }
 
-    MouseArea {
-        id: notifMouse
-        anchors.fill: parent
-        hoverEnabled: true
-        onClicked: root.popups.toggle("notifications")
+    TapHandler {
+        onTapped: root.popups.toggle("notifications")
     }
 }

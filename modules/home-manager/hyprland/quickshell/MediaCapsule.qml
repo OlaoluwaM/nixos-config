@@ -134,9 +134,8 @@ BarCapsule {
                 }
             }
 
-            MouseArea {
-                anchors.fill: parent
-                onClicked: root.popups.toggle("media")
+            TapHandler {
+                onTapped: root.popups.toggle("media")
             }
         }
 
