@@ -37,6 +37,10 @@ in
           # after_sleep_cmd runs after resume. DPMS is the display power
           # management signal; this tries to make sure screens are powered on.
           after_sleep_cmd = "${pkgs.hyprland}/bin/hyprctl dispatch dpms on";
+
+          # Wait until the lock screen reports that the session is locked before
+          # allowing suspend to continue.
+          inhibit_sleep = 3;
         };
 
         listener = [

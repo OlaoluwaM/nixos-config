@@ -243,6 +243,7 @@ let
         "@REFRESH_COMMAND@"
         "@RFKILL_COMMAND@"
         "@LOGOUT_COMMAND@"
+        "@NOTIFY_SEND_COMMAND@"
       ]
       [
         "${statusScript}/bin/hypr-shell-status"
@@ -250,8 +251,8 @@ let
         "${pkgs.vicinae}/bin/vicinae"
         "${airctl}/bin/airctl"
         "${unstable.overskride}/bin/overskride"
-        "${unstable.hyprshutdown}/bin/hyprshutdown -t 'Shutting down...' --post-cmd '${pkgs.systemd}/bin/systemctl poweroff'"
-        "${unstable.hyprshutdown}/bin/hyprshutdown -t 'Restarting...' --post-cmd '${pkgs.systemd}/bin/systemctl reboot'"
+        "${unstable.hyprshutdown}/bin/hyprshutdown -t 'Shutting down...' --post-cmd 'shutdown -P 0'"
+        "${unstable.hyprshutdown}/bin/hyprshutdown -t 'Restarting...' --post-cmd 'reboot'"
         "${powerProfileScript}/bin/hypr-shell-power-profile"
         "${pkgs.pamixer}/bin/pamixer"
         "${pkgs.brightnessctl}/bin/brightnessctl"
@@ -261,6 +262,7 @@ let
         "${pkgs.hyprland}/bin/hyprctl reload"
         "${pkgs.util-linux}/bin/rfkill"
         "${unstable.hyprshutdown}/bin/hyprshutdown"
+        "${pkgs.libnotify}/bin/notify-send"
       ]
       (builtins.readFile ./quickshell/shell.qml);
 
