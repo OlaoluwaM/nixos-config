@@ -18,9 +18,6 @@ import Quickshell.Wayland
 Scope {
     id: root
 
-    property string popupCommandToken: ""
-    property string popupCommandFile: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/hypr-shell/popup-command"
-
     // ── Confirm dialog helpers ────────────────────────────────────────
     function requestConfirmation(title, description, icon, danger, timeout, action) {
         popupController.close();
@@ -29,27 +26,6 @@ Scope {
 
     function dismissConfirmDialog() {
         confirmDialog.dismiss();
-    }
-
-    // ── Popup command channel (keybind → shell file → QML) ─────────────
-    function handlePopupCommand(text) {
-        let trimmed = text.trim();
-        if (trimmed === "") return;
-        let parts = trimmed.split(/\s+/);
-        let token = parts[0] || "";
-        let command = parts[1] || "";
-        if (token === "" || token === root.popupCommandToken) return;
-        root.popupCommandToken = token;
-        switch (command) {
-            case "quickSettings": popupController.toggle("quickSettings"); break;
-            case "audio-up": audioActions.adjustVolume(5); break;
-            case "audio-down": audioActions.adjustVolume(-5); break;
-            case "audio-mute": audioActions.toggleMute(); break;
-            case "osd-volume": commandRunner.refreshOsd("volume"); break;
-            case "osd-brightness": commandRunner.refreshOsd("brightness"); break;
-            case "osd-keyboard": commandRunner.refreshOsd("keyboard"); break;
-            case "osd-mute": commandRunner.refreshOsd("volume"); break;
-        }
     }
 
     // ── Data pipes (shell scripts → QML properties) ────────────────────
@@ -124,30 +100,6 @@ Scope {
 
     Timer { interval: 30000; running: true; repeat: true; onTriggered: timezoneProcess.running = true }
 
-    // Seed the token from any leftover file so stale commands aren't replayed.
-    Process {
-        id: popupSeedProcess
-        command: ["sh", "-c", "cat '" + root.popupCommandFile + "' 2>/dev/null || true"]
-        running: true
-        stdout: StdioCollector {
-            onStreamFinished: {
-                let token = this.text.trim().split(/\s+/)[0] || "";
-                if (token !== "") root.popupCommandToken = token;
-                popupPollTimer.running = true;
-            }
-        }
-    }
-
-    Process {
-        id: popupCommandProcess
-        command: ["sh", "-c", "cat '" + root.popupCommandFile + "' 2>/dev/null || true"]
-        stdout: StdioCollector {
-            onStreamFinished: root.handlePopupCommand(this.text)
-        }
-    }
-
-    Timer { id: popupPollTimer; interval: 250; repeat: true; onTriggered: popupCommandProcess.running = true }
-
     // ════════════════════════════════════════════════════════════════════
     //  Windows
     // ════════════════════════════════════════════════════════════════════
@@ -191,6 +143,17 @@ Scope {
 
     // ── OSD controller ────────────────────────────────────────────────
     OsdController { id: osdController }
+
+    // ── Popup command bridge (Hyprland keybind file → QML signals) ────
+    PopupCommandBridge {
+        onQuickSettingsRequested: popupController.toggle("quickSettings")
+        onAudioUpRequested: audioActions.adjustVolume(5)
+        onAudioDownRequested: audioActions.adjustVolume(-5)
+        onAudioMuteRequested: audioActions.toggleMute()
+        onOsdRefreshRequested: function(osdType) {
+            commandRunner.refreshOsd(osdType);
+        }
+    }
 
     // ── Top bar ────────────────────────────────────────────────────────
     PanelWindow {

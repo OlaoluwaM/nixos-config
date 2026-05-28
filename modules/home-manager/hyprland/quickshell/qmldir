@@ -22,6 +22,7 @@ MediaActions 1.0 MediaActions.qml
 PowerActions 1.0 PowerActions.qml
 ConnectivityActions 1.0 ConnectivityActions.qml
 PopupController 1.0 PopupController.qml
+PopupCommandBridge 1.0 PopupCommandBridge.qml
 OsdController 1.0 OsdController.qml
 Bar 1.0 Bar.qml
 Popovers 1.0 Popovers.qml

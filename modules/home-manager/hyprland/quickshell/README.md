@@ -12,6 +12,8 @@ parts of those windows and receive only the service objects they need.
 - `shell.qml`: top-level service wiring, timers, data pipes, and windows.
 - `GeneratedCommands.qml`: generated command/script paths from Nix.
 - `CommandRunner.qml`: shared command execution and refresh signaling.
+- `PopupCommandBridge.qml`: Hyprland keybind command-file polling exposed as
+  QML request signals.
 - `StatusController.qml`: public status façade passed to UI modules.
 - `AudioStatus.qml`, `BatteryStatus.qml`, `MediaStatus.qml`,
   `SystemStatus.qml`: private status-domain controllers used by
