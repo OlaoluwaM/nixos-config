@@ -9,11 +9,11 @@ import Quickshell.Services.SystemTray
 // This Item fills the bar PanelWindow; the PanelWindow itself lives in shell.qml.
 Item {
     id: bar
-    required property var connectivityActions
-    required property var mediaActions
-    required property var status
-    required property var notifications
-    required property var popups
+    required property ConnectivityActions connectivityActions
+    required property MediaActions mediaActions
+    required property StatusController status
+    required property NotificationService notifications
+    required property PopupController popups
     readonly property int statsSlotWidth: 54
 
     // ════════════════════════════════════════════════════════════════════

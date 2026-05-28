@@ -5,15 +5,19 @@ import Quickshell
 import Quickshell.Wayland
 
 PanelWindow {
-    id: popoverWindow
-    required property var audioActions
-    required property var brightnessActions
-    required property var connectivityActions
-    required property var mediaActions
-    required property var powerActions
-    required property var status
-    required property var notifications
-    required property var popups
+    id: root
+    required property AudioActions audioActions
+    required property BrightnessActions brightnessActions
+    required property ConnectivityActions connectivityActions
+    required property MediaActions mediaActions
+    required property PowerActions powerActions
+    required property StatusController status
+    required property NotificationService notifications
+    required property PopupController popups
+
+    readonly property int topbarBottom: 70
+    readonly property int topbarGap: 18
+    readonly property int popoverTop: root.topbarBottom + root.topbarGap
 
     // One row per popup. This keeps sizing decisions visible in one place
     // instead of scattering the same activePopup checks through the file.
@@ -31,14 +35,18 @@ PanelWindow {
 
     color: "transparent"
     aboveWindows: true
+    visible: root.popups.activePopup.length > 0
+
+    implicitHeight: root.popupSpec(root.popups.activePopup).windowHeight - root.popoverTop
+
+    exclusionMode: ExclusionMode.Ignore
+
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell-popover"
 
-    visible: popoverWindow.popups.activePopup !== ""
-
-    implicitHeight: popoverWindow.popupSpec(popoverWindow.popups.activePopup).windowHeight
-
-    exclusionMode: ExclusionMode.Ignore
+    margins {
+        top: root.popoverTop
+    }
 
     anchors {
         top: true
@@ -46,19 +54,25 @@ PanelWindow {
         right: true
     }
 
+    MouseArea {
+        anchors.fill: parent
+        z: 0
+        onClicked: root.popups.close()
+    }
+
     // ── Popover card ───────────────────────────────────────────────────
     Rectangle {
         id: popoverCard
-        y: 70
 
         property real trayCardHeight: 260
 
-        width: popoverWindow.popupSpec(popoverWindow.popups.activePopup).width
-        height: popoverWindow.popups.activePopup === "tray"
+        z: 1
+        width: root.popupSpec(root.popups.activePopup).width
+        height: root.popups.activePopup === "tray"
             ? popoverCard.trayCardHeight
-            : popoverWindow.popupSpec(popoverWindow.popups.activePopup).height
+            : root.popupSpec(root.popups.activePopup).height
 
-        x: popoverWindow.popupSpec(popoverWindow.popups.activePopup).align === "center"
+        x: root.popupSpec(root.popups.activePopup).align === "center"
             ? Math.round((parent.width - width) / 2)
             : parent.width - width - 12
 
@@ -67,11 +81,11 @@ PanelWindow {
         border.color: Theme.outline
         border.width: 1
 
-        MouseArea { anchors.fill: parent }
-
         transformOrigin: Item.Top
         opacity: 0
         scale: 0.92
+
+        MouseArea { anchors.fill: parent }
 
         ParallelAnimation {
             id: openAnim
@@ -99,16 +113,16 @@ PanelWindow {
         }
 
         Connections {
-            target: popoverWindow.popups
+            target: root.popups
             function onActivePopupChanged() {
-                if (popoverWindow.popups.activePopup === "") {
-                    popoverWindow.popups.trayMenuContentHeight = 0;
+                if (root.popups.activePopup === "") {
+                    root.popups.trayMenuContentHeight = 0;
                     popoverLoader.source = "";
                     return;
                 }
 
-                if (popoverWindow.popups.activePopup !== "") {
-                    if (popoverWindow.popups.activePopup === "tray") {
+                if (root.popups.activePopup.length > 0) {
+                    if (root.popups.activePopup === "tray") {
                         popoverCard.trayCardHeight = 260;
                     }
                     popoverCard.opacity = 0;
@@ -118,9 +132,9 @@ PanelWindow {
                 }
             }
             function onTrayMenuContentHeightChanged() {
-                if (popoverWindow.popups.activePopup === "tray") {
-                    let target = popoverWindow.popups.trayMenuContentHeight > 0
-                        ? Math.min(popoverWindow.popups.trayMenuContentHeight + 72, 500)
+                if (root.popups.activePopup === "tray") {
+                    let target = root.popups.trayMenuContentHeight > 0
+                        ? Math.min(root.popups.trayMenuContentHeight + 72, 500)
                         : 260;
                     trayHeightAnim.stop();
                     trayHeightAnim.from = popoverCard.trayCardHeight;
@@ -133,7 +147,7 @@ PanelWindow {
         HoverHandler {
             onHoveredChanged: {
                 if (hovered) {
-                    popoverWindow.popups.trayPopoverHovered = popoverWindow.popups.activePopup === "tray";
+                    root.popups.trayPopoverHovered = root.popups.activePopup === "tray";
                 }
             }
         }
@@ -141,31 +155,31 @@ PanelWindow {
         Loader {
             id: popoverLoader
             anchors.fill: parent
-            anchors.margins: popoverWindow.popupSpec(popoverWindow.popups.activePopup).margin
+            anchors.margins: root.popupSpec(root.popups.activePopup).margin
             asynchronous: false
 
             function loadPanel() {
-                let popup = popoverWindow.popups.activePopup;
-                let src = popoverWindow.popupSpec(popup).source;
+                let popup = root.popups.activePopup;
+                let src = root.popupSpec(popup).source;
                 if (src) {
                     let props = {};
                     if (popup === "quickSettings" || popup === "media") {
-                        props.status = popoverWindow.status;
+                        props.status = root.status;
                     }
                     if (popup === "quickSettings") {
-                        props.audioActions = popoverWindow.audioActions;
-                        props.brightnessActions = popoverWindow.brightnessActions;
-                        props.connectivityActions = popoverWindow.connectivityActions;
-                        props.powerActions = popoverWindow.powerActions;
+                        props.audioActions = root.audioActions;
+                        props.brightnessActions = root.brightnessActions;
+                        props.connectivityActions = root.connectivityActions;
+                        props.powerActions = root.powerActions;
                     }
                     if (popup === "media") {
-                        props.mediaActions = popoverWindow.mediaActions;
+                        props.mediaActions = root.mediaActions;
                     }
                     if (popup === "quickSettings" || popup === "notifications") {
-                        props.notifications = popoverWindow.notifications;
+                        props.notifications = root.notifications;
                     }
                     if (popup === "tray") {
-                        props.popups = popoverWindow.popups;
+                        props.popups = root.popups;
                     }
                     popoverLoader.setSource(src, props);
                 } else {
@@ -174,16 +188,10 @@ PanelWindow {
             }
 
             Component.onCompleted: {
-                if (popoverWindow.popups.activePopup !== "") {
+                if (root.popups.activePopup.length > 0) {
                     loadPanel();
                 }
             }
         }
-    }
-
-    MouseArea {
-        anchors.fill: parent
-        z: -1
-        onClicked: popoverWindow.popups.close()
     }
 }
