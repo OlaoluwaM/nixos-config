@@ -487,7 +487,7 @@ Item {
         // ── Wifi capsule ──────────────────────────────────────────────
         BarCapsule {
             id: wifiCapsule
-            width: Math.max(Theme.capsuleHeight, wifiContent.implicitWidth + 20)
+            width: Math.max(Theme.capsuleHeight, wifiContent.implicitWidth + 28)
             opacity: bar.status.airplaneMode ? 0.35 : 1.0
 
             Behavior on opacity     { OpacityAnimator { duration: Theme.animNormal } }
@@ -501,6 +501,7 @@ Item {
                     name: bar.status.airplaneMode || bar.status.networkText === "Offline" ? "networkOff" : "network"
                     iconColor: Theme.capsuleTextColor(false, wifiCapsule.hovered)
                     implicitSize: 15
+                    Layout.alignment: Qt.AlignVCenter
                 }
 
                 MarqueeText {
