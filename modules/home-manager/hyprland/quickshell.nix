@@ -444,14 +444,16 @@ in
           gaps_in = 4
           gaps_out = 8
           border_size = 2
-          col.active_border = rgb(${stripHash theme.secondary})
+          # Match the shell's capsule state language: primary = focused, outline = at rest.
+          col.active_border = rgb(${stripHash theme.primary})
           col.inactive_border = rgb(${stripHash theme.outline})
           layout = dwindle
         }
 
         decoration {
           # Window rounding, blur, and shadow for regular Hyprland windows.
-          rounding = 10
+          rounding = 14
+          rounding_power = 3.5
           blur {
             enabled = true
             size = 5
