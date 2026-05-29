@@ -40,7 +40,9 @@ BarCapsule {
                 readonly property bool hasArtwork: root.status.mediaAlbumArt.length > 0
                     && discArt.status === Image.Ready
 
-                // Hidden source image; the Shape below clips it into a circle.
+                // Source image for the circular clip below. It lives here, not
+                // inside the ShapePath, because a ShapePath's own children can't
+                // serve as fill items; the Shape references it by id instead.
                 Image {
                     id: discArt
                     anchors.centerIn: parent
@@ -75,8 +77,16 @@ BarCapsule {
                     Shape {
                         anchors.fill: parent
                         visible: recordDisc.hasArtwork
+                        // Native, resolution-independent anti-aliasing for the
+                        // circular edge as it spins; the default geometry renderer
+                        // relies on scene MSAA and can look jagged at this size.
+                        preferredRendererType: Shape.CurveRenderer
 
                         ShapePath {
+                            // fillItem (clipping the art into the circle) requires
+                            // Qt 6.8+. On older Qt it is silently ignored and the
+                            // disc shows no artwork — relevant if the NixOS flake
+                            // ever pins a Qt below 6.8.
                             fillItem: discArt
                             strokeWidth: -1
                             startX: artworkLens.width
@@ -112,12 +122,43 @@ BarCapsule {
                     opacity: recordDisc.hasArtwork ? 0.65 : 0
                 }
 
-                RotationAnimation on rotation {
+                // Continuous spin that pauses/resumes in place. pause() keeps the
+                // current angle and resume() continues from it, so toggling
+                // playback never snaps the disc back to the top. Driven
+                // imperatively rather than with a declarative `paused` binding,
+                // which doesn't reliably freeze a looping value-source animation.
+                readonly property bool shouldSpin: recordDisc.visible
+                    && root.status.mediaStatus === "Playing"
+                onShouldSpinChanged: recordDisc.applySpin()
+                Component.onCompleted: recordDisc.applySpin()
+
+                // Reconciles the animation to shouldSpin from whatever state it is
+                // in, so it can't drift out of sync: it's called on every
+                // shouldSpin change (and at startup), each branch is idempotent
+                // (start/pause/resume no-op if already in that state), and a
+                // missed transition self-corrects on the next call.
+                function applySpin() {
+                    if (recordDisc.shouldSpin) {
+                        if (discSpin.paused) discSpin.resume();
+                        else if (!discSpin.running) discSpin.start();
+                    } else if (discSpin.running && !discSpin.paused) {
+                        discSpin.pause();
+                    }
+                }
+
+                // Invariant: control this only via pause()/resume() in applySpin().
+                // Never stop()/start() it to toggle playback — stop() resets to
+                // from: 0, so the disc would snap to the top on the next play.
+                // start() runs exactly once (first play, from rest); after that it
+                // only ever pauses/resumes, preserving the angle for the session.
+                RotationAnimation {
+                    id: discSpin
+                    target: recordDisc
+                    property: "rotation"
                     from: 0
                     to: 360
                     duration: 6000
                     loops: Animation.Infinite
-                    running: recordDisc.visible && root.status.mediaStatus === "Playing"
                 }
             }
 
