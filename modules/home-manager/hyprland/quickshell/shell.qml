@@ -76,7 +76,7 @@ Scope {
 
                 let t = osdRefreshTimer.osdType;
                 if (t === "volume") {
-                    osdController.show(statusController.muted ? "volumeMuted" : "volume", statusController.volumePercent);
+                    osdController.show(Icons.volumeName(statusController.muted, statusController.volumePercent), statusController.volumePercent);
                 } else if (t === "brightness") {
                     osdController.show("brightness", bri);
                 } else if (t === "keyboard") {

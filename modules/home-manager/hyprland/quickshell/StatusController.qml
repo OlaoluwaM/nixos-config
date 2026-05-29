@@ -16,6 +16,10 @@ Scope {
     property alias brightnessPercent: systemStatus.brightnessPercent
     property alias networkOnline: systemStatus.networkOnline
     property alias networkName: systemStatus.networkName
+    property alias networkType: systemStatus.networkType
+    property alias vpnOn: systemStatus.vpnOn
+    property alias vpnName: systemStatus.vpnName
+    property alias vpnType: systemStatus.vpnType
     property alias bluetoothPowered: systemStatus.bluetoothPowered
     property alias bluetoothDevices: systemStatus.bluetoothDevices
     property alias powerProfile: systemStatus.powerProfile

@@ -25,7 +25,7 @@ parts of those windows and receive only the service objects they need.
 - `Bar.qml`: top bar layout and capsule composition.
 - `WorkspaceCapsule.qml`, `StatsCapsule.qml`, `MediaCapsule.qml`,
   `ClockCapsule.qml`, `NotificationCapsule.qml`, `TrayCapsule.qml`,
-  `AirplaneModeCapsule.qml`, `WifiCapsule.qml`, `BluetoothCapsule.qml`,
+  `AirplaneModeCapsule.qml`, `NetworkCapsule.qml`, `BluetoothCapsule.qml`,
   `QuickSettingsCapsule.qml`: top-bar capsule implementations.
 - `Popovers.qml`: the popup window and the Loader that swaps popup panels.
 - `QuickSettings.qml`, `CalendarPanel.qml`, `TrayPanel.qml`, `MediaPanel.qml`,
@@ -43,7 +43,7 @@ The small reusable files keep common visual patterns in one place:
 - `BarCapsule.qml`: standard top-bar capsule frame.
 - `WorkspaceCapsule.qml`, `StatsCapsule.qml`, `MediaCapsule.qml`,
   `ClockCapsule.qml`, `NotificationCapsule.qml`, `TrayCapsule.qml`,
-  `AirplaneModeCapsule.qml`, `WifiCapsule.qml`, `BluetoothCapsule.qml`,
+  `AirplaneModeCapsule.qml`, `NetworkCapsule.qml`, `BluetoothCapsule.qml`,
   `QuickSettingsCapsule.qml`: domain-specific top-bar capsules built on
   `BarCapsule` or the same geometry constants.
 - `IconButton.qml`: small icon-only button.

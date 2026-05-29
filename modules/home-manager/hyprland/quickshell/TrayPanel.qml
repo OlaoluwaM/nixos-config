@@ -72,7 +72,7 @@ ColumnLayout {
         IconButton {
             visible: trayPanel.activeMenuSource !== null
             accessibleName: qsTr("Back")
-            iconName: "left"
+            iconName: "leftArrow"
             iconSize: 13
             normalColor: "transparent"
             Layout.preferredWidth: 32

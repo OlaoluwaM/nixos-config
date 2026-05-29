@@ -94,8 +94,8 @@ Item {
             status: root.status
         }
 
-        WifiCapsule {
-            id: wifiCapsule
+        NetworkCapsule {
+            id: networkCapsule
             connectivityActions: root.connectivityActions
             status: root.status
         }

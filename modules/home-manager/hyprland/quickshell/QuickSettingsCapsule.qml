@@ -11,7 +11,7 @@ BarCapsule {
 
     ShellIcon {
         anchors.centerIn: parent
-        name: "quick"
+        name: "settings"
         iconColor: Theme.capsuleTextColor(root.popups.activePopup === "quickSettings", root.hovered)
         implicitSize: 17
     }

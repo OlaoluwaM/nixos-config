@@ -25,6 +25,12 @@ QtObject {
     // ── Connectivity ───────────────────────────────────────────────────
     property bool networkOnline: false     // has an active default-route link
     property string networkName: ""         // primary connection name ("" when offline)
+    property string networkType: ""         // "wifi" | "ethernet" | "" (primary link type)
+
+    // VPN is an overlay on top of the primary link, not a link type of its own.
+    property bool vpnOn: false
+    property string vpnName: ""              // VPN / WireGuard connection name
+    property string vpnType: ""              // "vpn" | "wireguard" | "tun" | ""
 
     property bool bluetoothPowered: false
     // Connected devices: array of { name, mac, batteryPercent (int|null), icon }.
@@ -47,6 +53,10 @@ QtObject {
         // Connectivity.
         root.networkOnline = data.network.online;
         root.networkName = data.network.primary.name;
+        root.networkType = data.network.primary.type;
+        root.vpnOn = data.vpn.on;
+        root.vpnName = data.vpn.name;
+        root.vpnType = data.vpn.type;
         root.bluetoothPowered = data.bluetooth.powered;
         root.bluetoothDevices = data.bluetooth.devices;
 

@@ -109,7 +109,7 @@ ColumnLayout {
         spacing: 12
 
         ShellIcon {
-            name: quickSettings.status.muted || volumeSlider.value <= 0 ? "volumeMuted" : "volume"
+            name: Icons.volumeName(quickSettings.status.muted, volumeSlider.value)
             iconColor: quickSettings.status.muted || volumeSlider.value <= 0 ? Theme.textDim : Theme.textSecondary
             implicitSize: 16
         }

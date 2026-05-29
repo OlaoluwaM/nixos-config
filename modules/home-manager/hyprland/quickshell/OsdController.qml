@@ -6,7 +6,7 @@ import Quickshell
 Scope {
     id: root
 
-    property string iconName: "volume"
+    property string iconName: "volumeHigh"
     property real value: 0
 
     signal triggered()

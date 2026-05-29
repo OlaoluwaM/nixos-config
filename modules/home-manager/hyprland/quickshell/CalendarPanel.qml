@@ -93,7 +93,7 @@ Item {
                         width: implicitWidth
                         height: implicitHeight
                         hoverColor: Theme.primary
-                        iconName: "left"
+                        iconName: "leftChevron"
                         iconColor: hovered ? Theme.primaryForeground : Theme.textSecondary
                         iconSize: 13
                         onClicked: calPanel.monthOffset -= 1
@@ -113,7 +113,7 @@ Item {
                         width: implicitWidth
                         height: implicitHeight
                         hoverColor: Theme.primary
-                        iconName: "right"
+                        iconName: "rightChevron"
                         iconColor: hovered ? Theme.primaryForeground : Theme.textSecondary
                         iconSize: 13
                         onClicked: calPanel.monthOffset += 1
