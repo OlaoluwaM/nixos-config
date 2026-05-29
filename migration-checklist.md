@@ -44,8 +44,11 @@
 - [x] Port gnugpg configuration to nix
 - [x] Port fontconfig configuration to nix
 - [x] Document "Usage" and home-manager install steps in README
-- [ ] Fix nixos vm to allow copy pasting of text and files across host and guest
+- [x] Fix nixos vm to allow copy pasting of text and files across host and guest
   - Looks like to do this we'll need to install `spice-vdagent` [on the nixos guest](https://unix.stackexchange.com/questions/109117/virt-manager-copy-paste-functionality-to-the-vm). NixOS has a configuration for this, so in the guest nixos config we need to set `services.spice-vdagentd.enable = true` then reboot: Per <https://search.nixos.org/options?channel=25.11&query=spice-vdagent>
+- [x] Setup fonts
+- [x] Configure catppuccin-cursors
+- [x] Configure colloid icon theme
 - [x] Document how all `nixos` and `home-manager` commands will now always need to reference our flake to work as we expect
   - [ ] Create shell aliases
 - [ ] Configure borgbackup
