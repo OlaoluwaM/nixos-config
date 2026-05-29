@@ -5,6 +5,7 @@
   ...
 }:
 
+# Inspired by https://codeberg.org/SeniorMatthew/nixos/src/branch/main/modules
 let
   cfg = config.local.fonts;
 
