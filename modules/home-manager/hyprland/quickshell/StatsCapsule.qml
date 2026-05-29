@@ -30,7 +30,7 @@ BarCapsule {
                 StyledText {
                     text: root.status.cpuPercent + "%"
                     color: Theme.metricCpu
-                    font.pixelSize: 13
+                    font.pixelSize: Theme.fontBody
                 }
             }
 
@@ -65,7 +65,7 @@ BarCapsule {
                 StyledText {
                     text: root.status.memPercent + "%"
                     color: Theme.metricMemory
-                    font.pixelSize: 13
+                    font.pixelSize: Theme.fontBody
                 }
             }
 
@@ -101,7 +101,7 @@ BarCapsule {
                     // tempC is null on machines without a CPU sensor (e.g. VMs).
                     text: root.status.tempC !== null ? root.status.tempC + "°C" : qsTr("N/A")
                     color: Theme.metricTemperature
-                    font.pixelSize: 13
+                    font.pixelSize: Theme.fontBody
                 }
             }
 

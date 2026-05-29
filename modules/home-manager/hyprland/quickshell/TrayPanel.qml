@@ -87,7 +87,7 @@ ColumnLayout {
                 ? trayPanel.cleanTrayName(trayPanel.activeMenuSource)
                 : qsTr("System Tray")
             color: Theme.text
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontHeader
             font.weight: Font.DemiBold
             elide: Text.ElideRight
             Layout.fillWidth: true
@@ -148,7 +148,7 @@ ColumnLayout {
                             visible: trayIcon.status !== Image.Ready
                             text: (trayDelegate.modelData.title || trayDelegate.modelData.id || "?").slice(0, 1).toUpperCase()
                             color: trayItemMouse.containsMouse ? Theme.text : Theme.textSecondary
-                            font.pixelSize: 16
+                            font.pixelSize: Theme.fontHeader
                             font.weight: Font.DemiBold
 
                             Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve } }
@@ -210,7 +210,7 @@ ColumnLayout {
 
                         Rectangle {
                             anchors.fill: parent
-                            radius: 8
+                            radius: Theme.capsuleButtonRadius
                             color: !menuEntry.modelData.isSeparator && menuEntryMouse.containsMouse
                                 ? Theme.surfaceVariant : "transparent"
                             visible: !menuEntry.modelData.isSeparator
@@ -235,7 +235,7 @@ ColumnLayout {
                                 StyledText {
                                     text: menuEntry.modelData.text || ""
                                     color: menuEntry.modelData.enabled ? Theme.text : Theme.textSecondary
-                                    font.pixelSize: 13
+                                    font.pixelSize: Theme.fontBody
                                     elide: Text.ElideRight
                                     Layout.fillWidth: true
                                 }

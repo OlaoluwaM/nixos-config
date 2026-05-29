@@ -36,7 +36,9 @@ PanelWindow {
         anchors.bottomMargin: 10
         width: 260
         height: 64
-        radius: 16
+        // Same card idiom as NotificationCard, so share its radius token rather
+        // than a one-off 16 — keeps all base-surface cards visually consistent.
+        radius: Theme.cardRadius
         color: Theme.base
         border.color: Theme.outline
         border.width: 1
@@ -90,13 +92,13 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 width: 170
                 height: 6
-                radius: 3
+                radius: Theme.trackRadius
                 color: Theme.surfaceVariant
 
                 Rectangle {
                     width: Math.max(0, Math.min(1, osdWindow.osd.value / 100)) * parent.width
                     height: parent.height
-                    radius: 3
+                    radius: Theme.trackRadius
                     color: Theme.primary
 
                     Behavior on width {

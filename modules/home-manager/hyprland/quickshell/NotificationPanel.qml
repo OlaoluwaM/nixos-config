@@ -39,7 +39,7 @@ ColumnLayout {
         StyledText {
             text: qsTr("Notifications")
             color: Theme.text
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontHeader
             font.weight: Font.DemiBold
             Layout.alignment: Qt.AlignBaseline
         }
@@ -47,7 +47,7 @@ ColumnLayout {
         StyledText {
             text: root.notifications.historyModel.count
             color: Theme.textDim
-            font.pixelSize: 13
+            font.pixelSize: Theme.fontBody
             visible: root.notifications.historyModel.count > 0
             Layout.alignment: Qt.AlignBaseline
         }
@@ -57,7 +57,7 @@ ColumnLayout {
         StyledText {
             text: qsTr("Clear")
             color: clearMouse.containsMouse ? Theme.text : Theme.textSecondary
-            font.pixelSize: 13
+            font.pixelSize: Theme.fontBody
             visible: root.notifications.historyModel.count > 0
             Layout.alignment: Qt.AlignBaseline
 

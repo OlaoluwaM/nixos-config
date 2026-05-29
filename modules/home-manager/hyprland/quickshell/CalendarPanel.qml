@@ -135,7 +135,7 @@ Item {
                             horizontalAlignment: Text.AlignHCenter
                             text: modelData
                             color: Theme.textDim
-                            font.pixelSize: 11
+                            font.pixelSize: Theme.fontSmall
                         }
                     }
 
@@ -146,7 +146,7 @@ Item {
                             required property var modelData
                             width: 34
                             height: 30
-                            radius: 8
+                            radius: Theme.capsuleButtonRadius
                             color: modelData.today ? Theme.primary : "transparent"
 
                             StyledText {
@@ -155,7 +155,7 @@ Item {
                                 color: modelData.today   ? Theme.primaryForeground
                                      : modelData.current ? Theme.text
                                      : Theme.textDim
-                                font.pixelSize: 12
+                                font.pixelSize: Theme.fontCaption
                                 font.weight: modelData.today ? Font.DemiBold : Font.Normal
                             }
                         }
@@ -189,7 +189,7 @@ Item {
                         id: bigTime
                         text: calPanel.hoursMinutes
                         color: Theme.text
-                        font.pixelSize: 54
+                        font.pixelSize: Theme.fontDisplay
                         font.weight: Font.DemiBold
                     }
 
@@ -197,7 +197,7 @@ Item {
                         id: bigSec
                         text: calPanel.seconds
                         color: Theme.textSecondary
-                        font.pixelSize: 22
+                        font.pixelSize: Theme.fontTitle
                         anchors.left: bigTime.right
                         anchors.baseline: bigTime.baseline
                     }
@@ -207,7 +207,7 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: calPanel.dateLine
                     color: Theme.textSecondary
-                    font.pixelSize: 13
+                    font.pixelSize: Theme.fontBody
                 }
             }
         }

@@ -22,6 +22,12 @@ BarCapsule {
     // VPN is only shown while there is also a live link for it to ride on.
     readonly property bool vpnActive: root.connected && root.status.vpnOn
 
+    // A live link lights the capsule up: feed `connected` into the frame's
+    // `active` and opt into the primary→secondary accent gradient, mirroring
+    // BluetoothCapsule so the two radio capsules read identically.
+    active: root.connected
+    accentGradient: true
+
     width: Math.max(Theme.capsuleHeight, netContent.implicitWidth + 28)
     opacity: root.status.airplaneMode ? 0.35 : 1.0
 
@@ -34,7 +40,7 @@ BarCapsule {
 
         ShellIcon {
             name: !root.connected ? "networkOff" : (root.ethernet ? "ethernet" : "network")
-            iconColor: Theme.capsuleTextColor(false, root.hovered)
+            iconColor: Theme.capsuleTextColor(root.active, root.hovered)
             implicitSize: 15
             Layout.alignment: Qt.AlignVCenter
         }
@@ -44,8 +50,8 @@ BarCapsule {
             // Ethernet connection names ("Wired connection 1") aren't meaningful,
             // so show a plain label; Wi-Fi keeps its connection/SSID name.
             text: root.ethernet ? qsTr("Ethernet") : root.status.networkName
-            color: Theme.capsuleTextColor(false, root.hovered)
-            font.pixelSize: 13
+            color: Theme.capsuleTextColor(root.active, root.hovered)
+            font.pixelSize: Theme.fontBody
             font.weight: Font.DemiBold
             Layout.alignment: Qt.AlignVCenter
             Layout.maximumWidth: 120
@@ -58,7 +64,7 @@ BarCapsule {
         ShellIcon {
             visible: root.vpnActive
             name: "vpn"
-            iconColor: Theme.capsuleTextColor(false, root.hovered)
+            iconColor: Theme.capsuleTextColor(root.active, root.hovered)
             implicitSize: 12
             Layout.alignment: Qt.AlignVCenter
         }

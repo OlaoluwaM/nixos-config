@@ -64,7 +64,7 @@ Rectangle {
         anchors.centerIn: parent
         text: root.label
         color: root.hovered ? root.hoverTextColor : root.textColor
-        font.pixelSize: 12
+        font.pixelSize: Theme.fontCaption
         font.weight: Font.DemiBold
         textFormat: Text.PlainText
 

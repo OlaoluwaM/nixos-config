@@ -93,14 +93,14 @@ Rectangle {
             StyledText {
                 text: root.appName
                 color: Theme.textSecondary
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontCaption
                 font.weight: Font.Normal
             }
 
             StyledText {
                 text: root.timeText
                 color: Theme.textDim
-                font.pixelSize: 12
+                font.pixelSize: Theme.fontCaption
             }
 
             Item { Layout.fillWidth: true }
@@ -116,7 +116,7 @@ Rectangle {
                     anchors.fill: parent
                     visible: dismissMouse.containsMouse
                     color: root.dismissHoverColor
-                    radius: 8
+                    radius: Theme.capsuleButtonRadius
                 }
 
                 ShellIcon {

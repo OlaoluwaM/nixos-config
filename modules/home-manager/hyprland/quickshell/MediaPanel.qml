@@ -106,7 +106,7 @@ ColumnLayout {
                     Layout.preferredHeight: implicitHeight
                     text: panel.status.mediaTrackTitle
                     color: Theme.text
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.fontHeader
                     font.weight: Font.DemiBold
                 }
 
@@ -115,7 +115,7 @@ ColumnLayout {
                     visible: panel.status.mediaArtist.length > 0
                     text: panel.status.mediaArtist
                     color: Theme.textSecondary
-                    font.pixelSize: 13
+                    font.pixelSize: Theme.fontBody
                     elide: Text.ElideRight
                 }
 
@@ -156,7 +156,7 @@ ColumnLayout {
                         text: panel.status.mediaPosition
                         color: Theme.textDim
                         font.family: Theme.monoFontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontSmall
                     }
 
                     Item { Layout.fillWidth: true }
@@ -167,7 +167,7 @@ ColumnLayout {
                         text: panel.status.mediaLength
                         color: Theme.textDim
                         font.family: Theme.monoFontFamily
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontSmall
                     }
                 }
 
@@ -247,7 +247,7 @@ ColumnLayout {
                         anchors.centerIn: parent
                         text: segment.modelData.identity || qsTr("Unknown")
                         color: segment.current ? Theme.primary : Theme.textDim
-                        font.pixelSize: 12
+                        font.pixelSize: Theme.fontCaption
                         font.weight: segment.current ? Font.DemiBold : Font.Normal
 
                         Behavior on color {

@@ -27,7 +27,7 @@ Rectangle {
         anchors.centerIn: parent
         text: root.text
         color: Theme.text
-        font.pixelSize: 11
+        font.pixelSize: Theme.fontSmall
         textFormat: Text.PlainText
     }
 }

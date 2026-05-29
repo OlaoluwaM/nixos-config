@@ -33,6 +33,18 @@ QtObject {
     readonly property string fontFamily:     "SF Pro Display"
     readonly property string monoFontFamily: "Berkeley Mono"
 
+    // ── Type scale (px) ─────────────────────────────────────────────────
+    // The recurring text roles, named so panels/capsules stop hardcoding the
+    // same pixel sizes. Values mirror what the UI already used; sizes that
+    // appear only once or twice (one-offs) intentionally stay inline rather
+    // than inflating this scale.
+    readonly property int fontDisplay:   54   // big clock / battery readout
+    readonly property int fontTitle:     22   // modal title, secondary readout
+    readonly property int fontHeader:    16   // panel section headers
+    readonly property int fontBody:      13   // capsule labels, default body
+    readonly property int fontCaption:   12   // secondary captions
+    readonly property int fontSmall:     11   // smallest labels
+
     // ── Capsule geometry ────────────────────────────────────────────────
     readonly property int capsuleHeight:        46
     readonly property int capsuleRadius:        10
@@ -40,6 +52,7 @@ QtObject {
     readonly property int capsuleButtonRadius:  8
     readonly property int popoverRadius:        20
     readonly property int cardRadius:           14
+    readonly property int trackRadius:          3   // thin slider / progress bars
 
     // ── Animation durations (ms) ────────────────────────────────────────
     readonly property int animFast:       150
@@ -57,8 +70,18 @@ QtObject {
 
     // ── Capsule state helpers ───────────────────────────────────────────
     // Uniform (active, hovered) signature; each responds to the state it needs:
-    // fill brightens on hover, border/text shift to the accent when active.
+    // fill washes with the accent when active, brightens on hover, border/text
+    // shift to the accent when active.
     function capsuleColor(active, hovered) {
+        // Active = a popover is open, or a radio/link is live. We wash the base
+        // surface with a low-alpha primary tint rather than the solid-primary
+        // fill used by the momentary toggles (caffeine/airplane): connectivity
+        // is "on" most of the time, so a full accent fill would make the bar
+        // loud. The tint reads as "live" while staying subtle; hover deepens it
+        // slightly so the cursor still gives feedback. Computed here so every
+        // capsule that sets `active` gets the same treatment for free.
+        if (active)
+            return Qt.tint(surfaceVariant, Qt.rgba(primary.r, primary.g, primary.b, hovered ? 0.26 : 0.18));
         return hovered ? surfaceHover : surfaceVariant;
     }
 
@@ -68,5 +91,19 @@ QtObject {
 
     function capsuleTextColor(active, hovered) {
         return active ? primary : text;
+    }
+
+    // ── Active accent gradient (the "live radio/link" capsules: wifi/bt) ──
+    // A soft primary→secondary wash that reads as "live" without the loud solid
+    // fill of the momentary toggles. The stops tint the surface (rather than
+    // using the raw accents) so the wash stays in-palette and gentle; opaque so
+    // it composites over the capsule surface, not the transparent bar window.
+    // Border and text for these capsules stay on the standard accent helpers
+    // (capsuleBorderColor / capsuleTextColor with active = true).
+    function capsuleGradientStart() {
+        return Qt.tint(surfaceVariant, Qt.rgba(primary.r, primary.g, primary.b, 0.22));
+    }
+    function capsuleGradientEnd() {
+        return Qt.tint(surfaceVariant, Qt.rgba(secondary.r, secondary.g, secondary.b, 0.22));
     }
 }

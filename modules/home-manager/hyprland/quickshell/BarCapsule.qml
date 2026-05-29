@@ -14,9 +14,25 @@ Rectangle {
     readonly property bool hovered: hoverHandler.hovered
     property bool clipped: false
 
+    // Opt-in for capsules that represent a *live radio/link* (wifi, bluetooth):
+    // when active they fill with the soft primary→secondary accent wash instead
+    // of the plain tint other active capsules get, so they read as a brighter
+    // "live" chip while staying in-palette. The gradient is defined once here
+    // (stop colours come from Theme) rather than copied into each radio capsule.
+    property bool accentGradient: false
+    readonly property bool activeAccent: root.accentGradient && root.active
+    readonly property Gradient accentFill: Gradient {
+        orientation: Gradient.Horizontal
+        GradientStop { position: 0.0; color: Theme.capsuleGradientStart() }
+        GradientStop { position: 1.0; color: Theme.capsuleGradientEnd() }
+    }
+
     height: Theme.capsuleHeight
     radius: Theme.capsuleRadius
     color: Theme.capsuleColor(root.active, root.respondToHover && root.hovered)
+    // Rectangle uses the gradient over `color` when one is set; only live radio
+    // capsules supply one, so every other capsule falls back to `color` above.
+    gradient: root.activeAccent ? root.accentFill : null
     border.color: Theme.capsuleBorderColor(root.active, root.respondToHover && root.hovered)
     border.width: 1
     clip: root.clipped

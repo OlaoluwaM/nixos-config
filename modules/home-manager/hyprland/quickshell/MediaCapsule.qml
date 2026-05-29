@@ -211,7 +211,7 @@ BarCapsule {
                     height: implicitHeight
                     text: root.status.mediaDisplayTitle
                     color: Theme.capsuleTextColor(root.popups.activePopup === "media", root.hovered)
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontCaption
                     font.weight: Font.DemiBold
                 }
 
@@ -223,7 +223,7 @@ BarCapsule {
                         ? root.status.mediaPosition + " / " + root.status.mediaLength
                         : root.status.mediaPosition
                     color: Theme.capsuleTextColor(root.popups.activePopup === "media", root.hovered)
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.fontSmall
                     elide: Text.ElideRight
                     maximumLineCount: 1
                     textFormat: Text.PlainText

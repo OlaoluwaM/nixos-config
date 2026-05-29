@@ -47,7 +47,7 @@ ColumnLayout {
                     id: bigPct
                     text: quickSettings.batteryPercent.toString()
                     color: Theme.text
-                    font.pixelSize: 54
+                    font.pixelSize: Theme.fontDisplay
                     font.weight: Font.DemiBold
                 }
 
@@ -55,7 +55,7 @@ ColumnLayout {
                     id: pctSign
                     text: "%"
                     color: Theme.textSecondary
-                    font.pixelSize: 22
+                    font.pixelSize: Theme.fontTitle
                     anchors.left: bigPct.right
                     anchors.baseline: bigPct.baseline
                 }
@@ -74,7 +74,7 @@ ColumnLayout {
                 StyledText {
                     text: quickSettings.batteryStatusLabel
                     color: quickSettings.batteryStateColor
-                    font.pixelSize: 13
+                    font.pixelSize: Theme.fontBody
                 }
             }
         }

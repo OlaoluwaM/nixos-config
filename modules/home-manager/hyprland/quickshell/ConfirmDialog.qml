@@ -168,7 +168,7 @@ PanelWindow {
                 Layout.alignment: Qt.AlignHCenter
                 text: confirmWindow.dialogTitle
                 color: Theme.text
-                font.pixelSize: 22
+                font.pixelSize: Theme.fontTitle
                 font.weight: Font.DemiBold
             }
 
@@ -177,7 +177,7 @@ PanelWindow {
                 Layout.maximumWidth: contentCol.width
                 text: confirmWindow.dialogDescription
                 color: Theme.textSecondary
-                font.pixelSize: 13
+                font.pixelSize: Theme.fontBody
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.WordWrap
             }
@@ -216,7 +216,7 @@ PanelWindow {
                     Layout.alignment: Qt.AlignHCenter
                     text: qsTr("Confirming in %1s").arg(countdown.remaining)
                     color: Theme.textDim
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontCaption
                 }
             }
 

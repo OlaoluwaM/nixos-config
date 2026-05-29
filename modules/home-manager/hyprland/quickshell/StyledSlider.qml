@@ -15,13 +15,13 @@ Slider {
         y: root.topPadding + root.availableHeight / 2 - height / 2
         width: root.availableWidth
         height: 6
-        radius: 3
+        radius: Theme.trackRadius
         color: Theme.surfaceVariant
 
         Rectangle {
             width: root.visualPosition * parent.width
             height: parent.height
-            radius: 3
+            radius: Theme.trackRadius
             color: root.accentColor
         }
     }
@@ -31,7 +31,7 @@ Slider {
         y: root.topPadding + root.availableHeight / 2 - height / 2
         width: 16
         height: 16
-        radius: 8
+        radius: Theme.capsuleButtonRadius
         color: root.pressed ? root.accentColor : Theme.text
 
         Behavior on color {
