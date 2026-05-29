@@ -116,7 +116,6 @@ ColumnLayout {
 
                 delegate: NotificationCard {
                     id: notifItem
-                    required property int index
                     required property real timestamp
 
                     width: notifColumn.width

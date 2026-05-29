@@ -55,7 +55,6 @@ PanelWindow {
 
         delegate: NotificationCard {
             id: toastItem
-            required property int index
 
             width: toastList.width
             verticalPadding: 22

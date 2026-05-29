@@ -1,6 +1,6 @@
 pragma ComponentBehavior: Bound
 
-import QtQuick
+import QtQml
 import Quickshell
 
 Scope {

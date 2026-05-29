@@ -240,11 +240,11 @@ ColumnLayout {
                                     Layout.fillWidth: true
                                 }
 
-                                StyledText {
+                                ShellIcon {
                                     visible: menuEntry.modelData.checkState === Qt.Checked
-                                    text: "✓"
-                                    color: Theme.primary
-                                    font.pixelSize: 14
+                                    name: "check"
+                                    iconColor: Theme.primary
+                                    implicitSize: 14
                                 }
                             }
 

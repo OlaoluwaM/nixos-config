@@ -80,6 +80,10 @@ let
       jq
       lm_sensors
       networkmanager
+      # hypr-shell-status.sh reads the active profile with `powerprofilesctl`
+      # directly, so the daemon's CLI must be on PATH. (powerProfileScript below
+      # only wraps the *write* path, not this read.)
+      power-profiles-daemon
       caffeineScript
       powerProfileScript
       systemd
