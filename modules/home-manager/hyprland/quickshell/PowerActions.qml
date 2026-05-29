@@ -17,10 +17,6 @@ QtObject {
         root.runner.run(GeneratedCommands.rebootCommand);
     }
 
-    function runPowerProfileCycle() {
-        root.runner.runAndRefresh(GeneratedCommands.powerProfileCommand + " cycle");
-    }
-
     function runPowerProfileSet(profile) {
         root.runner.runAndRefresh(GeneratedCommands.powerProfileCommand + " set " + profile);
     }
@@ -31,10 +27,6 @@ QtObject {
 
     function runSleepCommand() {
         root.runner.run(GeneratedCommands.sleepCommand);
-    }
-
-    function runRefreshCommand() {
-        root.runner.run(GeneratedCommands.refreshCommand);
     }
 
     function runLogoutCommand() {

@@ -91,7 +91,7 @@ ColumnLayout {
             StyledText {
                 text: qsTr("All clear")
                 color: Theme.textDim
-                font.pixelSize: 14
+                font.pixelSize: Theme.fontMedium
                 Layout.alignment: Qt.AlignHCenter
             }
         }
@@ -119,7 +119,7 @@ ColumnLayout {
                     required property real timestamp
 
                     width: notifColumn.width
-                    radius: 10
+                    radius: Theme.capsuleRadius
                     expandable: true
                     heightAnimationEnabled: root.heightAnimationsReady
                     backgroundColor: Theme.surfaceVariant

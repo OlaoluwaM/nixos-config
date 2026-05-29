@@ -7,7 +7,7 @@ import Quickshell.Services.SystemTray
 
 ColumnLayout {
     id: trayPanel
-    required property var popups
+    required property PopupController popups
     spacing: 16
 
     property var activeMenuSource: null

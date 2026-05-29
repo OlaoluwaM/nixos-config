@@ -135,6 +135,8 @@ printf -v quickshell_cmd '%q' "$quickshell_bin"
 printf -v config_dir_arg '%q' "$config_dir"
 printf -v wallpaper_arg '%q' "$wallpaper_path"
 printf -v qs_log_arg '%q' "$runtime_root/quickshell.log"
+printf -v popup_cmd '%q' "$tty_bin_dir/hypr-shell-popup"
+printf -v brightnessctl_cmd '%q' "$tty_bin_dir/brightnessctl"
 
 cat >"$start_wallpaper" <<EOF
 #!/usr/bin/env bash
@@ -233,13 +235,13 @@ bind = SUPER SHIFT, 7, movetoworkspace, 7
 bind = SUPER SHIFT, 8, movetoworkspace, 8
 bind = SUPER SHIFT, 9, movetoworkspace, 9
 
-bindel = , XF86AudioRaiseVolume, exec, ${tty_bin_dir}/hypr-shell-popup audio-up
-bindel = , XF86AudioLowerVolume, exec, ${tty_bin_dir}/hypr-shell-popup audio-down
-bindl = , XF86AudioMute, exec, ${tty_bin_dir}/hypr-shell-popup audio-mute
-bindel = , XF86MonBrightnessUp, exec, brightnessctl set 5%+ && ${tty_bin_dir}/hypr-shell-popup osd-brightness
-bindel = , XF86MonBrightnessDown, exec, brightnessctl set 5%- && ${tty_bin_dir}/hypr-shell-popup osd-brightness
-bindel = , XF86KbdBrightnessUp, exec, brightnessctl -d '*::kbd_backlight' set 5%+ && ${tty_bin_dir}/hypr-shell-popup osd-keyboard
-bindel = , XF86KbdBrightnessDown, exec, brightnessctl -d '*::kbd_backlight' set 5%- && ${tty_bin_dir}/hypr-shell-popup osd-keyboard
+bindel = , XF86AudioRaiseVolume, exec, ${popup_cmd} audio-up
+bindel = , XF86AudioLowerVolume, exec, ${popup_cmd} audio-down
+bindl = , XF86AudioMute, exec, ${popup_cmd} audio-mute
+bindel = , XF86MonBrightnessUp, exec, ${brightnessctl_cmd} set 5%+ && ${popup_cmd} osd-brightness
+bindel = , XF86MonBrightnessDown, exec, ${brightnessctl_cmd} set 5%- && ${popup_cmd} osd-brightness
+bindel = , XF86KbdBrightnessUp, exec, ${brightnessctl_cmd} -d '*::kbd_backlight' set 5%+ && ${popup_cmd} osd-keyboard
+bindel = , XF86KbdBrightnessDown, exec, ${brightnessctl_cmd} -d '*::kbd_backlight' set 5%- && ${popup_cmd} osd-keyboard
 EOF
 
 printf 'hypr-shell-tty-test: Hyprland config: %s\n' "$hypr_config" >&2

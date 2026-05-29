@@ -21,7 +21,7 @@ BarCapsule {
                 return parts.slice(0, 2).join(" ");
             }
             color: Theme.capsuleTextColor(root.popups.activePopup === "calendar", root.hovered)
-            font.pixelSize: 14
+            font.pixelSize: Theme.fontMedium
             font.weight: Font.DemiBold
 
             Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve } }
@@ -33,7 +33,7 @@ BarCapsule {
                 return parts.slice(2).join(" ");
             }
             color: Theme.capsuleTextColor(root.popups.activePopup === "calendar", root.hovered)
-            font.pixelSize: 14
+            font.pixelSize: Theme.fontMedium
             font.weight: Font.DemiBold
 
             Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve } }

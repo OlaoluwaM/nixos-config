@@ -18,23 +18,7 @@ QtObject {
             || root.batteryDevice.state === UPowerDeviceState.PendingCharge)
     readonly property bool batteryFull: root.batteryReady
         && root.batteryDevice.state === UPowerDeviceState.FullyCharged
-    readonly property string batteryText: root.batteryReady ? root.batteryPercent + "%" : "AC"
-    readonly property string batteryHours: root.formatHours(root.batteryTimeSeconds)
-    readonly property string batteryMinutes: root.formatMinutes(root.batteryTimeSeconds)
     readonly property string batteryStatusLabel: root.batteryLabel()
-    readonly property real batteryTimeSeconds: !root.batteryReady ? 0
-        : root.batteryCharging ? root.batteryDevice.timeToFull
-        : root.batteryDevice.timeToEmpty
-
-    function formatHours(seconds) {
-        if (seconds <= 0) return "--";
-        return String(Math.floor(seconds / 3600));
-    }
-
-    function formatMinutes(seconds) {
-        if (seconds <= 0) return "--";
-        return String(Math.floor((seconds % 3600) / 60));
-    }
 
     function batteryLabel() {
         if (!root.batteryReady) return qsTr("AC Power");

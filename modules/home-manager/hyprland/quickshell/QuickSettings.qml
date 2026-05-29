@@ -5,12 +5,12 @@ import QtQuick.Layouts
 
 ColumnLayout {
     id: quickSettings
-    required property var audioActions
-    required property var brightnessActions
-    required property var connectivityActions
-    required property var powerActions
-    required property var status
-    required property var notifications
+    required property AudioActions audioActions
+    required property BrightnessActions brightnessActions
+    required property ConnectivityActions connectivityActions
+    required property PowerActions powerActions
+    required property StatusController status
+    required property NotificationService notifications
 
     property int batteryPercent: status.batteryPercent
     property bool isCharging: status.batteryCharging

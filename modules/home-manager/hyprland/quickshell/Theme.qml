@@ -4,8 +4,10 @@
 pragma Singleton
 
 import QtQuick
+import Quickshell
 
-QtObject {
+Singleton {
+    id: root
 
     // ── Catppuccin Mocha color palette ──────────────────────────────────
     readonly property color base:           "#1e1e2e"
@@ -41,6 +43,7 @@ QtObject {
     readonly property int fontDisplay:   54   // big clock / battery readout
     readonly property int fontTitle:     22   // modal title, secondary readout
     readonly property int fontHeader:    16   // panel section headers
+    readonly property int fontMedium:    14   // clock, notification body, emphasis labels
     readonly property int fontBody:      13   // capsule labels, default body
     readonly property int fontCaption:   12   // secondary captions
     readonly property int fontSmall:     11   // smallest labels

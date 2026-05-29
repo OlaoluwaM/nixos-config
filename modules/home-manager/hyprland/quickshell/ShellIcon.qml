@@ -4,7 +4,9 @@ import Quickshell.Widgets
 
 IconImage {
     required property string name
-    property string iconColor: Theme.text
+    // color (not string): callers pass Theme.* color tokens; iconSource()
+    // serialises it to a hex string for the SVG stroke.
+    property color iconColor: Theme.text
 
     implicitSize: 16
     width: implicitSize

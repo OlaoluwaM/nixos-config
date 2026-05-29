@@ -82,7 +82,7 @@ closes, the Loader source is cleared so the hidden panel is destroyed instead of
 kept around in memory.
 
 Qt Loader documentation:
-https://doc.qt.io/qt-6/qml-qtquick-loader.html
+<https://doc.qt.io/qt-6/qml-qtquick-loader.html>
 
 ## Testing
 
@@ -104,3 +104,10 @@ TTY:
 After the test session exits, check the Quickshell log printed by the helper.
 That log is the fastest way to find QML load errors, missing `qmldir` entries,
 or unsubstituted placeholders.
+
+## Future Items to Consider
+
+- Blur & Translucencies in windows and in the topbar
+- A topbar design more like [this](https://github.com/ilyamiro/nixos-configuration/blob/master/previews/screenshot1.png)
+- Quickshell script test suite
+- A Quickshell widget that displays device usage metric like AppBlock. Similar to [this](https://github.com/ilyamiro/nixos-configuration/blob/master/previews/screenshot6.png)

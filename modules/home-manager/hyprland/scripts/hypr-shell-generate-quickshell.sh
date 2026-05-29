@@ -103,17 +103,21 @@ write_repo_script_wrapper() {
 	local name="$1"
 	local script_path="$2"
 	local output="$bin_dir/$name"
+	local quoted_bin_dir
+	local quoted_script_path
 
 	if [ ! -f "$script_path" ]; then
 		printf 'hypr-shell-generate-quickshell: expected helper script not found:\n  %s\n' "$script_path" >&2
 		exit 66
 	fi
 
+	printf -v quoted_bin_dir '%q' "$bin_dir"
+	printf -v quoted_script_path '%q' "$script_path"
 	cat >"$output" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
-export PATH="$bin_dir:\$PATH"
-exec bash "$script_path" "\$@"
+export PATH=${quoted_bin_dir}:"\$PATH"
+exec bash ${quoted_script_path} "\$@"
 EOF
 	chmod +x "$output"
 }
@@ -121,22 +125,28 @@ EOF
 write_command_wrapper() {
 	local name="$1"
 	local command_name="$2"
+	local required="${3:-optional}"
 	local output="$bin_dir/$name"
 	local command_path
+	local quoted_command_path
 
 	command_path="$(command -v "$command_name" 2>/dev/null || true)"
 
 	if [ -n "$command_path" ]; then
+		printf -v quoted_command_path '%q' "$command_path"
 		cat >"$output" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
-exec "$command_path" "\$@"
+exec ${quoted_command_path} "\$@"
 EOF
 	else
 		cat >"$output" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
 printf 'hypr-shell-generate-quickshell: command not available on host: %s\n' "$command_name" >&2
+if [ "$required" = "required" ]; then
+	exit 69
+fi
 exit 0
 EOF
 	fi
@@ -150,12 +160,20 @@ write_repo_script_wrapper hypr-shell-power-profile "$scripts_dir/hypr-shell-powe
 write_repo_script_wrapper hypr-shell-caffeine "$scripts_dir/hypr-shell-caffeine.sh"
 write_repo_script_wrapper hypr-shell-popup "$scripts_dir/hypr-shell-popup.sh"
 
+write_command_wrapper sh sh required
+write_command_wrapper cat cat required
+write_command_wrapper awk awk required
+write_command_wrapper tr tr required
 write_command_wrapper vicinae vicinae
 write_command_wrapper airctl airctl
 write_command_wrapper overskride overskride
 write_command_wrapper hyprshutdown hyprshutdown
 write_command_wrapper brightnessctl brightnessctl
 write_command_wrapper rfkill rfkill
+write_command_wrapper systemctl systemctl required
+write_command_wrapper loginctl loginctl required
+write_command_wrapper hyprctl hyprctl required
+write_command_wrapper notify-send notify-send
 
 if [ "${HYPR_SHELL_TTY_SMOKE:-}" = "1" ]; then
 	cat >"$output_dir/shell.qml" <<'EOF'
@@ -217,31 +235,38 @@ replace_placeholder() {
 	local file="$1"
 	local placeholder="$2"
 	local replacement="$3"
+	local escaped_replacement
 
 	[ -f "$file" ] || return 0
-	sed -i "s|$placeholder|$replacement|g" "$file"
+	escaped_replacement="$(printf '%s' "$replacement" | sed -e 's/[\/&|\\]/\\&/g')"
+	sed -i "s|$placeholder|$escaped_replacement|g" "$file"
 }
 
 replace_command_placeholder() {
-	replace_placeholder "$output_dir/GeneratedCommands.qml" "$1" "$2"
+	local qml_replacement
+
+	qml_replacement="$(printf '%s' "$2" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')"
+	replace_placeholder "$output_dir/GeneratedCommands.qml" "$1" "$qml_replacement"
 }
 
+replace_command_placeholder '@SHELL_COMMAND@' "$bin_dir/sh"
+replace_command_placeholder '@CAT_COMMAND@' "$bin_dir/cat"
+replace_command_placeholder '@AWK_COMMAND@' "$bin_dir/awk"
+replace_command_placeholder '@TR_COMMAND@' "$bin_dir/tr"
 replace_command_placeholder '@STATUS_SCRIPT@' "$bin_dir/hypr-shell-status"
 replace_command_placeholder '@TIMEZONE_SCRIPT@' "$bin_dir/hypr-shell-timezones"
-replace_command_placeholder '@VICINAE_COMMAND@' "$bin_dir/vicinae"
 replace_command_placeholder '@NETWORK_COMMAND@' "$bin_dir/airctl"
 replace_command_placeholder '@BLUETOOTH_COMMAND@' "$bin_dir/overskride"
-replace_command_placeholder '@POWER_COMMAND@' "$bin_dir/hyprshutdown -t 'Shutting down...' --post-cmd 'systemctl poweroff'"
+replace_command_placeholder '@POWER_COMMAND@' "$bin_dir/hyprshutdown -t 'Shutting down...' --post-cmd '$bin_dir/systemctl poweroff'"
 replace_command_placeholder '@POWER_PROFILE_COMMAND@' "$bin_dir/hypr-shell-power-profile"
 replace_command_placeholder '@CAFFEINE_COMMAND@' "$bin_dir/hypr-shell-caffeine"
 replace_command_placeholder '@BRIGHTNESS_COMMAND@' "$bin_dir/brightnessctl"
-replace_command_placeholder '@REBOOT_COMMAND@' "$bin_dir/hyprshutdown -t 'Restarting...' --post-cmd 'systemctl reboot'"
-replace_command_placeholder '@LOCK_COMMAND@' "loginctl lock-session"
-replace_command_placeholder '@SLEEP_COMMAND@' "systemctl suspend"
-replace_command_placeholder '@REFRESH_COMMAND@' "hyprctl reload"
+replace_command_placeholder '@REBOOT_COMMAND@' "$bin_dir/hyprshutdown -t 'Restarting...' --post-cmd '$bin_dir/systemctl reboot'"
+replace_command_placeholder '@LOCK_COMMAND@' "$bin_dir/loginctl lock-session"
+replace_command_placeholder '@SLEEP_COMMAND@' "$bin_dir/systemctl suspend"
 replace_command_placeholder '@RFKILL_COMMAND@' "$bin_dir/rfkill"
 replace_command_placeholder '@LOGOUT_COMMAND@' "$bin_dir/hyprshutdown"
-replace_command_placeholder '@NOTIFY_SEND_COMMAND@' "notify-send"
+replace_command_placeholder '@NOTIFY_SEND_COMMAND@' "$bin_dir/notify-send"
 
 if grep -R -n --include='*.qml' '@[A-Z_]*@' "$output_dir" >&2; then
 	printf 'hypr-shell-generate-quickshell: generated QML still contains placeholders\n' >&2

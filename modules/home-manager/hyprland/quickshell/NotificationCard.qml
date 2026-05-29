@@ -144,12 +144,15 @@ Rectangle {
             elide: root.expandable && !root.expanded ? Text.ElideRight : Text.ElideNone
             textFormat: Text.PlainText
             Layout.fillWidth: true
+            // Extra breathing room below the app/time header row; the column
+            // spacing (4) is kept tight for the title↔body gap.
+            Layout.topMargin: 6
         }
 
         StyledText {
             text: root.body
             color: Theme.textSecondary
-            font.pixelSize: 14
+            font.pixelSize: Theme.fontMedium
             font.weight: Font.Normal
             wrapMode: Text.Wrap
             maximumLineCount: root.expandable && !root.expanded ? 2 : 100

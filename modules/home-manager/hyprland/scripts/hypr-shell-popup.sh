@@ -1,5 +1,4 @@
-#!/usr/bin/env bash
-set -euo pipefail
+# shellcheck shell=bash
 
 # Beginner orientation:
 #
@@ -22,9 +21,11 @@ set -euo pipefail
 # repeatedly handling the same old file content.
 
 state_dir="${XDG_RUNTIME_DIR:-/tmp}/hypr-shell"
+if ! mkdir -p "$state_dir" 2>/dev/null || [ ! -w "$state_dir" ]; then
+	state_dir="/tmp/hypr-shell-${UID:-$(id -u)}"
+	mkdir -p "$state_dir"
+fi
 state_file="$state_dir/popup-command"
-
-mkdir -p "$state_dir"
 
 case "${1:-}" in
 quick-settings | quickSettings)

@@ -59,6 +59,45 @@ explicit `exec-once = systemctl --user start ...` lines may no longer be the
 right ownership model. Do not flip only the boolean and assume the rest of the
 startup chain is unchanged.
 
+## Helper Scripts
+
+The shell scripts under `scripts/` (status, popup, power-profile, caffeine,
+screenshot, screenrecord, timezones, etc.) are **not** standalone executables.
+`quickshell.nix` reads each one with `builtins.readFile` and embeds it into a
+`pkgs.writeShellApplication`. That builder generates the real store executable:
+it supplies the `#!${runtimeShell}` (bash) shebang, `set -euo pipefail`, and the
+`runtimeInputs` PATH, then runs ShellCheck at build time.
+
+Because the production entry point is the builder — not the file's own
+interpreter line — each script starts with:
+
+```sh
+# shellcheck shell=bash
+```
+
+and deliberately **omits** both a `#!/usr/bin/env bash` shebang and an in-body
+`set -euo pipefail`:
+
+- A shebang would be inert here (it lands mid-file as a comment after the
+  builder's own prelude) and would falsely advertise a standalone-executable
+  contract the file does not fulfil — it isn't `chmod +x` in this flow.
+- The `set -euo pipefail` would be redundant; `writeShellApplication` already
+  applies it in the production path.
+- The `# shellcheck shell=bash` directive still gives ShellCheck the dialect it
+  needs when linting the raw file (editor / CI / `shellcheck foo.sh`), avoiding
+  `SC2148` and the POSIX-`sh` false positives on bash-isms like `[[ ]]`, `<<<`,
+  arrays, and `${var//pat/repl}`.
+
+Caveat: the Fast Host Testing harness runs these via `exec bash "$script"`, so
+they do not get strict mode in the TTY path (same as production relies on the
+builder). If a script ever becomes directly invoked by its own path, restore a
+real shebang.
+
+The two host-side harness scripts — `hypr-shell-generate-quickshell.sh` and
+`hypr-shell-tty-test.sh` — are the exception. They are run directly (not
+embedded in a builder), so they intentionally keep a `#!/usr/bin/env bash`
+shebang and their own `set -euo pipefail`.
+
 ## Desktop Shape
 
 Once launched, the session shape is a standalone Hyprland desktop with a custom
@@ -117,28 +156,25 @@ cd ~/Desktop/labs/nixos-config
 The helper reads the working-tree `shell.qml`, generates a temporary Quickshell config under `$XDG_RUNTIME_DIR/hypr-shell-tty-test`, writes a temporary Hyprland config, and launches:
 
 ```sh
-Hyprland --config "$XDG_RUNTIME_DIR/hypr-shell-tty-test/tty-hyprland/hyprland.conf"
+Hyprland --config "$XDG_RUNTIME_DIR/hypr-shell-tty-test/hyprland/hyprland.conf"
 ```
 
 That temporary Hyprland config launches Quickshell with real `PanelWindow`/layer-shell behavior. Quickshell startup logs for this test session are written under:
 
 ```text
-$XDG_RUNTIME_DIR/hypr-shell-tty-test/tty-hyprland/quickshell.log
+$XDG_RUNTIME_DIR/hypr-shell-tty-test/quickshell.log
 ```
 
 If the wallpaper appears but the top bar does not, check that log first. It should show whether Quickshell started, whether it exited, and which temporary config directory it loaded.
 
-The helper also writes Hyprland snapshots a few seconds after startup:
+The helper writes the generated configs under:
 
 ```text
-$XDG_RUNTIME_DIR/hypr-shell-tty-test/tty-hyprland/layers.log
-$XDG_RUNTIME_DIR/hypr-shell-tty-test/tty-hyprland/monitors.log
-$XDG_RUNTIME_DIR/hypr-shell-tty-test/tty-hyprland/clients.log
+$XDG_RUNTIME_DIR/hypr-shell-tty-test/quickshell
+$XDG_RUNTIME_DIR/hypr-shell-tty-test/hyprland
 ```
 
-`layers.log` is the important one for a missing bar. It should show layer-shell
-surfaces named `quickshell-topbar`, `quickshell-popover`, or
-`quickshell-notifications`.
+For layer-shell state while the test session is running, switch to another TTY and run `hyprctl layers`.
 
 If the normal bar still does not appear, run the TTY helper in smoke-test mode:
 
@@ -155,7 +191,7 @@ the host TTY session, or the Fedora package/build.
 By default, the TTY test uses this mock wallpaper:
 
 ```text
-/home/olaolu/Pictures/Wallpapers/images/skeleton-prophet.jpg
+/home/olaolu/Pictures/wallpapers/skeleton-prophet.jpg
 ```
 
 Quickshell is still launched before the wallpaper process. That ordering matters
@@ -176,11 +212,7 @@ HYPR_SHELL_TTY_WALLPAPER=/path/to/image.jpg ./modules/home-manager/hyprland/scri
 The temporary TTY session applies this test wallpaper with `swaybg`. This is
 separate from the normal Hyprland profile, which uses Waypaper with `awww` for
 regular wallpapers. The helper expects `swaybg` to already be available on the
-non-NixOS test host. Wallpaper startup logs are written under:
-
-```text
-$XDG_RUNTIME_DIR/hypr-shell-tty-test/tty-hyprland/wallpaper.log
-```
+non-NixOS test host.
 
 When you edit QML or helper scripts, close the temporary Hyprland session and
 run `hypr-shell-tty-test` again. That keeps the test path simple and predictable.
@@ -257,8 +289,8 @@ The Quickshell power controls intentionally use different tools for different
 jobs:
 
 - Logout uses `hyprshutdown`.
-- Reboot uses `hyprshutdown --post-cmd 'systemctl reboot'`.
-- Power off uses `hyprshutdown --post-cmd 'systemctl poweroff'`.
+- Reboot uses `hyprshutdown --post-cmd '<generated systemctl path> reboot'`.
+- Power off uses `hyprshutdown --post-cmd '<generated systemctl path> poweroff'`.
 - Suspend uses `systemctl suspend`.
 - Lock uses `loginctl lock-session`.
 

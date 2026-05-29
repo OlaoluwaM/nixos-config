@@ -252,9 +252,16 @@ if have nmcli; then
 		w_line="$(nmcli -t -f IN-USE,SSID,SIGNAL,SECURITY,FREQ,CHAN,RATE device wifi 2>/dev/null |
 			awk -F: '$1 == "*" { print; exit }' || true)"
 		if [ -n "$w_line" ]; then
-			IFS=: read -r _ w_ssid w_sig w_security w_freq w_ch w_rate <<<"$w_line" || true
-			[ -n "${w_sig:-}" ] && w_signal="$w_sig"
-			[ -n "${w_ch:-}" ] && w_chan="$w_ch"
+			# nmcli -t escapes ':' inside values as '\:'; a raw IFS=: split would
+			# mangle any SSID/security string containing a colon. Swap escaped
+			# colons for a unit-separator sentinel, split, then restore them.
+			w_safe="${w_line//\\:/$'\x1f'}"
+			IFS=: read -r _ w_ssid w_sig w_security w_freq w_ch w_rate <<<"$w_safe" || true
+			w_ssid="${w_ssid//$'\x1f'/:}"
+			w_security="${w_security//$'\x1f'/:}"
+			# signal/chan feed --argjson, so accept them only when numeric.
+			[[ "${w_sig:-}" =~ ^[0-9]+$ ]] && w_signal="$w_sig"
+			[[ "${w_ch:-}" =~ ^[0-9]+$ ]] && w_chan="$w_ch"
 		fi
 	fi
 fi
@@ -266,13 +273,22 @@ vpn_on=false
 vpn_name=""
 vpn_type=""
 if have nmcli; then
-	v_line="$(nmcli -t -f NAME,TYPE,DEVICE connection show --active 2>/dev/null |
-		awk -F: 'tolower($2) ~ /vpn|wireguard|tun/ { print $1":"$2; exit }' || true)"
-	if [ -n "$v_line" ]; then
-		vpn_on=true
-		vpn_name="${v_line%%:*}"
-		vpn_type="${v_line##*:}"
-	fi
+	# Iterate active connections by name (-g yields clean, unescaped values) and
+	# match the first VPN/WireGuard/tunnel by its connection.type. Avoids the
+	# colon-escaping pitfall of splitting a multi-field terse row when a
+	# connection name contains a colon.
+	while IFS= read -r conn; do
+		[ -n "$conn" ] || continue
+		c_type="$(nmcli -g connection.type connection show "$conn" 2>/dev/null || true)"
+		case "$c_type" in
+		*vpn* | *wireguard* | *tun*)
+			vpn_on=true
+			vpn_name="$conn"
+			vpn_type="$c_type"
+			break
+			;;
+		esac
+	done < <(nmcli -g NAME connection show --active 2>/dev/null || true)
 fi
 if [ "$vpn_on" = false ] && have wg; then
 	wg_if="$(wg show interfaces 2>/dev/null | awk '{ print $1; exit }' || true)"

@@ -61,12 +61,16 @@ Scope {
             let notif = root.notificationStore[notifId];
             if (!notif || actionIndex >= notif.actions.length) return;
             notif.actions[actionIndex].invoke();
-            if (!notif.resident) root.removeFromModel(notificationPopups, notifId);
+            if (!notif.resident) {
+                root.removeFromModel(notificationPopups, notifId);
+                root.scheduleTrim();
+            }
         } catch (e) { console.warn("hypr-shell: notification action invoke failed:", e); }
     }
 
     function dismissPopup(notifId) {
         root.removeFromModel(notificationPopups, notifId);
+        root.scheduleTrim();
     }
 
     function dismissHistory(notifId) {
@@ -76,6 +80,8 @@ Scope {
         } catch (e) { console.warn("hypr-shell: notification dismiss failed:", e); }
         delete root.notificationStore[notifId];
         root.removeFromModel(notificationHistory, notifId);
+        root.removeFromModel(notificationPopups, notifId);
+        root.scheduleTrim();
     }
 
     function clearAll() {
@@ -88,6 +94,8 @@ Scope {
             delete root.notificationStore[item.notifId];
         }
         notificationHistory.clear();
+        notificationPopups.clear();
+        popupTrimTimer.stop();
     }
 
     NotificationServer {

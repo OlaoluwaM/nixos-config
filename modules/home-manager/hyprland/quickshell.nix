@@ -172,8 +172,10 @@ let
     pragma Singleton
 
     import QtQuick
+    import Quickshell
 
-    QtObject {
+    Singleton {
+        id: root
 
         // ── Color palette (generated from local.theme) ──────────────────
         readonly property color base:           "${theme.base}"
@@ -287,9 +289,12 @@ let
   # This matters because Nix packages live at long immutable paths such as
   # /nix/store/.../bin/brightnessctl, not simply /usr/bin/brightnessctl.
   commandPlaceholders = [
+    "@SHELL_COMMAND@"
+    "@CAT_COMMAND@"
+    "@AWK_COMMAND@"
+    "@TR_COMMAND@"
     "@STATUS_SCRIPT@"
     "@TIMEZONE_SCRIPT@"
-    "@VICINAE_COMMAND@"
     "@NETWORK_COMMAND@"
     "@BLUETOOTH_COMMAND@"
     "@POWER_COMMAND@"
@@ -299,26 +304,27 @@ let
     "@BRIGHTNESS_COMMAND@"
     "@LOCK_COMMAND@"
     "@SLEEP_COMMAND@"
-    "@REFRESH_COMMAND@"
     "@RFKILL_COMMAND@"
     "@LOGOUT_COMMAND@"
     "@NOTIFY_SEND_COMMAND@"
   ];
 
   commandReplacements = [
+    "${pkgs.bash}/bin/sh"
+    "${pkgs.coreutils}/bin/cat"
+    "${pkgs.gawk}/bin/awk"
+    "${pkgs.coreutils}/bin/tr"
     "${statusScript}/bin/hypr-shell-status"
     "${timezoneScript}/bin/hypr-shell-timezones"
-    "${pkgs.vicinae}/bin/vicinae"
     "${airctl}/bin/airctl"
     "${unstable.overskride}/bin/overskride"
-    "${unstable.hyprshutdown}/bin/hyprshutdown -t 'Shutting down...' --post-cmd 'shutdown -P 0'"
-    "${unstable.hyprshutdown}/bin/hyprshutdown -t 'Restarting...' --post-cmd 'reboot'"
+    "${unstable.hyprshutdown}/bin/hyprshutdown -t 'Shutting down...' --post-cmd '${pkgs.systemd}/bin/systemctl poweroff'"
+    "${unstable.hyprshutdown}/bin/hyprshutdown -t 'Restarting...' --post-cmd '${pkgs.systemd}/bin/systemctl reboot'"
     "${powerProfileScript}/bin/hypr-shell-power-profile"
     "${caffeineScript}/bin/hypr-shell-caffeine"
     "${pkgs.brightnessctl}/bin/brightnessctl"
     "${pkgs.systemd}/bin/loginctl lock-session"
     "${pkgs.systemd}/bin/systemctl suspend"
-    "${pkgs.hyprland}/bin/hyprctl reload"
     "${pkgs.util-linux}/bin/rfkill"
     "${unstable.hyprshutdown}/bin/hyprshutdown"
     "${pkgs.libnotify}/bin/notify-send"

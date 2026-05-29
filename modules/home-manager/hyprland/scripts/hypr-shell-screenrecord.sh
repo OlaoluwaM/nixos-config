@@ -1,5 +1,4 @@
-#!/usr/bin/env bash
-set -euo pipefail
+# shellcheck shell=bash
 
 mode="${1:-area}"
 screenrecord_dir="${XDG_VIDEOS_DIR:-"$HOME/Videos"}/Screencasts"

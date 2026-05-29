@@ -277,14 +277,6 @@ PanelWindow {
             }
         }
 
-        HoverHandler {
-            onHoveredChanged: {
-                if (hovered) {
-                    root.popups.trayPopoverHovered = root.popups.activePopup === "tray";
-                }
-            }
-        }
-
         Loader {
             id: popoverLoader
             anchors.fill: parent

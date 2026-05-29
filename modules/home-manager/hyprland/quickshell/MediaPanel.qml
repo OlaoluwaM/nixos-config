@@ -8,8 +8,8 @@ import QtQuick.Layouts
 // source is active) spans the width below.
 ColumnLayout {
     id: panel
-    required property var mediaActions
-    required property var status
+    required property MediaActions mediaActions
+    required property StatusController status
     spacing: 0
 
     // Crossfade the art + metadata when the active source changes, so switching

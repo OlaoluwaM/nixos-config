@@ -16,6 +16,14 @@ Scope {
     signal audioMuteRequested()
     signal osdRefreshRequested(string osdType)
 
+    function shellQuote(value) {
+        return "'" + String(value).replace(/'/g, "'\\''") + "'";
+    }
+
+    function readCommand() {
+        return GeneratedCommands.catCommand + " " + root.shellQuote(root.commandFile) + " 2>/dev/null || true";
+    }
+
     function dispatch(text) {
         let trimmed = text.trim();
         if (trimmed.length === 0) return;
@@ -54,7 +62,7 @@ Scope {
 
     Process {
         id: seedProcess
-        command: ["sh", "-c", "cat '" + root.commandFile + "' 2>/dev/null || true"]
+        command: [GeneratedCommands.shellCommand, "-c", root.readCommand()]
         running: true
         stdout: StdioCollector {
             onStreamFinished: {
@@ -69,7 +77,7 @@ Scope {
 
     Process {
         id: commandProcess
-        command: ["sh", "-c", "cat '" + root.commandFile + "' 2>/dev/null || true"]
+        command: [GeneratedCommands.shellCommand, "-c", root.readCommand()]
         stdout: StdioCollector {
             onStreamFinished: root.dispatch(this.text)
         }

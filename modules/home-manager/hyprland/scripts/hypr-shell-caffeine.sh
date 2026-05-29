@@ -1,7 +1,5 @@
 # shellcheck shell=bash
 
-set -euo pipefail
-
 service_name="hypr-shell-caffeine.service"
 state_dir="${XDG_RUNTIME_DIR:-/tmp}/hypr-shell"
 if ! mkdir -p "$state_dir" 2>/dev/null || [ ! -w "$state_dir" ]; then

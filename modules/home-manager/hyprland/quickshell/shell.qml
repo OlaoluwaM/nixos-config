@@ -8,9 +8,7 @@ pragma ComponentBehavior: Bound
 //  generated command paths live in Theme.qml and GeneratedCommands.qml.
 
 import QtQuick
-import QtQuick.Layouts
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Services.SystemTray
 import Quickshell.Wayland
@@ -22,10 +20,6 @@ Scope {
     function requestConfirmation(title, description, icon, danger, timeout, action) {
         popupController.close();
         confirmDialog.request(title, description, icon, danger, timeout, action);
-    }
-
-    function dismissConfirmDialog() {
-        confirmDialog.dismiss();
     }
 
     // ── Data pipes (shell scripts → QML properties) ────────────────────
@@ -63,9 +57,9 @@ Scope {
 
     Process {
         id: osdReadProcess
-        command: ["sh", "-c",
-            "bri=$(" + GeneratedCommands.brightnessCommand + " -m 2>/dev/null | awk -F, '{print $4}' | tr -d '%');" +
-            "kbd=$(" + GeneratedCommands.brightnessCommand + " -m -d '*::kbd_backlight' 2>/dev/null | awk -F, '{print $4}' | tr -d '%');" +
+        command: [GeneratedCommands.shellCommand, "-c",
+            "bri=$(" + GeneratedCommands.brightnessCommand + " -m 2>/dev/null | " + GeneratedCommands.awkCommand + " -F, '{print $4}' | " + GeneratedCommands.trCommand + " -d '%');" +
+            "kbd=$(" + GeneratedCommands.brightnessCommand + " -m -d '*::kbd_backlight' 2>/dev/null | " + GeneratedCommands.awkCommand + " -F, '{print $4}' | " + GeneratedCommands.trCommand + " -d '%');" +
             "printf '%s %s' \"${bri:--1}\" \"${kbd:--1}\""
         ]
         stdout: StdioCollector {

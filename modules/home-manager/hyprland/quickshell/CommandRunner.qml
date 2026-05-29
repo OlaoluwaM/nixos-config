@@ -24,7 +24,7 @@ QtObject {
             + "\nfi"
             + "\nexit \"$status\"";
 
-        Quickshell.execDetached(["sh", "-c", script]);
+        Quickshell.execDetached([GeneratedCommands.shellCommand, "-c", script]);
     }
 
     function runAndRefresh(command) {
