@@ -1,8 +1,10 @@
 pragma ComponentBehavior: Bound
 
 import QtQml
+import Quickshell
 
-QtObject {
+// Scope (not QtObject) so the child Timer has a default property to attach to.
+Scope {
     id: root
 
     required property CommandRunner runner
