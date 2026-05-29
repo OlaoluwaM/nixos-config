@@ -62,7 +62,7 @@ Scope {
             if (!notif || actionIndex >= notif.actions.length) return;
             notif.actions[actionIndex].invoke();
             if (!notif.resident) root.removeFromModel(notificationPopups, notifId);
-        } catch(e) {}
+        } catch (e) { console.warn("hypr-shell: notification action invoke failed:", e); }
     }
 
     function dismissPopup(notifId) {
@@ -73,7 +73,7 @@ Scope {
         try {
             let notif = root.notificationStore[notifId];
             if (notif) notif.dismiss();
-        } catch(e) {}
+        } catch (e) { console.warn("hypr-shell: notification dismiss failed:", e); }
         delete root.notificationStore[notifId];
         root.removeFromModel(notificationHistory, notifId);
     }
@@ -84,7 +84,7 @@ Scope {
             try {
                 let notif = root.notificationStore[item.notifId];
                 if (notif) notif.dismiss();
-            } catch(e) {}
+            } catch (e) { console.warn("hypr-shell: notification dismiss failed:", e); }
             delete root.notificationStore[item.notifId];
         }
         notificationHistory.clear();

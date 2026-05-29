@@ -77,12 +77,15 @@ Scope {
                 statusController.systemStatus.updateOsdReadings(bri);
 
                 let t = osdRefreshTimer.osdType;
+                // bri/kbd come through as -1 when the device has no backlight
+                // (the shell prints the -1 sentinel). Suppress the OSD in that
+                // case instead of flashing a phantom 0% bar.
                 if (t === "volume") {
                     osdController.show(Icons.volumeName(statusController.muted, statusController.volumePercent), statusController.volumePercent);
                 } else if (t === "brightness") {
-                    osdController.show("brightness", bri);
+                    if (bri >= 0) osdController.show("brightness", bri);
                 } else if (t === "keyboard") {
-                    osdController.show("keyboard", kbd);
+                    if (kbd >= 0) osdController.show("keyboard", kbd);
                 }
             }
         }
