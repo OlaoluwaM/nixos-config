@@ -217,7 +217,11 @@ BarCapsule {
 
                 StyledText {
                     width: parent.width
-                    text: root.status.mediaPosition + " / " + root.status.mediaLength
+                    // Drop the "/ total" when the player reports no length
+                    // (e.g. Gapless), leaving just the elapsed time.
+                    text: root.status.mediaHasLength
+                        ? root.status.mediaPosition + " / " + root.status.mediaLength
+                        : root.status.mediaPosition
                     color: Theme.capsuleTextColor(root.popups.activePopup === "media", root.hovered)
                     font.pixelSize: 11
                     elide: Text.ElideRight

@@ -126,6 +126,9 @@ ColumnLayout {
                     implicitHeight: 3
                     radius: height / 2
                     color: Theme.surfaceVariant
+                    // Hidden when the player reports no duration; an empty bar
+                    // would imply a zero-length track. Elapsed time still shows.
+                    visible: panel.status.mediaHasLength
 
                     // Progress fill. The width animates so the once-a-second
                     // position ticks (see MediaStatus' poke timer) glide instead
@@ -159,6 +162,8 @@ ColumnLayout {
                     Item { Layout.fillWidth: true }
 
                     StyledText {
+                        // Hidden alongside the bar when the player gives no length.
+                        visible: panel.status.mediaHasLength
                         text: panel.status.mediaLength
                         color: Theme.textDim
                         font.family: Theme.monoFontFamily

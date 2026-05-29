@@ -31,6 +31,10 @@ Scope {
     readonly property real mediaProgress: (root.mediaPlayer !== null && root.mediaPlayer.length > 0)
         ? Math.max(0, Math.min(1, root.mediaPlayer.position / root.mediaPlayer.length))
         : 0
+    // Whether the player advertises a track length. Some players (notably
+    // G4Music / "Gapless") publish mpris:length as 0 — i.e. no duration — so the
+    // UI hides the progress bar and total and shows only the elapsed position.
+    readonly property bool mediaHasLength: root.mediaPlayer !== null && root.mediaPlayer.length > 0
     // A player the user explicitly pinned is honoured even while stopped, so
     // switching to an open-but-idle source (e.g. Spotify) keeps it on the bar.
     readonly property bool hasExplicitSelection: root.mediaPlayer !== null

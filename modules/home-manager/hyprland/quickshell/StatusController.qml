@@ -52,6 +52,7 @@ Scope {
     property alias mediaPosition: media.mediaPosition
     property alias mediaLength: media.mediaLength
     property alias mediaProgress: media.mediaProgress
+    property alias mediaHasLength: media.mediaHasLength
     property alias mediaActive: media.mediaActive
     property alias mediaIsMusic: media.mediaIsMusic
     property alias mediaDisplayTitle: media.mediaDisplayTitle
