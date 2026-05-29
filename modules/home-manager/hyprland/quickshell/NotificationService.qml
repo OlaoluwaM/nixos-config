@@ -106,8 +106,8 @@ Scope {
 
             let entry = {
                 notifId: id,
-                appName: notification.appName || "System",
-                summary: notification.summary || "Notification",
+                appName: (notification.appName || "").trim() || "System",
+                summary: (notification.summary || "").trim() || "Notification",
                 body: notification.body || "",
                 timestamp: Date.now(),
                 hasActions: notification.actions.length > 0,

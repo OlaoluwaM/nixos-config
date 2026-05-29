@@ -94,7 +94,7 @@ Rectangle {
                 text: root.appName
                 color: Theme.textSecondary
                 font.pixelSize: 12
-                font.weight: root.contentCentered ? Font.DemiBold : Font.Normal
+                font.weight: Font.Normal
             }
 
             StyledText {
@@ -138,8 +138,8 @@ Rectangle {
         StyledText {
             text: root.summary
             color: Theme.text
-            font.pixelSize: 14
-            font.weight: Font.Normal
+            font.pixelSize: 15
+            font.weight: Font.DemiBold
             wrapMode: root.expandable && !root.expanded ? Text.NoWrap : Text.Wrap
             elide: root.expandable && !root.expanded ? Text.ElideRight : Text.ElideNone
             textFormat: Text.PlainText
@@ -149,7 +149,8 @@ Rectangle {
         StyledText {
             text: root.body
             color: Theme.textSecondary
-            font.pixelSize: 12
+            font.pixelSize: 14
+            font.weight: Font.Normal
             wrapMode: Text.Wrap
             maximumLineCount: root.expandable && !root.expanded ? 2 : 100
             elide: root.expandable && !root.expanded ? Text.ElideRight : Text.ElideNone
