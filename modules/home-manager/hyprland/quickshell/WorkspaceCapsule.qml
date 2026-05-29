@@ -29,13 +29,16 @@ Rectangle {
 
         Repeater {
             id: wsRepeater
-            model: Hyprland.workspaces
+            // Sorted by id so the dots always read left-to-right numerically —
+            // Hyprland.workspaces is in creation order, not necessarily sorted.
+            model: [...Hyprland.workspaces.values].sort((a, b) => a.id - b.id)
 
             delegate: Item {
                 id: wsDelegate
                 required property var modelData
 
                 property bool isActive: Hyprland.focusedMonitor !== null
+                    && Hyprland.focusedMonitor.activeWorkspace !== null
                     && wsDelegate.modelData.id === Hyprland.focusedMonitor.activeWorkspace.id
 
                 width: 18
@@ -73,23 +76,44 @@ Rectangle {
     Rectangle {
         id: wsHighlight
 
-        property int activeIndex: {
-            if (!Hyprland.focusedMonitor) return 0;
+        // Index of the focused monitor's active workspace, or -1 when there
+        // isn't one in the list — no monitor/workspace focused yet, or a
+        // special/scratchpad workspace. -1 hides the highlight rather than
+        // parking it on the first dot.
+        readonly property int activeIndex: {
+            if (!Hyprland.focusedMonitor || !Hyprland.focusedMonitor.activeWorkspace) return -1;
             let activeId = Hyprland.focusedMonitor.activeWorkspace.id;
             for (let i = 0; i < wsRepeater.count; i++) {
                 let item = wsRepeater.itemAt(i);
                 if (item && item.modelData.id === activeId) return i;
             }
-            return 0;
+            return -1;
         }
 
-        visible: wsRepeater.count > 0
+        // The active delegate itself. Driving x/y off its real geometry keeps
+        // the highlight aligned even if the dot size or row spacing changes —
+        // no hardcoded pitch to drift out of sync. Reads count so it
+        // re-resolves as delegates are created/destroyed.
+        readonly property Item activeItem: {
+            wsRepeater.count;
+            return wsHighlight.activeIndex >= 0
+                ? wsRepeater.itemAt(wsHighlight.activeIndex)
+                : null;
+        }
+
+        visible: wsHighlight.activeItem !== null
         width: 10
         height: 10
         radius: 5
         color: Theme.primary
-        x: workspaceRow.x + activeIndex * 24 + 4
-        y: workspaceRow.y + 4
+        x: wsHighlight.activeItem
+            ? workspaceRow.x + wsHighlight.activeItem.x
+                + (wsHighlight.activeItem.width - wsHighlight.width) / 2
+            : workspaceRow.x
+        y: wsHighlight.activeItem
+            ? workspaceRow.y + wsHighlight.activeItem.y
+                + (wsHighlight.activeItem.height - wsHighlight.height) / 2
+            : workspaceRow.y
 
         Behavior on x {
             id: wsHighlightAnim
