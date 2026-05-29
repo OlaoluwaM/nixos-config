@@ -11,19 +11,19 @@ QtObject {
     readonly property color base:           "#1e1e2e"
     readonly property color surfaceVariant: "#313244"
     readonly property color surfaceHover:   "#3a3c52"
+    readonly property color surfaceDeep:    "#15161a"
+    readonly property color scrim:          "#000000"
     readonly property color outline:        "#45475a"
     readonly property color text:           "#cdd6f4"
     readonly property color textSecondary:  "#a6adc8"
     readonly property color textDim:        "#6c7086"
     readonly property color primary:        "#b4befe"
     readonly property color secondary:      "#cba6f7"
-    readonly property color tertiary:       "#94e2d5"
     readonly property color error:          "#f38ba8"
     readonly property color success:        "#a6e3a1"
     readonly property color warning:        "#f9e2af"
     readonly property color primaryForeground: "#11111b"
     readonly property color secondaryForeground: "#11111b"
-    readonly property color tertiaryForeground: "#11111b"
     readonly property color errorForeground: "#11111b"
     readonly property color metricCpu:      "#89b4fa"
     readonly property color metricMemory:   "#94e2d5"
@@ -56,19 +56,17 @@ QtObject {
     readonly property list<real> easingAccel: [0.4, 0.0, 1.0, 1.0, 1.0, 1.0]
 
     // ── Capsule state helpers ───────────────────────────────────────────
+    // Uniform (active, hovered) signature; each responds to the state it needs:
+    // fill brightens on hover, border/text shift to the accent when active.
     function capsuleColor(active, hovered) {
-        if (hovered) return surfaceHover;
-        return surfaceVariant;
+        return hovered ? surfaceHover : surfaceVariant;
     }
 
     function capsuleBorderColor(active, hovered) {
-        if (active) return primary;
-        return outline;
+        return active ? primary : outline;
     }
 
     function capsuleTextColor(active, hovered) {
-        if (active)  return primary;
-        if (hovered) return text;
-        return text;
+        return active ? primary : text;
     }
 }

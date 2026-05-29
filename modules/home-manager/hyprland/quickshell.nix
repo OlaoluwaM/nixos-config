@@ -175,19 +175,19 @@ let
         readonly property color base:           "${theme.base}"
         readonly property color surfaceVariant: "${theme.surfaceVariant}"
         readonly property color surfaceHover:   "${theme.surfaceHover}"
+        readonly property color surfaceDeep:    "${theme.surfaceDeep}"
+        readonly property color scrim:          "${theme.scrim}"
         readonly property color outline:        "${theme.outline}"
         readonly property color text:           "${theme.text}"
         readonly property color textSecondary:  "${theme.textSecondary}"
         readonly property color textDim:        "${theme.textDim}"
         readonly property color primary:        "${theme.primary}"
         readonly property color secondary:      "${theme.secondary}"
-        readonly property color tertiary:       "${theme.tertiary}"
         readonly property color error:          "${theme.error}"
         readonly property color success:        "${theme.success}"
         readonly property color warning:        "${theme.warning}"
         readonly property color primaryForeground: "${theme.primaryForeground}"
         readonly property color secondaryForeground: "${theme.secondaryForeground}"
-        readonly property color tertiaryForeground: "${theme.tertiaryForeground}"
         readonly property color errorForeground: "${theme.errorForeground}"
         readonly property color metricCpu:      "${theme.metricCpu}"
         readonly property color metricMemory:   "${theme.metricMemory}"
@@ -220,20 +220,18 @@ let
         readonly property list<real> easingAccel: [0.4, 0.0, 1.0, 1.0, 1.0, 1.0]
 
         // ── Capsule state helpers ───────────────────────────────────────
+        // Uniform (active, hovered) signature; each responds to the state it needs:
+        // fill brightens on hover, border/text shift to the accent when active.
         function capsuleColor(active, hovered) {
-            if (hovered) return surfaceHover;
-            return surfaceVariant;
+            return hovered ? surfaceHover : surfaceVariant;
         }
 
         function capsuleBorderColor(active, hovered) {
-            if (active) return primary;
-            return outline;
+            return active ? primary : outline;
         }
 
         function capsuleTextColor(active, hovered) {
-            if (active)  return primary;
-            if (hovered) return text;
-            return text;
+            return active ? primary : text;
         }
     }
   '';

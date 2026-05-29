@@ -83,7 +83,7 @@ PanelWindow {
 
     Rectangle {
         anchors.fill: parent
-        color: "#000000"
+        color: Theme.scrim
         opacity: confirmCard.opacity * 0.4
     }
 

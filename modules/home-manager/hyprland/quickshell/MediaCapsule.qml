@@ -25,7 +25,7 @@ BarCapsule {
             height: 30
             anchors.verticalCenter: parent.verticalCenter
             radius: 15
-            color: "#15161a"
+            color: Theme.surfaceDeep
             border.color: Theme.outline
             border.width: 1
 
@@ -92,7 +92,7 @@ BarCapsule {
                 width: 4
                 height: 4
                 radius: 2
-                color: "#0b0c0f"
+                color: Theme.surfaceDeep
                 opacity: root.status.mediaAlbumArt.length > 0 && mediaArtwork.status === Image.Ready ? 0.65 : 0
             }
 
