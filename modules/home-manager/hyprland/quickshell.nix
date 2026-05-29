@@ -216,12 +216,12 @@ let
 
         // ── Capsule state helpers ───────────────────────────────────────
         function capsuleColor(active, hovered) {
+            if (hovered) return surfaceHover;
             return surfaceVariant;
         }
 
         function capsuleBorderColor(active, hovered) {
-            if (active)  return primary;
-            if (hovered) return surfaceHover;
+            if (active) return primary;
             return outline;
         }
 
