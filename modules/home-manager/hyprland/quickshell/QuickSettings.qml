@@ -20,7 +20,7 @@ ColumnLayout {
         : quickSettings.isCharging || quickSettings.status.batteryFull ? Theme.success
         : Theme.textSecondary
     property string normalizedPowerProfile: {
-        let p = status.powerProfileText.toLowerCase();
+        let p = status.powerProfile.toLowerCase();
         if (p === "saver" || p === "quiet") return "power-saver";
         return p;
     }
@@ -95,7 +95,9 @@ ColumnLayout {
             id: brightnessSlider
             Layout.fillWidth: true
             from: 1; to: 100
-            value: Number(quickSettings.status.brightnessText.replace("%", "")) || 50
+            // brightnessPercent is null when there is no backlight (e.g. VMs);
+            // fall back to empty rather than a fabricated mid-range reading.
+            value: quickSettings.status.brightnessPercent !== null ? quickSettings.status.brightnessPercent : 0
             accentColor: Theme.primary
             onMoved: quickSettings.brightnessActions.setBrightness(value)
         }
@@ -131,7 +133,9 @@ ColumnLayout {
             model: [
                 { icon: "lock",             activeIcon: "lock",             action: "lock",     danger: false, toggle: false },
                 { icon: "notifications",    activeIcon: "notificationsOff", action: "dnd",      danger: false, toggle: true  },
-                { icon: "airplane",         activeIcon: "airplane",         action: "airplane", danger: false, toggle: true  },
+                // activeIcon swaps to the slashed glyph when engaged, matching the
+                // dnd toggle above (engaged → "off" glyph = radios suppressed).
+                { icon: "airplane",         activeIcon: "airplaneOff",      action: "airplane", danger: false, toggle: true  },
                 { icon: "power",            activeIcon: "power",            action: "power",    danger: true,  toggle: false }
             ]
 

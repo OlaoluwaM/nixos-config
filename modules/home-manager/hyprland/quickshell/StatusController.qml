@@ -8,16 +8,25 @@ Scope {
 
     // Public status facade. UI modules depend on this stable API while each
     // status domain owns its private state and native/command-backed details.
+    // System telemetry, connectivity, power (from hypr-shell-status.sh)
     property alias airplaneMode: systemStatus.airplaneMode
-    property alias clockText: systemStatus.clockText
-    property alias cpuText: systemStatus.cpuText
-    property alias memText: systemStatus.memText
-    property alias tempText: systemStatus.tempText
+    property alias cpuPercent: systemStatus.cpuPercent
+    property alias memPercent: systemStatus.memPercent
+    property alias tempC: systemStatus.tempC
+    property alias brightnessPercent: systemStatus.brightnessPercent
+    property alias networkOnline: systemStatus.networkOnline
+    property alias networkName: systemStatus.networkName
+    property alias bluetoothPowered: systemStatus.bluetoothPowered
+    property alias bluetoothDevices: systemStatus.bluetoothDevices
+    property alias powerProfile: systemStatus.powerProfile
+    property alias caffeineManual: systemStatus.caffeineManual
+
+    // Audio (PipeWire, native)
     property alias volumePercent: audio.volumePercent
     property alias volumeText: audio.volumeText
     property alias muted: audio.muted
-    property alias brightnessText: systemStatus.brightnessText
-    property alias powerProfileText: systemStatus.powerProfileText
+
+    // Battery (UPower, native)
     property alias batteryPercent: battery.batteryPercent
     property alias batteryReady: battery.batteryReady
     property alias batteryCharging: battery.batteryCharging
@@ -26,11 +35,8 @@ Scope {
     property alias batteryHours: battery.batteryHours
     property alias batteryMinutes: battery.batteryMinutes
     property alias batteryStatusLabel: battery.batteryStatusLabel
-    property alias networkText: systemStatus.networkText
-    property alias vpnText: systemStatus.vpnText
-    property alias bluetoothText: systemStatus.bluetoothText
-    property alias bluetoothDevice: systemStatus.bluetoothDevice
-    property alias caffeineManual: systemStatus.caffeineManual
+
+    // Media (MPRIS, native)
     property alias mediaPlayer: media.mediaPlayer
     property alias mediaStatus: media.mediaStatus
     property alias mediaArtist: media.mediaArtist
@@ -40,10 +46,9 @@ Scope {
     property alias mediaLength: media.mediaLength
     property alias mediaActive: media.mediaActive
     property alias mediaDisplayTitle: media.mediaDisplayTitle
-    property alias localTime: systemStatus.localTime
-    property alias birminghamTime: systemStatus.birminghamTime
-    property alias lagosTime: systemStatus.lagosTime
-    property alias sanFranciscoTime: systemStatus.sanFranciscoTime
+
+    // Clock (from hypr-shell-timezones.sh)
+    property alias clockText: systemStatus.clockText
 
     function updateStatus(data) {
         systemStatus.updateStatus(data);

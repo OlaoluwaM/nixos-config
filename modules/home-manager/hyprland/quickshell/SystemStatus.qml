@@ -5,53 +5,66 @@ import QtQml
 QtObject {
     id: root
 
+    // This object mirrors the atomic JSON emitted by hypr-shell-status.sh. Each
+    // field is a single raw fact: booleans are booleans, numbers are numbers,
+    // and a value that has no source (no sensor, no backlight) is null rather
+    // than a sentinel string. Widgets format these at the display edge.
+
+    // Airplane mode is writable: ConnectivityActions sets it optimistically on
+    // toggle, then the next status poll confirms it from the rfkill state.
     property bool airplaneMode: false
 
-    property string clockText: "Loading"
-    property string cpuText: "..."
-    property string memText: "..."
-    property string tempText: "..."
-    property string brightnessText: "N/A"
-    property string powerProfileText: "Unavailable"
-    property string networkText: "Offline"
-    property string vpnText: "Off"
-    property string bluetoothText: "Off"
-    property string bluetoothDevice: ""
-    property bool caffeineManual: false
-    property string localTime: "Loading"
-    property string birminghamTime: "..."
-    property string lagosTime: "..."
-    property string sanFranciscoTime: "..."
+    // ── Telemetry (raw numbers; widgets append %, °C, etc.) ──────────────
+    property int cpuPercent: 0
+    property int memPercent: 0
+    property var tempC: null               // CPU package °C, or null (no sensor)
 
-    function isUnavailable(value) {
-        return value === "" || value === "--" || value === "N/A" || value === "Unavailable";
-    }
+    // ── Brightness ─────────────────────────────────────────────────────
+    property var brightnessPercent: null   // 0–100, or null when there is no backlight
+
+    // ── Connectivity ───────────────────────────────────────────────────
+    property bool networkOnline: false     // has an active default-route link
+    property string networkName: ""         // primary connection name ("" when offline)
+
+    property bool bluetoothPowered: false
+    // Connected devices: array of { name, mac, batteryPercent (int|null), icon }.
+    property var bluetoothDevices: []
+
+    // ── Power / misc ───────────────────────────────────────────────────
+    property string powerProfile: ""        // raw backend profile string (e.g. "balanced")
+    property bool caffeineManual: false
+
+    // ── Clock (sourced from hypr-shell-timezones.sh) ─────────────────────
+    property string clockText: "Loading"
 
     function updateStatus(data) {
-        root.cpuText = data.cpu + "%";
-        root.memText = data.mem + "%";
-        root.tempText = root.isUnavailable(data.temp) ? "N/A" : data.temp + "°C";
-        root.brightnessText = data.brightness;
-        root.airplaneMode = data.airplaneMode || false;
-        root.networkText = data.network;
-        root.vpnText = data.vpn;
-        root.bluetoothText = data.bluetooth;
-        root.bluetoothDevice = data.bluetoothDevice || "";
-        root.powerProfileText = data.powerProfile;
-        root.caffeineManual = data.caffeineManual || false;
+        // Telemetry — celsius/percent may be null when the source is absent.
+        root.cpuPercent = data.cpu.percent;
+        root.memPercent = data.memory.usedPercent;
+        root.tempC = data.temperature.celsius;
+        root.brightnessPercent = data.brightness.percent;
+
+        // Connectivity.
+        root.networkOnline = data.network.online;
+        root.networkName = data.network.primary.name;
+        root.bluetoothPowered = data.bluetooth.powered;
+        root.bluetoothDevices = data.bluetooth.devices;
+
+        // Radios / power / misc.
+        root.airplaneMode = data.rfkill.airplaneMode;
+        root.powerProfile = data.power.profile;
+        root.caffeineManual = data.caffeine.manual;
     }
 
     function updateOsdReadings(brightness) {
+        // The OSD polls brightness far faster than the status script; reflect
+        // those reads immediately so the slider and OSD stay in sync.
         if (brightness >= 0) {
-            root.brightnessText = brightness + "%";
+            root.brightnessPercent = brightness;
         }
     }
 
     function updateTimezones(data) {
         root.clockText = data.local;
-        root.localTime = data.local;
-        root.birminghamTime = data.birmingham;
-        root.lagosTime = data.lagos;
-        root.sanFranciscoTime = data.sanfrancisco;
     }
 }

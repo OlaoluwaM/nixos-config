@@ -28,7 +28,7 @@ BarCapsule {
 
                 ShellIcon { name: "cpu"; iconColor: Theme.metricCpu; implicitSize: 16 }
                 StyledText {
-                    text: root.status.cpuText
+                    text: root.status.cpuPercent + "%"
                     color: Theme.metricCpu
                     font.pixelSize: 13
                 }
@@ -40,7 +40,7 @@ BarCapsule {
 
             HoverTooltip {
                 active: cpuHover.hovered
-                text: qsTr("CPU: %1").arg(root.status.cpuText)
+                text: qsTr("CPU: %1%").arg(root.status.cpuPercent)
                 anchors {
                     horizontalCenter: parent.horizontalCenter
                     top: parent.bottom
@@ -63,7 +63,7 @@ BarCapsule {
 
                 ShellIcon { name: "memory"; iconColor: Theme.metricMemory; implicitSize: 16 }
                 StyledText {
-                    text: root.status.memText
+                    text: root.status.memPercent + "%"
                     color: Theme.metricMemory
                     font.pixelSize: 13
                 }
@@ -75,7 +75,7 @@ BarCapsule {
 
             HoverTooltip {
                 active: memoryHover.hovered
-                text: qsTr("Memory: %1").arg(root.status.memText)
+                text: qsTr("Memory: %1%").arg(root.status.memPercent)
                 anchors {
                     horizontalCenter: parent.horizontalCenter
                     top: parent.bottom
@@ -98,7 +98,8 @@ BarCapsule {
 
                 ShellIcon { name: "temp"; iconColor: Theme.metricTemperature; implicitSize: 16 }
                 StyledText {
-                    text: root.status.tempText
+                    // tempC is null on machines without a CPU sensor (e.g. VMs).
+                    text: root.status.tempC !== null ? root.status.tempC + "°C" : qsTr("N/A")
                     color: Theme.metricTemperature
                     font.pixelSize: 13
                 }
@@ -110,7 +111,7 @@ BarCapsule {
 
             HoverTooltip {
                 active: tempHover.hovered
-                text: qsTr("Temperature: %1").arg(root.status.tempText)
+                text: qsTr("Temperature: %1").arg(root.status.tempC !== null ? root.status.tempC + "°C" : qsTr("N/A"))
                 anchors {
                     horizontalCenter: parent.horizontalCenter
                     top: parent.bottom

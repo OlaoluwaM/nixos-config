@@ -15,6 +15,8 @@ QtObject {
         brightnessOff:    '<path d="M2 2l20 20M12 6a6 6 0 0 1 5.66 8.01M8.34 8.34A6 6 0 0 0 12 18M12 2v2M20 12h2M4.93 4.93l1.41 1.41M2 12h2"/>',
         close:            '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
         coffee:           '<path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/>',
+        // Placeholder: coffee glyph + the shared "off" slash. Refine the artwork later.
+        coffeeOff:        '<path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/><path d="m2 2 20 20"/>',
         cpu:              '<path d="M12 20v2"/><path d="M12 2v2"/><path d="M17 20v2"/><path d="M17 2v2"/><path d="M2 12h2"/><path d="M2 17h2"/><path d="M2 7h2"/><path d="M20 12h2"/><path d="M20 17h2"/><path d="M20 7h2"/><path d="M7 20v2"/><path d="M7 2v2"/><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="8" y="8" width="8" height="8" rx="1"/>',
         left:             '<path d="M15 18l-6-6 6-6"/>',
         memory:           '<path d="M12 12v-2"/><path d="M12 18v-2"/><path d="M16 12v-2"/><path d="M16 18v-2"/><path d="M2 11h1.5"/><path d="M20 18v-2"/><path d="M20.5 11H22"/><path d="M4 18v-2"/><path d="M8 12v-2"/><path d="M8 18v-2"/><rect x="2" y="6" width="20" height="10" rx="2"/>',
@@ -34,12 +36,16 @@ QtObject {
         tray:             '<path d="M12 17v4"/><path d="m14.305 7.53.923-.382"/><path d="m15.228 4.852-.923-.383"/><path d="m16.852 3.228-.383-.924"/><path d="m16.852 8.772-.383.923"/><path d="m19.148 3.228.383-.924"/><path d="m19.53 9.696-.382-.924"/><path d="m20.772 4.852.924-.383"/><path d="m20.772 7.148.924.383"/><path d="M22 13v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/><path d="M8 21h8"/><circle cx="18" cy="6" r="3"/>',
         volume:           '<path d="M4 9v6h4l5 4V5L8 9H4zM17 9a4 4 0 0 1 0 6M19.5 6.5a8 8 0 0 1 0 11"/>',
         volumeMuted:      '<path d="M4 9v6h4l5 4V5L8 9H4zM18 9l4 4M22 9l-4 4"/>',
+        // Not yet wired to any widget. Reserved for a VPN indicator backed by the
+        // status script's `vpn` domain. See VPN-UI-TASK.md.
         vpn:              '<path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z"/><path d="M9 12h6M12 9v6"/>',
         vpnOff:           '<path d="M12 3l7 3v5c0 1.5-.27 2.86-.8 4.07M15.2 18.7A14.2 14.2 0 0 1 12 21c-4-2-7-5-7-10V6l2.6-1.1M3 3l18 18"/>',
         lock:             '<rect x="5" y="11" width="14" height="11" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
         sleep:            '<path d="M17 18a5 5 0 0 0-10 0M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
         refresh:          '<path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15"/>',
         airplane:         '<path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/>',
+        // Placeholder: airplane glyph + the shared "off" slash. Refine the artwork later.
+        airplaneOff:      '<path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/><path d="m2 2 20 20"/>',
         bolt:             '<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>',
         gauge:            '<circle cx="12" cy="14" r="8"/><path d="M12 14l3.5-3.5"/><path d="M12 8v1"/>',
         keyboard:         '<rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/>',

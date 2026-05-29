@@ -14,7 +14,9 @@ BarCapsule {
 
     ShellIcon {
         anchors.centerIn: parent
-        name: "coffee"
+        // Swap to the slashed glyph when caffeine is off, like the network/bluetooth
+        // capsules. The active background colour still reinforces the on state.
+        name: root.status.caffeineManual ? "coffee" : "coffeeOff"
         iconColor: root.status.caffeineManual ? Theme.primaryForeground : Theme.capsuleTextColor(false, root.hovered)
         implicitSize: 16
     }

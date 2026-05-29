@@ -76,6 +76,7 @@ let
       findutils
       gawk
       gnused
+      iproute2
       jq
       lm_sensors
       networkmanager
@@ -83,6 +84,7 @@ let
       powerProfileScript
       systemd
       util-linux
+      wireguard-tools
     ];
     text = builtins.readFile ./scripts/hypr-shell-status.sh;
   };
