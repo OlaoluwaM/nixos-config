@@ -57,7 +57,7 @@ Rectangle {
                         }
                     }
                     Behavior on color { ColorAnimation { duration: Theme.animFade; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve } }
-                    Behavior on opacity { OpacityAnimator { duration: Theme.animFade } }
+                    Behavior on opacity { OpacityAnimator { duration: Theme.animFade; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve } }
                 }
 
                 MouseArea {

@@ -45,6 +45,8 @@ Rectangle {
     Behavior on opacity {
         OpacityAnimator {
             duration: Theme.animFast
+            easing.type: Theme.easingType
+            easing.bezierCurve: Theme.easingCurve
         }
     }
 

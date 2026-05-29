@@ -16,7 +16,7 @@ BarCapsule {
     width: Math.max(Theme.capsuleHeight, btContent.implicitWidth + 20)
     opacity: root.status.airplaneMode ? 0.35 : 1.0
 
-    Behavior on opacity { OpacityAnimator { duration: Theme.animNormal } }
+    Behavior on opacity { OpacityAnimator { duration: Theme.animNormal; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve } }
 
     RowLayout {
         id: btContent

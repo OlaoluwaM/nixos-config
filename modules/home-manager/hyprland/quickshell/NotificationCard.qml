@@ -110,7 +110,7 @@ Rectangle {
                 Layout.preferredWidth: 26
                 Layout.preferredHeight: 26
 
-                Behavior on opacity { OpacityAnimator { duration: Theme.animFast } }
+                Behavior on opacity { OpacityAnimator { duration: Theme.animFast; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve } }
 
                 Rectangle {
                     anchors.fill: parent

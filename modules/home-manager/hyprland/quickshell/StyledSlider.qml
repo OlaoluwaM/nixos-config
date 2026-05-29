@@ -37,6 +37,8 @@ Slider {
         Behavior on color {
             ColorAnimation {
                 duration: Theme.animFast
+                easing.type: Theme.easingType
+                easing.bezierCurve: Theme.easingCurve
             }
         }
     }
