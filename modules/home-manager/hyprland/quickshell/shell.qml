@@ -37,7 +37,9 @@ Scope {
             onStreamFinished: {
                 try {
                     let data = JSON.parse(this.text);
-                    statusController.updateStatus(data);
+                    // Write straight to the owning status domain via the facade's
+                    // ingestion alias; the controller stays a pure state facade.
+                    statusController.systemStatus.updateStatus(data);
                 } catch (e) {
                     console.log("hypr-shell status parse failed:", e);
                 }
@@ -72,7 +74,7 @@ Scope {
                 let bri = parseInt(parts[0]) || 0;
                 let kbd = parseInt(parts[1]) || 0;
 
-                statusController.updateOsdReadings(bri);
+                statusController.systemStatus.updateOsdReadings(bri);
 
                 let t = osdRefreshTimer.osdType;
                 if (t === "volume") {
@@ -94,7 +96,7 @@ Scope {
             onStreamFinished: {
                 try {
                     let data = JSON.parse(this.text);
-                    statusController.updateTimezones(data);
+                    statusController.systemStatus.updateTimezones(data);
                 } catch (e) {
                     console.log("hypr-shell timezone parse failed:", e);
                 }

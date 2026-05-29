@@ -60,17 +60,14 @@ Scope {
     // Clock (from hypr-shell-timezones.sh)
     property alias clockText: systemStatus.clockText
 
-    function updateStatus(data) {
-        systemStatus.updateStatus(data);
-    }
-
-    function updateOsdReadings(brightness) {
-        systemStatus.updateOsdReadings(brightness);
-    }
-
-    function updateTimezones(data) {
-        systemStatus.updateTimezones(data);
-    }
+    // Ingestion handle. UI reads the flat aliases above; the data pipes in
+    // shell.qml push raw source data straight to the owning domain object
+    // through this alias (e.g. status.systemStatus.updateStatus(data)). Keeping
+    // ingestion on the domain object — rather than re-wrapping each setter as a
+    // function here — keeps this controller a pure state facade with no extra
+    // forwarding layer. Only SystemStatus needs this; the audio/battery/media
+    // domains are native services with no command-fed input.
+    property alias systemStatus: systemStatus
 
     AudioStatus { id: audio }
     BatteryStatus { id: battery }
