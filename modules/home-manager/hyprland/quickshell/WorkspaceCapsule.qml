@@ -16,7 +16,7 @@ Rectangle {
 
     Behavior on width {
         NumberAnimation {
-            duration: 200
+            duration: Theme.animFade
             easing.type: Theme.easingType
             easing.bezierCurve: Theme.easingCurve
         }
@@ -51,13 +51,13 @@ Rectangle {
 
                     Behavior on width {
                         NumberAnimation {
-                            duration: 200
+                            duration: Theme.animFade
                             easing.type: Theme.easingType
                             easing.bezierCurve: Theme.easingCurve
                         }
                     }
-                    Behavior on color { ColorAnimation { duration: 200; easing.type: Easing.InOutQuad } }
-                    Behavior on opacity { OpacityAnimator { duration: 200 } }
+                    Behavior on color { ColorAnimation { duration: Theme.animFade; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve } }
+                    Behavior on opacity { OpacityAnimator { duration: Theme.animFade } }
                 }
 
                 MouseArea {

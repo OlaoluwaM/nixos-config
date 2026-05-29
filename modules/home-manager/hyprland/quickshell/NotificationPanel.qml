@@ -61,7 +61,7 @@ ColumnLayout {
             visible: root.notifications.historyModel.count > 0
             Layout.alignment: Qt.AlignBaseline
 
-            Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Easing.InOutQuad } }
+            Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve } }
 
             MouseArea {
                 id: clearMouse

@@ -24,14 +24,16 @@ Rectangle {
     Behavior on color {
         ColorAnimation {
             duration: Theme.animFast
-            easing.type: Easing.InOutQuad
+            easing.type: Theme.easingType
+            easing.bezierCurve: Theme.easingCurve
         }
     }
 
     Behavior on border.color {
         ColorAnimation {
             duration: Theme.animFast
-            easing.type: Easing.InOutQuad
+            easing.type: Theme.easingType
+            easing.bezierCurve: Theme.easingCurve
         }
     }
 

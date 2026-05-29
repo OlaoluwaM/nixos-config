@@ -24,7 +24,7 @@ BarCapsule {
             font.pixelSize: 14
             font.weight: Font.DemiBold
 
-            Behavior on color { ColorAnimation { duration: Theme.animFast } }
+            Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve } }
         }
 
         StyledText {
@@ -36,7 +36,7 @@ BarCapsule {
             font.pixelSize: 14
             font.weight: Font.DemiBold
 
-            Behavior on color { ColorAnimation { duration: Theme.animFast } }
+            Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve } }
         }
     }
 

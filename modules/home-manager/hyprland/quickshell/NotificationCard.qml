@@ -46,7 +46,7 @@ Rectangle {
     Behavior on height {
         enabled: root.heightAnimationEnabled
         NumberAnimation {
-            duration: 300
+            duration: Theme.animNormal
             easing.type: Theme.easingType
             easing.bezierCurve: Theme.easingCurve
         }
@@ -138,8 +138,8 @@ Rectangle {
         StyledText {
             text: root.summary
             color: Theme.text
-            font.pixelSize: 13
-            font.weight: Font.DemiBold
+            font.pixelSize: 14
+            font.weight: Font.Normal
             wrapMode: root.expandable && !root.expanded ? Text.NoWrap : Text.Wrap
             elide: root.expandable && !root.expanded ? Text.ElideRight : Text.ElideNone
             textFormat: Text.PlainText

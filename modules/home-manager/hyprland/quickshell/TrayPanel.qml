@@ -128,7 +128,7 @@ ColumnLayout {
                         radius: 12
                         color: trayItemMouse.containsMouse ? Theme.surfaceVariant : "transparent"
 
-                        Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Easing.InOutQuad } }
+                        Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve } }
 
                         Image {
                             id: trayIcon
@@ -151,7 +151,7 @@ ColumnLayout {
                             font.pixelSize: 16
                             font.weight: Font.DemiBold
 
-                            Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Easing.InOutQuad } }
+                            Behavior on color { ColorAnimation { duration: Theme.animFast; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve } }
                         }
 
                         MouseArea {
