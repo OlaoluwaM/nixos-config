@@ -119,19 +119,43 @@ else
 fi
 
 # ── Temperature ────────────────────────────────────────────────────────────
-# Read CPU package temperature straight from sysfs (no lm_sensors dependency,
-# stable labels, no stderr noise). Prefer the coretemp "Package id 0" sensor,
-# then the x86_pkg_temp thermal zone. VMs have neither -> null.
+# Average the per-core CPU temperatures (coretemp "Core N" sensors), matching
+# the GNOME Vitals average reading rather than the hotter single package sensor.
+# Read straight from sysfs (no lm_sensors dependency, stable labels, no stderr
+# noise). Falls back to the package sensor, then the x86_pkg_temp thermal zone,
+# when no per-core labels exist (e.g. AMD k10temp or VMs) -> null if none found.
 temp_milli=""
 temp_label=""
+temp_sum=0
+temp_count=0
 for label_file in /sys/class/hwmon/hwmon*/temp*_label; do
 	[ -e "$label_file" ] || continue
-	if [ "$(cat "$label_file" 2>/dev/null || true)" = "Package id 0" ]; then
-		temp_milli="$(cat "${label_file%_label}_input" 2>/dev/null || true)"
-		temp_label="Package id 0"
-		break
-	fi
+	case "$(cat "$label_file" 2>/dev/null || true)" in
+	"Core "*)
+		core_milli="$(cat "${label_file%_label}_input" 2>/dev/null || true)"
+		if [ -n "$core_milli" ]; then
+			temp_sum=$((temp_sum + core_milli))
+			temp_count=$((temp_count + 1))
+		fi
+		;;
+	esac
 done
+if [ "$temp_count" -gt 0 ]; then
+	temp_milli=$((temp_sum / temp_count))
+	temp_label="Core average"
+fi
+# Fallback 1: the single package sensor.
+if [ -z "$temp_milli" ]; then
+	for label_file in /sys/class/hwmon/hwmon*/temp*_label; do
+		[ -e "$label_file" ] || continue
+		if [ "$(cat "$label_file" 2>/dev/null || true)" = "Package id 0" ]; then
+			temp_milli="$(cat "${label_file%_label}_input" 2>/dev/null || true)"
+			temp_label="Package id 0"
+			break
+		fi
+	done
+fi
+# Fallback 2: the x86_pkg_temp thermal zone.
 if [ -z "$temp_milli" ]; then
 	for zone in /sys/class/thermal/thermal_zone*; do
 		[ -e "$zone/type" ] || continue
