@@ -19,89 +19,140 @@ BarCapsule {
         anchors.margins: 8
         spacing: 8
 
-        Rectangle {
-            id: recordDisc
+        // Leading visual: a spinning vinyl record for music; a static rounded
+        // thumbnail (or glyph) for everything else — video, podcasts, browsers.
+        Item {
+            id: mediaThumb
             width: 30
             height: 30
             anchors.verticalCenter: parent.verticalCenter
-            radius: 15
-            color: Theme.surfaceDeep
-            border.color: Theme.outline
-            border.width: 1
 
+            // ── Music: spinning vinyl record ─────────────────────────────
             Rectangle {
-                anchors.centerIn: parent
-                width: 22
-                height: 22
-                radius: 11
-                color: "transparent"
-                border.color: Theme.surfaceHover
+                id: recordDisc
+                anchors.fill: parent
+                radius: width / 2
+                visible: root.status.mediaIsMusic
+                color: Theme.surfaceDeep
+                border.color: Theme.outline
                 border.width: 1
-                opacity: 0.55
-            }
 
-            Item {
-                id: artworkLens
-                anchors.centerIn: parent
-                width: 14
-                height: 14
+                readonly property bool hasArtwork: root.status.mediaAlbumArt.length > 0
+                    && discArt.status === Image.Ready
 
+                // Hidden source image; the Shape below clips it into a circle.
                 Image {
-                    id: mediaArtwork
-                    anchors.fill: parent
+                    id: discArt
+                    anchors.centerIn: parent
+                    width: 14
+                    height: 14
                     source: root.status.mediaAlbumArt
-                    sourceSize.width: 24
-                    sourceSize.height: 24
+                    sourceSize.width: 28
+                    sourceSize.height: 28
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     visible: false
                 }
 
-                Shape {
-                    anchors.fill: parent
-                    visible: root.status.mediaAlbumArt.length > 0 && mediaArtwork.status === Image.Ready
+                // groove ring
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 22
+                    height: 22
+                    radius: 11
+                    color: "transparent"
+                    border.color: Theme.surfaceHover
+                    border.width: 1
+                    opacity: 0.55
+                }
 
-                    ShapePath {
-                        fillItem: mediaArtwork
-                        strokeWidth: -1
-                        startX: artworkLens.width
-                        startY: artworkLens.height / 2
+                Item {
+                    id: artworkLens
+                    anchors.centerIn: parent
+                    width: 14
+                    height: 14
 
-                        PathAngleArc {
-                            centerX: artworkLens.width / 2
-                            centerY: artworkLens.height / 2
-                            radiusX: artworkLens.width / 2
-                            radiusY: artworkLens.height / 2
-                            startAngle: 0
-                            sweepAngle: 360
+                    Shape {
+                        anchors.fill: parent
+                        visible: recordDisc.hasArtwork
+
+                        ShapePath {
+                            fillItem: discArt
+                            strokeWidth: -1
+                            startX: artworkLens.width
+                            startY: artworkLens.height / 2
+
+                            PathAngleArc {
+                                centerX: artworkLens.width / 2
+                                centerY: artworkLens.height / 2
+                                radiusX: artworkLens.width / 2
+                                radiusY: artworkLens.height / 2
+                                startAngle: 0
+                                sweepAngle: 360
+                            }
                         }
                     }
+
+                    ShellIcon {
+                        anchors.centerIn: parent
+                        visible: !recordDisc.hasArtwork
+                        name: root.status.mediaStatus === "Playing" ? "play" : "music"
+                        iconColor: Theme.text
+                        implicitSize: 9
+                    }
+                }
+
+                // spindle hole
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 4
+                    height: 4
+                    radius: 2
+                    color: Theme.surfaceDeep
+                    opacity: recordDisc.hasArtwork ? 0.65 : 0
+                }
+
+                RotationAnimation on rotation {
+                    from: 0
+                    to: 360
+                    duration: 6000
+                    loops: Animation.Infinite
+                    running: recordDisc.visible && root.status.mediaStatus === "Playing"
+                }
+            }
+
+            // ── Non-music: static rounded thumbnail / glyph ──────────────
+            Rectangle {
+                id: thumbCard
+                anchors.fill: parent
+                visible: !root.status.mediaIsMusic
+                radius: Theme.capsuleButtonRadius
+                color: Theme.surfaceDeep
+                border.color: Theme.outline
+                border.width: 1
+                clip: true
+
+                readonly property bool hasArtwork: root.status.mediaAlbumArt.length > 0
+                    && thumbArt.status === Image.Ready
+
+                Image {
+                    id: thumbArt
+                    anchors.fill: parent
+                    source: root.status.mediaAlbumArt
+                    sourceSize.width: 30
+                    sourceSize.height: 30
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    visible: thumbCard.hasArtwork
                 }
 
                 ShellIcon {
                     anchors.centerIn: parent
-                    visible: root.status.mediaAlbumArt.length === 0 || !(mediaArtwork.status === Image.Ready)
+                    visible: !thumbCard.hasArtwork
                     name: root.status.mediaStatus === "Playing" ? "play" : "music"
                     iconColor: Theme.text
-                    implicitSize: 9
+                    implicitSize: 14
                 }
-            }
-
-            Rectangle {
-                anchors.centerIn: parent
-                width: 4
-                height: 4
-                radius: 2
-                color: Theme.surfaceDeep
-                opacity: root.status.mediaAlbumArt.length > 0 && mediaArtwork.status === Image.Ready ? 0.65 : 0
-            }
-
-            RotationAnimation on rotation {
-                from: 0
-                to: 360
-                duration: 6000
-                loops: Animation.Infinite
-                running: root.visible && root.status.mediaStatus === "Playing"
             }
         }
 
@@ -135,10 +186,14 @@ BarCapsule {
             }
 
             TapHandler {
-                onTapped: root.popups.toggle("media")
+                onTapped: root.popups.toggleAt("media", root.mapToItem(null, root.width / 2, 0).x)
             }
         }
 
+        // Inline transport. These sit on top of the capsule's own fill, so the
+        // buttons stay chromeless — transparent at rest and on hover — and only
+        // the icon brightens. A filled hover box here would read as a panel
+        // inside the capsule, which looked busy against the popup's flat icons.
         Row {
             width: 98
             height: 30
@@ -153,7 +208,8 @@ BarCapsule {
                 iconSize: 15
                 iconColor: hovered ? Theme.text
                     : Theme.capsuleTextColor(root.popups.activePopup === "media", root.hovered)
-                normalColor: Theme.surfaceVariant
+                normalColor: "transparent"
+                hoverColor: "transparent"
                 onClicked: root.mediaActions.perform("previous")
             }
 
@@ -166,7 +222,8 @@ BarCapsule {
                 iconSize: 15
                 iconColor: hovered ? Theme.text
                     : Theme.capsuleTextColor(root.popups.activePopup === "media", root.hovered)
-                normalColor: Theme.surfaceVariant
+                normalColor: "transparent"
+                hoverColor: "transparent"
                 onClicked: root.mediaActions.perform("play-pause")
             }
 
@@ -179,7 +236,8 @@ BarCapsule {
                 iconSize: 15
                 iconColor: hovered ? Theme.text
                     : Theme.capsuleTextColor(root.popups.activePopup === "media", root.hovered)
-                normalColor: Theme.surfaceVariant
+                normalColor: "transparent"
+                hoverColor: "transparent"
                 onClicked: root.mediaActions.perform("next")
             }
         }

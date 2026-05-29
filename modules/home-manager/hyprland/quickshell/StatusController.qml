@@ -42,13 +42,18 @@ Scope {
 
     // Media (MPRIS, native)
     property alias mediaPlayer: media.mediaPlayer
+    property alias mediaPlayers: media.mediaPlayers
+    property alias selectedPlayerId: media.selectedPlayerId
     property alias mediaStatus: media.mediaStatus
+    property alias mediaSource: media.mediaSource
     property alias mediaArtist: media.mediaArtist
     property alias mediaTrackTitle: media.mediaTrackTitle
     property alias mediaAlbumArt: media.mediaAlbumArt
     property alias mediaPosition: media.mediaPosition
     property alias mediaLength: media.mediaLength
+    property alias mediaProgress: media.mediaProgress
     property alias mediaActive: media.mediaActive
+    property alias mediaIsMusic: media.mediaIsMusic
     property alias mediaDisplayTitle: media.mediaDisplayTitle
 
     // Clock (from hypr-shell-timezones.sh)

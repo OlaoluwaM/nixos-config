@@ -30,7 +30,8 @@ PanelWindow {
         calendar:       { source: "CalendarPanel.qml",     width: 700, height: 440, margin: 28, align: "center" },
         tray:           { source: "TrayPanel.qml",         width: 340, height: root.trayDefaultHeight, margin: 36, align: "right"  },
         notifications:  { source: "NotificationPanel.qml", width: 440, height: 670, margin: 32, align: "center" },
-        media:          { source: "MediaPanel.qml",        width: 430, height: 280, margin: 32, align: "right"  }
+        // height is a fallback only — media sizes to its content (see height binding below).
+        media:          { source: "MediaPanel.qml",        width: 470, height: 300, margin: 36, align: "left"   }
     })
 
     function popupSpec(name) {
@@ -74,17 +75,38 @@ PanelWindow {
 
         property real trayCardHeight: root.trayDefaultHeight
         property bool cardShown: true
+        // The anchor the currently-shown card was positioned with. Captured when
+        // a popup is shown so the outgoing card doesn't jump when the next
+        // popup's trigger changes the live anchorCenterX mid-switch.
+        property real shownAnchorCenterX: -1
 
         z: 1
         visible: popoverCard.cardShown
         width: root.popupSpec(root.renderedPopup).width
-        height: root.renderedPopup === "tray"
-            ? popoverCard.trayCardHeight
-            : root.popupSpec(root.renderedPopup).height
+        // Media sizes to its content so the top/bottom padding stays equal to
+        // the margin whether or not the player switcher is showing; the card
+        // grows/shrinks instead of the padding changing.
+        height: {
+            if (root.renderedPopup === "tray")
+                return popoverCard.trayCardHeight;
+            if (root.renderedPopup === "media" && popoverLoader.item)
+                return Math.round(popoverLoader.item.implicitHeight)
+                    + root.popupSpec("media").margin * 2;
+            return root.popupSpec(root.renderedPopup).height;
+        }
 
-        x: root.popupSpec(root.renderedPopup).align === "center"
-            ? Math.round((parent.width - width) / 2)
-            : parent.width - width - 12
+        // Anchor under the triggering capsule when one set a center x; otherwise
+        // fall back to the spec's edge alignment (center / right). Always clamped
+        // to stay on-screen.
+        x: {
+            if (popoverCard.shownAnchorCenterX >= 0) {
+                let centered = popoverCard.shownAnchorCenterX - width / 2;
+                return Math.round(Math.max(12, Math.min(centered, parent.width - width - 12)));
+            }
+            return root.popupSpec(root.renderedPopup).align === "center"
+                ? Math.round((parent.width - width) / 2)
+                : parent.width - width - 12;
+        }
 
         radius: Theme.popoverRadius
         color: Theme.base
@@ -109,6 +131,7 @@ PanelWindow {
                 return;
             }
 
+            popoverCard.shownAnchorCenterX = root.popups.anchorCenterX;
             popoverCard.loadPopup(expectedPopup);
             root.pendingPopup = "";
             popoverCard.cardShown = true;
@@ -118,6 +141,7 @@ PanelWindow {
         }
 
         function showOpenedPopup(name) {
+            popoverCard.shownAnchorCenterX = root.popups.anchorCenterX;
             popoverCard.loadPopup(name);
             popoverCard.cardShown = true;
             popoverCard.opacity = 0;
