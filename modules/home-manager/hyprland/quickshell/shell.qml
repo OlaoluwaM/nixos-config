@@ -127,7 +127,7 @@ Scope {
         onStatusRefreshRequested: statusRefreshTimer.restart()
     }
 
-    AudioActions { id: audioActions; runner: commandRunner }
+    AudioActions { id: audioActions; runner: commandRunner; status: statusController }
     BrightnessActions { id: brightnessActions; runner: commandRunner }
     CaffeineActions { id: caffeineActions; runner: commandRunner; status: statusController }
     MediaActions { id: mediaActions; status: statusController }

@@ -29,6 +29,9 @@ Scope {
     property alias volumePercent: audio.volumePercent
     property alias volumeText: audio.volumeText
     property alias muted: audio.muted
+    // Expose the audio domain object so AudioActions can read the live sink node
+    // (and reuse its single PwObjectTracker) rather than re-deriving its own.
+    property alias audioStatus: audio
 
     // Battery (UPower, native)
     property alias batteryPercent: battery.batteryPercent

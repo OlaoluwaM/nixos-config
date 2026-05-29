@@ -2,18 +2,18 @@ pragma ComponentBehavior: Bound
 
 import QtQml
 import Quickshell
-import Quickshell.Services.Pipewire
 
 Scope {
     id: root
 
     required property CommandRunner runner
+    required property StatusController status
 
-    // PipeWire owns the audio state; CommandRunner is only used to refresh the
-    // brightness/volume OSD after keybind-driven changes.
-    readonly property var audioSink: Pipewire.defaultAudioSink
-    readonly property var audio: root.audioSink !== null && root.audioSink.ready ? root.audioSink.audio : null
-    readonly property bool ready: root.audio !== null
+    // AudioStatus owns the PipeWire sink and the single PwObjectTracker that
+    // keeps its properties live; we read that node here and write volume/mute,
+    // then refresh the OSD. CommandRunner is only used for that OSD refresh.
+    readonly property var audio: root.status.audioStatus.audio
+    readonly property bool ready: root.status.audioStatus.hasAudio
 
     function setVolume(value) {
         if (root.ready) {
@@ -33,9 +33,5 @@ Scope {
             root.audio.muted = !root.audio.muted;
         }
         root.runner.refreshOsd("volume");
-    }
-
-    PwObjectTracker {
-        objects: [root.audioSink]
     }
 }
