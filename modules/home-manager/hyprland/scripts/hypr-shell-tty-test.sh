@@ -164,8 +164,8 @@ printf -v start_wallpaper_cmd '%q' "$start_wallpaper"
 # decoration blocks in quickshell.nix and must be kept in step with them.
 theme_qml="$config_dir/Theme.qml"
 read_theme_color() {
-	grep -oE "property color $1:[[:space:]]*\"#[0-9a-fA-F]+\"" "$theme_qml" 2>/dev/null \
-		| grep -oE '[0-9a-fA-F]{6,8}' | head -1
+	grep -oE "property color $1:[[:space:]]*\"#[0-9a-fA-F]+\"" "$theme_qml" 2>/dev/null |
+		grep -oE '[0-9a-fA-F]{6,8}' | head -1
 }
 border_active="$(read_theme_color primary)"
 border_inactive="$(read_theme_color outline)"
@@ -199,7 +199,8 @@ general {
 
 decoration {
   rounding = 14
-  rounding_power = 3.5
+	# Commenting this out because it is not a valid option for the version of Hyprland used in by TTY test on our current host.
+  # rounding_power = 3.5
 }
 
 misc {
