@@ -42,15 +42,15 @@ PanelWindow {
         }
 
         add: Transition {
-            OpacityAnimator { from: 0; to: 1; duration: 200; easing.type: Easing.OutCubic }
+            OpacityAnimator { from: 0; to: 1; duration: Theme.animFade; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingDecel }
         }
 
         remove: Transition {
-            OpacityAnimator { from: 1; to: 0; duration: 200; easing.type: Easing.OutCubic }
+            OpacityAnimator { from: 1; to: 0; duration: Theme.animFade; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingAccel }
         }
 
         displaced: Transition {
-            NumberAnimation { properties: "y"; duration: 200; easing.type: Easing.OutCubic }
+            NumberAnimation { properties: "y"; duration: Theme.animFade; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve }
         }
 
         delegate: NotificationCard {

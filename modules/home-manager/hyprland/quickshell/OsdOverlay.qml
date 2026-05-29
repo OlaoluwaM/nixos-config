@@ -46,13 +46,15 @@ PanelWindow {
             id: showAnim
             NumberAnimation {
                 target: osdCard; property: "opacity"
-                to: 1; duration: 150
-                easing.type: Easing.OutCubic
+                to: 1; duration: Theme.animFast
+                easing.type: Theme.easingType
+                easing.bezierCurve: Theme.easingDecel
             }
             NumberAnimation {
                 target: osdCard; property: "anchors.bottomMargin"
-                to: 40; duration: 200
-                easing.type: Easing.OutCubic
+                to: 40; duration: Theme.animFade
+                easing.type: Theme.easingType
+                easing.bezierCurve: Theme.easingDecel
             }
         }
 
@@ -60,13 +62,15 @@ PanelWindow {
             id: hideAnim
             NumberAnimation {
                 target: osdCard; property: "opacity"
-                to: 0; duration: 300
-                easing.type: Easing.InCubic
+                to: 0; duration: Theme.animNormal
+                easing.type: Theme.easingType
+                easing.bezierCurve: Theme.easingAccel
             }
             NumberAnimation {
                 target: osdCard; property: "anchors.bottomMargin"
-                to: 10; duration: 350
-                easing.type: Easing.InCubic
+                to: 10; duration: Theme.animNormal
+                easing.type: Theme.easingType
+                easing.bezierCurve: Theme.easingAccel
             }
             onFinished: osdState.windowVisible = false
         }
@@ -97,8 +101,9 @@ PanelWindow {
 
                     Behavior on width {
                         NumberAnimation {
-                            duration: 120
-                            easing.type: Easing.OutCubic
+                            duration: Theme.animFast
+                            easing.type: Theme.easingType
+                            easing.bezierCurve: Theme.easingCurve
                         }
                     }
                 }

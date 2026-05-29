@@ -115,13 +115,15 @@ PanelWindow {
                 target: confirmCard; property: "opacity"
                 from: 0; to: 1
                 duration: Theme.animFade
-                easing.type: Easing.OutCubic
+                easing.type: Theme.easingType
+                easing.bezierCurve: Theme.easingDecel
             }
             NumberAnimation {
                 target: confirmCard; property: "scale"
                 from: 0.92; to: 1.0
                 duration: Theme.animNormal
-                easing.type: Easing.OutCubic
+                easing.type: Theme.easingType
+                easing.bezierCurve: Theme.easingDecel
             }
         }
 
@@ -132,14 +134,16 @@ PanelWindow {
             NumberAnimation {
                 target: confirmCard; property: "opacity"
                 from: confirmCard.opacity; to: 0
-                duration: 150
-                easing.type: Easing.OutCubic
+                duration: Theme.animFast
+                easing.type: Theme.easingType
+                easing.bezierCurve: Theme.easingAccel
             }
             NumberAnimation {
                 target: confirmCard; property: "scale"
                 from: confirmCard.scale; to: 0.96
-                duration: 150
-                easing.type: Easing.OutCubic
+                duration: Theme.animFast
+                easing.type: Theme.easingType
+                easing.bezierCurve: Theme.easingAccel
             }
         }
 

@@ -210,9 +210,14 @@ let
         readonly property int animNormal:     300
         readonly property int animFade:       200
 
-        // ── Default easing (CSS "ease") ─────────────────────────────────
+        // ── Easing vocabulary (all Easing.Bezier; pick the curve by motion role) ──
         readonly property int easingType: Easing.Bezier
+        // standard — neutral motion: hover, colour fades, value changes (CSS "ease")
         readonly property list<real> easingCurve: [0.25, 0.1, 0.25, 1.0, 1.0, 1.0]
+        // decel (ease-out) — entrances: an element appears and settles into place
+        readonly property list<real> easingDecel: [0.0, 0.0, 0.2, 1.0, 1.0, 1.0]
+        // accel (ease-in) — exits: an element leaves and accelerates away
+        readonly property list<real> easingAccel: [0.4, 0.0, 1.0, 1.0, 1.0, 1.0]
 
         // ── Capsule state helpers ───────────────────────────────────────
         function capsuleColor(active, hovered) {

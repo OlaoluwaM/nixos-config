@@ -36,8 +36,8 @@ ColumnLayout {
     SequentialAnimation {
         id: openMenuAnim
         ParallelAnimation {
-            NumberAnimation { target: trayPanel; property: "gridOpacity"; to: 0; duration: 100; easing.type: Easing.InQuad }
-            NumberAnimation { target: trayPanel; property: "menuOpacity"; to: 1; duration: 140; easing.type: Easing.OutQuad }
+            NumberAnimation { target: trayPanel; property: "gridOpacity"; to: 0; duration: Theme.animFast; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingAccel }
+            NumberAnimation { target: trayPanel; property: "menuOpacity"; to: 1; duration: Theme.animFast; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingDecel }
         }
     }
 
@@ -48,8 +48,8 @@ ColumnLayout {
         }
         PauseAnimation { duration: 60 }
         ParallelAnimation {
-            NumberAnimation { target: trayPanel; property: "menuOpacity"; to: 0; duration: 100; easing.type: Easing.InQuad }
-            NumberAnimation { target: trayPanel; property: "gridOpacity"; to: 1; duration: 140; easing.type: Easing.OutQuad }
+            NumberAnimation { target: trayPanel; property: "menuOpacity"; to: 0; duration: Theme.animFast; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingAccel }
+            NumberAnimation { target: trayPanel; property: "gridOpacity"; to: 1; duration: Theme.animFast; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingDecel }
         }
     }
 

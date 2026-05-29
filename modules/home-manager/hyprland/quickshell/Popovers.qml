@@ -139,13 +139,15 @@ PanelWindow {
                 target: popoverCard; property: "opacity"
                 from: 0; to: 1
                 duration: Theme.animFade
-                easing.type: Easing.OutCubic
+                easing.type: Theme.easingType
+                easing.bezierCurve: Theme.easingDecel
             }
             NumberAnimation {
                 target: popoverCard; property: "scale"
                 from: 0.92; to: 1.0
                 duration: Theme.animNormal
-                easing.type: Easing.OutCubic
+                easing.type: Theme.easingType
+                easing.bezierCurve: Theme.easingDecel
             }
         }
 
@@ -161,14 +163,16 @@ PanelWindow {
             NumberAnimation {
                 target: popoverCard; property: "opacity"
                 from: popoverCard.opacity; to: 0
-                duration: 150
-                easing.type: Easing.OutCubic
+                duration: Theme.animFast
+                easing.type: Theme.easingType
+                easing.bezierCurve: Theme.easingAccel
             }
             NumberAnimation {
                 target: popoverCard; property: "scale"
                 from: popoverCard.scale; to: 0.96
-                duration: 150
-                easing.type: Easing.OutCubic
+                duration: Theme.animFast
+                easing.type: Theme.easingType
+                easing.bezierCurve: Theme.easingAccel
             }
         }
 
@@ -178,8 +182,9 @@ PanelWindow {
             property: "opacity"
             from: popoverCard.opacity
             to: 0
-            duration: 120
-            easing.type: Easing.OutCubic
+            duration: Theme.animFast
+            easing.type: Theme.easingType
+            easing.bezierCurve: Theme.easingAccel
             onFinished: popoverCard.fadeInSwitchedPopup(root.pendingPopup)
         }
 
@@ -189,8 +194,9 @@ PanelWindow {
             property: "opacity"
             from: 0
             to: 1
-            duration: 150
-            easing.type: Easing.OutCubic
+            duration: Theme.animFast
+            easing.type: Theme.easingType
+            easing.bezierCurve: Theme.easingDecel
             onFinished: popoverCard.forceActiveFocus()
         }
 
@@ -198,7 +204,7 @@ PanelWindow {
             id: trayHeightAnim
             target: popoverCard
             property: "trayCardHeight"
-            duration: 300
+            duration: Theme.animNormal
             easing.type: Theme.easingType
             easing.bezierCurve: Theme.easingCurve
         }
