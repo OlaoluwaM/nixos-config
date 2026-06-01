@@ -36,6 +36,7 @@ in
     ../../modules/home-manager/fontconfig.nix
     ../../modules/home-manager/fzf.nix
     ../../modules/home-manager/gpg.nix
+    ../../modules/home-manager/lsd.nix
     ../../modules/home-manager/zsh.nix
   ];
 
@@ -207,7 +208,6 @@ in
     unstable.libva
     unstable.libva-utils
     unstable.lld
-    unstable.lsd
     unstable.lsof
 
     unstable.navi
@@ -319,6 +319,7 @@ in
   local.bottom.enable = true;
   local.delta.enable = true;
   local.fzf.enable = true;
+  local.lsd.enable = true;
 
   local.fsLayout.devDirname = hostConfig.devDirname;
 
