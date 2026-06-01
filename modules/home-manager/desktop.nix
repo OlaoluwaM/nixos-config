@@ -7,12 +7,15 @@
 let
   cfg = config.local.desktop;
   fonts = config.local.fonts;
+
   fontSpec = font: "${font.name} ${toString font.size}";
+
   cursorTheme = {
     name = "catppuccin-mocha-dark-cursors";
     package = pkgs.catppuccin-cursors.mochaDark;
     size = 24;
   };
+
   iconTheme = {
     name = "Colloid-Dark";
     package = pkgs.colloid-icon-theme;
@@ -83,6 +86,13 @@ in
       home.pointerCursor = cursorTheme // {
         gtk.enable = true;
         x11.enable = true;
+      };
+
+      home.sessionVariables = {
+        HYPRCURSOR_SIZE = toString cursorTheme.size;
+        HYPRCURSOR_THEME = cursorTheme.name;
+        XCURSOR_SIZE = toString cursorTheme.size;
+        XCURSOR_THEME = cursorTheme.name;
       };
 
       qt = {
