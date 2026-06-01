@@ -27,6 +27,7 @@ in
 
       # Bat is configured via nix, see modules/home-manager/bat.nix
       bat.enable = true;
+      atuin.enable = true;
 
       # Some items would require too much work to port to nix for catppuccin-nix theming so just disable them
       # They are all already themed in my dotfiles anyway

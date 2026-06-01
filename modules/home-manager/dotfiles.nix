@@ -71,7 +71,6 @@ in
       FONT_DIR = "${data}/fonts";
       NAVI_PATH = "${cfg.dotsPath}/navi/cheats";
       NAVI_CONFIG_PATH = "${cfg.dotsPath}/navi/config.yaml";
-      ATUIN_CONFIG_DIR = "${cfg.dotsPath}/atuin";
       _ZO_DATA_DIR = "${cfg.dotsPath}/zoxide";
       TEALDEER_CONFIG_DIR = "${cfg.dotsPath}/tldr";
       STARSHIP_CONFIG = "${cfg.dotsPath}/starship/starship.toml";

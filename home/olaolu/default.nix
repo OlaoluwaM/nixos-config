@@ -26,6 +26,7 @@ in
 
     # You can also split up your configuration and import pieces of it here:
     # ./nvim.nix
+    ../../modules/home-manager/atuin.nix
     ../../modules/home-manager/bat.nix
     ../../modules/home-manager/desktop.nix
     ../../modules/home-manager/dotfiles.nix
@@ -162,8 +163,6 @@ in
     zsh-you-should-use # We can include them as plugins
 
     # Packages from unstable channel
-    unstable.atuin
-
     unstable.cabal-install
     unstable.cabal2nix
     unstable.cheat # Creating an overlay would involve more effort than I am willing to expend
@@ -315,6 +314,7 @@ in
     dotsPath = "${config.xdg.userDirs.desktop}/${hostConfig.dotfilesRelativePath}";
   };
 
+  local.atuin.enable = true;
   local.bat.enable = true;
   local.fsLayout.devDirname = hostConfig.devDirname;
 
