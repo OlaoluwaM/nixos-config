@@ -28,6 +28,7 @@ in
     # ./nvim.nix
     ../../modules/home-manager/atuin.nix
     ../../modules/home-manager/bat.nix
+    ../../modules/home-manager/bottom.nix
     ../../modules/home-manager/desktop.nix
     ../../modules/home-manager/dotfiles.nix
     ../../modules/home-manager/fs-layout.nix
@@ -95,7 +96,6 @@ in
 
     bat-extras.core
     bitwarden-desktop
-    bottom
 
     cmake
     claude-code # From https://github.com/sadjow/claude-code-nix
@@ -316,6 +316,7 @@ in
 
   local.atuin.enable = true;
   local.bat.enable = true;
+  local.bottom.enable = true;
   local.fsLayout.devDirname = hostConfig.devDirname;
 
   # Enable and configure zsh with OMZ and our custom module
