@@ -14,6 +14,8 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    catppuccin.atuin.enable = true;
+
     programs.atuin = {
       enable = true;
       package = unstable.atuin;

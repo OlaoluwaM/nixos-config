@@ -13,6 +13,8 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    catppuccin.bat.enable = true;
+
     programs.bat = {
       enable = true;
 
