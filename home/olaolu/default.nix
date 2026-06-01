@@ -34,6 +34,7 @@ in
     ../../modules/home-manager/dotfiles.nix
     ../../modules/home-manager/fs-layout.nix
     ../../modules/home-manager/fontconfig.nix
+    ../../modules/home-manager/fzf.nix
     ../../modules/home-manager/gpg.nix
     ../../modules/home-manager/zsh.nix
   ];
@@ -176,7 +177,6 @@ in
     unstable.ffmpeg-full
     unstable.ffmpegthumbnailer
     unstable.fx
-    unstable.fzf
 
     unstable.gdu
     unstable.git-credential-manager
@@ -318,6 +318,7 @@ in
   local.bat.enable = true;
   local.bottom.enable = true;
   local.delta.enable = true;
+  local.fzf.enable = true;
 
   local.fsLayout.devDirname = hostConfig.devDirname;
 
