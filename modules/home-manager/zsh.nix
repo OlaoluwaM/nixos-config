@@ -9,7 +9,7 @@ let
 in
 {
   options.local.zsh = {
-    enable = lib.mkEnableOption "opinionated Zsh configuration";
+    enable = lib.mkEnableOption "Opinionated Zsh configuration";
 
     histFilePath = lib.mkOption {
       type = lib.types.nullOr lib.types.str;
