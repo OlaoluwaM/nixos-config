@@ -109,5 +109,6 @@ or unsubstituted placeholders.
 
 - Blur & Translucencies in windows and in the topbar
 - A topbar design more like [this](https://github.com/ilyamiro/nixos-configuration/blob/master/previews/screenshot1.png)
+  - Particularly, grouping some of the rightmost capsules together
 - Quickshell script test suite
 - A Quickshell widget that displays device usage metric like AppBlock. Similar to [this](https://github.com/ilyamiro/nixos-configuration/blob/master/previews/screenshot6.png)
