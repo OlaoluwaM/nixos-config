@@ -83,13 +83,17 @@ let
   selected = presets.${cfg.preset};
 in
 {
+  imports = [
+    ./catppuccin.nix
+  ];
+
   options.local.theme = {
     preset = lib.mkOption {
       type = lib.types.enum [
         "noctalia"
         "catppuccin-mocha"
       ];
-      default = "noctalia";
+      default = "catppuccin-mocha";
       description = "Color theme preset. Individual colors can be overridden via local.theme.colors.";
     };
 
@@ -124,5 +128,9 @@ in
       lockClockColor = colorOption selected.lockClockColor "Lock screen clock color";
       lockDateColor = colorOption selected.lockDateColor "Lock screen date color";
     };
+  };
+
+  config = {
+    local.catppuccin.enable = cfg.preset == "catppuccin-mocha";
   };
 }

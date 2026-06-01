@@ -49,7 +49,8 @@
 - [x] Setup fonts
 - [x] Configure catppuccin-cursors
 - [x] Configure colloid icon theme
-- [ ] Configure [catppuccin-mocha theme](https://nix.catppuccin.com/options/main/home/catppuccin.vicinae/) for vicinae
+- [ ] Configure catppuccin-nix
+  - [ ] Address potentially conflicting dotfiles: ~~bat~~, fsh, ~~kitty~~, ~~starship~~, yazi, hyprland (might not be an issue)
 - [x] Document how all `nixos` and `home-manager` commands will now always need to reference our flake to work as we expect
   - [ ] Create shell aliases
 - [ ] Configure borgbackup

@@ -6,16 +6,18 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
-    claude-code.url = "github:sadjow/claude-code-nix";
-    codex-cli.url = "github:sadjow/codex-cli-nix";
-    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
-
     # Home manager
     home-manager.url = "github:nix-community/home-manager/release-25.11";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     # Flatpak
     nix-flatpak.url = "github:gmodena/nix-flatpak/?ref=latest";
+
+    # Other stuff
+    claude-code.url = "github:sadjow/claude-code-nix";
+    codex-cli.url = "github:sadjow/codex-cli-nix";
+    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
+    catppuccin.url = "github:catppuccin/nix";
   };
 
   outputs =
@@ -28,6 +30,7 @@
       nixos-hardware,
       home-manager,
       nix-flatpak,
+      catppuccin,
       ...
     }@inputs:
 
@@ -100,6 +103,7 @@
           # > Our main home-manager configuration file <
           # For a new user profile, you'd need a new entry and replace `./home/olaolu` with whatever the new profile user name is
           modules = [
+            ./home/${boreas.username}
             nix-flatpak.homeManagerModules.nix-flatpak
             # We're getting claude-code from this repo https://github.com/sadjow/claude-code-nix to always have the most up to date version
             # The same guy also has a repo for codex https://github.com/sadjow/codex-cli-nix
@@ -109,7 +113,7 @@
                 codex-cli.overlays.default
               ];
             }
-            ./home/${boreas.username}
+            catppuccin.homeModules.catppuccin
           ];
         };
       };
