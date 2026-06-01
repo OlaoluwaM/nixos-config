@@ -29,6 +29,7 @@ in
     ../../modules/home-manager/atuin.nix
     ../../modules/home-manager/bat.nix
     ../../modules/home-manager/bottom.nix
+    ../../modules/home-manager/delta.nix
     ../../modules/home-manager/desktop.nix
     ../../modules/home-manager/dotfiles.nix
     ../../modules/home-manager/fs-layout.nix
@@ -167,7 +168,6 @@ in
     unstable.cabal2nix
     unstable.cheat # Creating an overlay would involve more effort than I am willing to expend
 
-    unstable.delta
     unstable.discord
 
     unstable.fastfetch
@@ -317,6 +317,8 @@ in
   local.atuin.enable = true;
   local.bat.enable = true;
   local.bottom.enable = true;
+  local.delta.enable = true;
+
   local.fsLayout.devDirname = hostConfig.devDirname;
 
   # Enable and configure zsh with OMZ and our custom module

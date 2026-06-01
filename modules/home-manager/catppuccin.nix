@@ -30,6 +30,7 @@ in
       starship.enable = false;
       hyprland.enable = false;
       kitty.enable = false;
+      neovim.enable = false;
     };
   };
 }
