@@ -26,6 +26,7 @@ in
 
     # You can also split up your configuration and import pieces of it here:
     # ./nvim.nix
+    ../../modules/home-manager/bat.nix
     ../../modules/home-manager/desktop.nix
     ../../modules/home-manager/dotfiles.nix
     ../../modules/home-manager/fs-layout.nix
@@ -91,7 +92,6 @@ in
     acpi
     atool
 
-    bat
     bat-extras.core
     bitwarden-desktop
     bottom
@@ -315,6 +315,7 @@ in
     dotsPath = "${config.xdg.userDirs.desktop}/${hostConfig.dotfilesRelativePath}";
   };
 
+  local.bat.enable = true;
   local.fsLayout.devDirname = hostConfig.devDirname;
 
   # Enable and configure zsh with OMZ and our custom module
