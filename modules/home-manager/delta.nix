@@ -14,7 +14,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    catppucin.delta.enable = true;
+    catppuccin.delta.enable = true;
 
     programs.delta = {
       enable = true;

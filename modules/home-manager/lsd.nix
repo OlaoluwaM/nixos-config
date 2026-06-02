@@ -14,7 +14,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    catppucin.lsd.enable = true;
+    catppuccin.lsd.enable = true;
 
     programs.lsd = {
       enable = true;
