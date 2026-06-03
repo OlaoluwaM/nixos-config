@@ -10,6 +10,14 @@ in
 {
   options.local.vicinae = {
     enable = lib.mkEnableOption "vicinae configuration";
+
+    systemd.target = lib.mkOption {
+      type = lib.types.str;
+      default = "graphical-session.target";
+      description = ''
+        User systemd target that starts and stops the Vicinae service.
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -20,7 +28,9 @@ in
       systemd = {
         enable = true;
         autoStart = true;
+        target = cfg.systemd.target;
       };
+
       # useLayerShell
       settings = {
         launcher_window.layer_shell.enabled = true;

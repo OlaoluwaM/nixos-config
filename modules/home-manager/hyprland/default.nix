@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  unstable,
   ...
 }:
 
@@ -12,8 +13,10 @@
 # imports the smaller Hyprland-related files below.
 #
 # The split is:
-# - default.nix: shared packages, fonts, portals, file-manager plumbing
-# - quickshell.nix: Hyprland config, top bar, keybinds, services, scripts
+# - default.nix: compositor config, session target, keybinds, wallpaper/session
+#   plumbing, shared packages, portals
+# - quickshell.nix: top bar, generated QML, Quickshell service, QML helper
+#   scripts
 # - hyprlock.nix: lock-screen look and behavior
 # - hypridle.nix: idle locking behavior
 #
@@ -21,12 +24,90 @@
 # https://nix-community.github.io/home-manager/options.xhtml
 let
   cfg = config.local.hyprland;
+  commands = cfg.commands;
+  theme = config.local.theme.colors;
+  stripHash = s: lib.removePrefix "#" s;
+  hyprlandSessionTarget = "hyprland-session.target";
+
+  vicinaeCommand = lib.getExe' config.programs.vicinae.package "vicinae";
+
+  airctl = pkgs.callPackage ../../../pkgs/airctl { };
+
+  # Wallpaper folder used by Waypaper. If WALLPAPERS_DIR is set in the session
+  # environment, use that. Otherwise fall back to ~/Pictures/wallpapers.
+  wallpapersDir =
+    config.home.sessionVariables.WALLPAPERS_DIR or "${config.xdg.userDirs.pictures}/wallpapers";
+
+  # Small command bridge used by Hyprland keybinds. It writes a command into a
+  # runtime file. The Quickshell popup bridge polls that file and opens the
+  # requested popover.
+  popupScript = pkgs.writeShellApplication {
+    name = "hypr-shell-popup";
+    runtimeInputs = with pkgs; [
+      coreutils
+    ];
+    text = builtins.readFile ./scripts/hypr-shell-popup.sh;
+  };
+
+  # Waypaper manages the desktop wallpaper. Hyprlock still needs one stable file
+  # path for its background, so Waypaper runs this tiny hook after a wallpaper is
+  # selected. The hook only updates the lock-screen symlink; it does not choose
+  # or apply wallpapers.
+  wallpaperLockHook = pkgs.writeShellApplication {
+    name = "hypr-shell-lock-wallpaper";
+    runtimeInputs = with pkgs; [
+      coreutils
+    ];
+    text = ''
+      wallpaper="''${1:-}"
+
+      if [ -z "$wallpaper" ] || [ ! -f "$wallpaper" ]; then
+        exit 0
+      fi
+
+      cache_dir="''${XDG_CACHE_HOME:-$HOME/.cache}/hypr-shell"
+      mkdir -p "$cache_dir"
+      ln -sfn "$wallpaper" "$cache_dir/lock-wallpaper"
+    '';
+  };
+
+  # Screenshot script wraps grim/slurp/satty into one command with modes for
+  # area, full-screen, and active-window screenshots.
+  screenshotScript = pkgs.writeShellApplication {
+    name = "hypr-shell-screenshot";
+    runtimeInputs = with pkgs; [
+      coreutils
+      grim
+      hyprland
+      jq
+      libnotify
+      satty
+      slurp
+      wl-clipboard
+      xdg-utils
+    ];
+    text = builtins.readFile ./scripts/hypr-shell-screenshot.sh;
+  };
+
+  screenrecordScript = pkgs.writeShellApplication {
+    name = "hypr-shell-record";
+    runtimeInputs = with pkgs; [
+      coreutils
+      libnotify
+      procps
+      slurp
+      wf-recorder
+      xdg-utils
+    ];
+    text = builtins.readFile ./scripts/hypr-shell-screenrecord.sh;
+  };
 in
 {
   # Import the focused modules that make up the riced Hyprland session.
   imports = [
     ./hypridle.nix
     ./hyprlock.nix
+    ../vicinae.nix
     ./quickshell.nix
   ];
 
@@ -34,9 +115,284 @@ in
     # Creates the option local.hyprland.enable. Other files can set this to true
     # to enable the whole Home Manager Hyprland profile.
     enable = lib.mkEnableOption "Hyprland configuration";
+
+    # Shared internal values, not normal user-facing settings. Think like shared
+    # internal state without the usual enforcement by native language facilities, like in Python.
+    # These internal "options" are meant solely to expose stuff to other modules within this Hyprland
+    # module config and should not be "set" like regular module options.
+    #
+    # A `let` value in this file would only be visible in this file. We needed a way to
+    # share some package paths with other Hyprland modules. This was the solution we chose.
+    # Putting them under config.local.hyprland.commands gives every Hyprland module one shared
+    # place to read the same helper commands from, but discourage writing to.
+    #
+    # These live under local.hyprland, not local.hyprland.quickshell, because
+    # they belong to the whole Hyprland session: default.nix uses them for
+    # keybinds/packages, while quickshell.nix reuses the same commands when it
+    # generates QML. `internal = true` marks these as shared values for the
+    # Hyprland module files in this directory, not settings users are expected
+    # to configure/set directly.
+    commands = {
+      airctl = lib.mkOption {
+        type = lib.types.package;
+        internal = true;
+        description = "Packaged airctl helper used by Hyprland keybinds.";
+      };
+
+      popupScript = lib.mkOption {
+        type = lib.types.package;
+        internal = true;
+        description = "Packaged Quickshell popup command bridge.";
+      };
+
+      screenshotScript = lib.mkOption {
+        type = lib.types.package;
+        internal = true;
+        description = "Packaged screenshot helper used by Hyprland keybinds.";
+      };
+
+      screenrecordScript = lib.mkOption {
+        type = lib.types.package;
+        internal = true;
+        description = "Packaged screen recording helper used by Hyprland keybinds.";
+      };
+    };
   };
 
   config = lib.mkIf cfg.enable {
+    local.hyprland.commands = {
+      inherit
+        airctl
+        popupScript
+        screenshotScript
+        screenrecordScript
+        ;
+    };
+
+    local.vicinae.enable = true;
+    local.vicinae.systemd.target = hyprlandSessionTarget;
+
+    # Tells Home Manager which user systemd target represents "the Hyprland
+    # desktop session is running." Services such as Quickshell, hypridle,
+    # hyprsunset, Vicinae, and wallpaper restore attach themselves to this same
+    # target, so they start when Hyprland starts and stop when the Hyprland
+    # session stops. Without one shared target, each service would need its own
+    # separate start/stop rules and they could drift out of sync.
+    wayland.systemd.target = hyprlandSessionTarget;
+
+    wayland.windowManager.hyprland = {
+      enable = true;
+
+      # The NixOS module already installs Hyprland and its portal package. Home
+      # Manager's wayland.windowManager.hyprland.package docs say to set this
+      # to null when the NixOS module installs Hyprland:
+      # https://nix-community.github.io/home-manager/options.xhtml#opt-wayland.windowManager.hyprland.package
+      #
+      # Home Manager owns the user config and hyprland-session.target here. The
+      # Home Manager module also contributes the Hyprland portal to xdg.portal;
+      # the GTK portal fallback is configured below.
+      package = null;
+
+      # When Hyprland starts, Home Manager can copy important session variables
+      # into the environment inherited by services run through `systemctl --user`
+      # before starting hyprland-session.target. Services started this way, such
+      # as Quickshell, hypridle, hyprsunset, Vicinae, and wallpaper restore, need
+      # these values to know which Wayland/Hyprland session they belong to.
+      # Without them, those services can start but fail to talk to the compositor,
+      # portals, or the right display.
+      systemd = {
+        enable = true;
+        variables = [
+          "DISPLAY"
+          "HYPRLAND_INSTANCE_SIGNATURE"
+          "WAYLAND_DISPLAY"
+          "XDG_CURRENT_DESKTOP"
+          "XDG_SESSION_DESKTOP"
+          "XDG_SESSION_TYPE"
+          # Repo-specific: used by Waypaper/wallpaper restore helpers.
+          "WALLPAPERS_DIR"
+        ];
+      };
+
+      # Hyprland 0.55+ supports Lua config, and newer Home Manager releases can
+      # generate ~/.config/hypr/hyprland.lua instead of hyprland.conf via
+      # wayland.windowManager.hyprland.configType = "lua". Do not flip that on
+      # casually: many settings below, especially the keybinds, are currently
+      # written as hyprlang-style strings and may need migration before the
+      # generated Lua config works correctly.
+      settings = {
+        # Monitor rule. Blank monitor name means "apply to all monitors".
+        # preferred = use the monitor's preferred resolution/refresh rate.
+        # auto = let Hyprland choose the position. 1 = scale factor.
+        monitor = [ ",preferred,auto,1" ];
+
+        env = [
+          "XDG_CURRENT_DESKTOP,Hyprland"
+          "XDG_SESSION_DESKTOP,Hyprland"
+          "NIXOS_OZONE_WL,1"
+        ];
+
+        # Runs when Hyprland is already shutting down so no need for hyprshutdown
+        "exec-shutdown" = [
+          "${pkgs.systemd}/bin/systemctl --user stop ${hyprlandSessionTarget}"
+        ];
+
+        input = {
+          kb_layout = "us";
+          follow_mouse = 1;
+          touchpad.natural_scroll = true;
+        };
+
+        general = {
+          gaps_in = 4;
+          gaps_out = 8;
+          border_size = 2;
+          "col.active_border" = "rgb(${stripHash theme.primary})";
+          "col.inactive_border" = "rgb(${stripHash theme.outline})";
+          layout = "dwindle";
+        };
+
+        decoration = {
+          rounding = 14;
+          rounding_power = 3.5;
+          blur = {
+            enabled = true;
+            size = 5;
+            passes = 2;
+          };
+          shadow = {
+            enabled = true;
+            range = 12;
+            render_power = 2;
+            color = "rgba(${stripHash theme.shadowColor})";
+          };
+        };
+
+        animations = {
+          enabled = true;
+          bezier = [ "easeOut, 0.22, 1, 0.36, 1" ];
+          animation = [
+            "windows, 1, 3, easeOut"
+            "border, 1, 4, default"
+            "fade, 1, 3, easeOut"
+            "workspaces, 1, 3, easeOut"
+          ];
+        };
+
+        dwindle = {
+          pseudotile = true;
+          preserve_split = true;
+        };
+
+        misc = {
+          disable_hyprland_logo = true;
+          disable_splash_rendering = true;
+          focus_on_activate = true;
+        };
+
+        windowrulev2 = [
+          "float,class:^(vicinae)$"
+          "center,class:^(vicinae)$"
+          "size 42% 48%,class:^(vicinae)$"
+          "float,class:^(io.github.airctl)$"
+          "float,class:^(io.github.kaii_lb.Overskride)$"
+          "float,class:^(mission-center)$"
+        ];
+
+        "$mod" = "SUPER";
+        "$terminal" = "kitty";
+
+        # Hyprland bind names can have extra flag letters after `bind`.
+        # The groups below use plain `bind`, `bindr`, `bindel`, `bindl`, and `bindm`.
+        # Docs: https://wiki.hypr.land/0.52.0/Configuring/Binds/#bind-flags
+        #
+        # Plain `bind` runs once when the key is pressed.
+        bind = [
+          "$mod, Return, exec, $terminal"
+
+          "$mod, Space, exec, ${vicinaeCommand} open"
+          "$mod SHIFT, V, exec, ${vicinaeCommand} 'vicinae://launch/clipboard/history?toggle=true'"
+
+          "$mod SHIFT, W, exec, ${unstable.waypaper}/bin/waypaper"
+
+          ", F6, exec, ${commands.screenshotScript}/bin/hypr-shell-screenshot area"
+          "SHIFT, F6, exec, ${commands.screenshotScript}/bin/hypr-shell-screenshot full"
+          "CTRL, F6, exec, ${commands.screenshotScript}/bin/hypr-shell-screenshot window"
+
+          "$mod SHIFT, R, exec, ${commands.screenrecordScript}/bin/hypr-shell-record area"
+          "$mod CTRL, R, exec, ${commands.screenrecordScript}/bin/hypr-shell-record full"
+          "$mod ALT, R, exec, ${commands.screenrecordScript}/bin/hypr-shell-record stop"
+
+          "$mod, Q, exec, ${commands.popupScript}/bin/hypr-shell-popup quick-settings"
+
+          "$mod, E, exec, ${pkgs.nautilus}/bin/nautilus"
+          "$mod, N, exec, ${commands.airctl}/bin/airctl"
+          "$mod, B, exec, ${unstable.overskride}/bin/overskride"
+
+          "$mod, M, exec, ${pkgs.mission-center}/bin/missioncenter"
+
+          "$mod, Escape, exec, ${unstable.hyprshutdown}/bin/hyprshutdown"
+          ", XF86PowerOff, exec, ${unstable.hyprshutdown}/bin/hyprshutdown"
+
+          "$mod, L, exec, ${pkgs.systemd}/bin/loginctl lock-session"
+
+          "$mod SHIFT, Q, killactive,"
+          "ALT, F4, killactive,"
+
+          "$mod, F, fullscreen,"
+          "$mod, V, togglefloating,"
+
+          "$mod, 1, workspace, 1"
+          "$mod, 2, workspace, 2"
+          "$mod, 3, workspace, 3"
+          "$mod, 4, workspace, 4"
+          "$mod, 5, workspace, 5"
+
+          "$mod SHIFT, 1, movetoworkspace, 1"
+          "$mod SHIFT, 2, movetoworkspace, 2"
+          "$mod SHIFT, 3, movetoworkspace, 3"
+          "$mod SHIFT, 4, movetoworkspace, 4"
+          "$mod SHIFT, 5, movetoworkspace, 5"
+        ];
+
+        # `r` = release: run when the key is released. This is useful for
+        # "press Super by itself" behavior because it avoids firing before
+        # Hyprland knows whether Super is part of a combo like Super+Space.
+        bindr = [
+          "$mod, SUPER_L, exec, ${vicinaeCommand} open"
+          "$mod, SUPER_R, exec, ${vicinaeCommand} open"
+        ];
+
+        # `e` = repeat while held, `l` = locked. These volume/brightness binds
+        # keep changing while the key is held and still work when input is
+        # inhibited, such as while the lock screen is active.
+        bindel = [
+          ", XF86AudioRaiseVolume, exec, ${commands.popupScript}/bin/hypr-shell-popup audio-up"
+          ", XF86AudioLowerVolume, exec, ${commands.popupScript}/bin/hypr-shell-popup audio-down"
+
+          ", XF86MonBrightnessUp, exec, ${pkgs.brightnessctl}/bin/brightnessctl set 5%+ && ${commands.popupScript}/bin/hypr-shell-popup osd-brightness"
+          ", XF86MonBrightnessDown, exec, ${pkgs.brightnessctl}/bin/brightnessctl set 5%- && ${commands.popupScript}/bin/hypr-shell-popup osd-brightness"
+
+          ", XF86KbdBrightnessUp, exec, ${pkgs.brightnessctl}/bin/brightnessctl -d '*::kbd_backlight' set 5%+ && ${commands.popupScript}/bin/hypr-shell-popup osd-keyboard"
+          ", XF86KbdBrightnessDown, exec, ${pkgs.brightnessctl}/bin/brightnessctl -d '*::kbd_backlight' set 5%- && ${commands.popupScript}/bin/hypr-shell-popup osd-keyboard"
+        ];
+
+        # `l` = locked: allow the mute key even when input is inhibited, such as
+        # while the lock screen is active.
+        bindl = [
+          ", XF86AudioMute, exec, ${commands.popupScript}/bin/hypr-shell-popup audio-mute"
+        ];
+
+        # `m` = mouse-style bind: keep running the dispatcher while the mouse
+        # button is held. Used here so Super+left-drag moves a window and
+        # Super+right-drag resizes one.
+        bindm = [
+          "$mod, mouse:272, movewindow"
+          "$mod, mouse:273, resizewindow"
+        ];
+      };
+    };
+
     # Baseline user packages for the Hyprland profile. These are not all visible
     # apps; some are fonts and Qt support libraries that make the UI render
     # correctly.
@@ -58,7 +414,72 @@ in
       qt6.qtimageformats
       qt6.qtsvg
       qt6.qtwayland
+
+      # Hyprland session utilities and apps launched by the keybinds above.
+      brightnessctl
+      commands.airctl
+      commands.popupScript
+      commands.screenrecordScript
+      commands.screenshotScript
+      grim
+      jq
+      libnotify
+      mission-center
+      satty
+      slurp
+      unstable.awww
+      unstable.hyprshutdown
+      unstable.overskride
+      unstable.waypaper
+      wayland-pipewire-idle-inhibit
+      wf-recorder
+      wl-clipboard
     ];
+
+    home.sessionVariables = {
+      # Helps Chromium/Electron apps prefer Wayland behavior under NixOS.
+      NIXOS_OZONE_WL = "1";
+    };
+
+    # .desktop entry for waypaper so it can show up in app launchers like vicinae
+    xdg.desktopEntries.waypaper = {
+      name = "Waypaper";
+      genericName = "Wallpaper Picker";
+      comment = "Pick and apply wallpapers for the Hyprland session";
+      exec = "${unstable.waypaper}/bin/waypaper";
+      icon = "waypaper";
+      terminal = false;
+      categories = [
+        "Utility"
+        "GTK"
+        "DesktopSettings"
+      ];
+    };
+
+    # Waypaper is the wallpaper picker. awww is the background daemon that
+    # actually draws the wallpaper on the Wayland outputs.
+    xdg.configFile."waypaper/config.ini".text = ''
+      [Settings]
+      language = en
+      folder = ${wallpapersDir}
+      backend = awww
+      monitors = All
+      fill = Fill
+      sort = name
+      color = ${theme.lockBackground}
+      subfolders = False
+      all_subfolders = False
+      show_hidden = False
+      show_gifs_only = False
+      show_path_in_tooltip = True
+      number_of_columns = 3
+      use_xdg_state = True
+      zen_mode = False
+
+      # Waypaper replaces $wallpaper with an escaped file path. Leave it
+      # unquoted here so paths with spaces still reach the hook correctly.
+      post_command = ${wallpaperLockHook}/bin/hypr-shell-lock-wallpaper $wallpaper
+    '';
 
     # udiskie watches removable drives. automount=true means USB drives can show
     # up automatically without manually running mount commands.
@@ -68,9 +489,94 @@ in
       notify = true;
     };
 
+    services.hypridle.systemdTarget = hyprlandSessionTarget;
+
+    services.hyprpolkitagent.enable = true;
+
+    # hyprsunset shifts the display color temperature later in the day. Lower
+    # temperature values look warmer/oranger. This is separate from the QML UI.
+    services.hyprsunset = {
+      enable = true;
+      systemdTarget = hyprlandSessionTarget;
+      settings = {
+        profile = [
+          {
+            time = "7:00";
+            identity = true;
+          }
+          {
+            time = "19:00";
+            temperature = 5000;
+          }
+          {
+            time = "22:00";
+            temperature = 4200;
+          }
+        ];
+      };
+    };
+
+    # Extra Hyprland-session user services that do not have dedicated Home
+    # Manager modules in this config. Quickshell, Vicinae, hypridle, and
+    # hyprsunset are configured elsewhere; these are the remaining session
+    # helpers that need to start and stop with hyprland-session.target.
+    systemd.user.services = {
+      # awww is the wallpaper backend daemon. Waypaper chooses the wallpaper,
+      # but awww is the process that actually draws it on the Wayland outputs.
+      hypr-shell-awww = {
+        Unit = {
+          Description = "Wayland wallpaper daemon";
+          PartOf = [ hyprlandSessionTarget ];
+        };
+
+        Install.WantedBy = [ hyprlandSessionTarget ];
+
+        Service = {
+          ExecStart = "${unstable.awww}/bin/awww-daemon";
+          Restart = "on-failure";
+        };
+      };
+
+      # Restore the last Waypaper-selected wallpaper after awww is running.
+      # This is a oneshot because it applies the saved wallpaper and then exits.
+      hypr-shell-waypaper-restore = {
+        Unit = {
+          Description = "Restore Waypaper wallpaper";
+          After = [ "hypr-shell-awww.service" ];
+          PartOf = [ hyprlandSessionTarget ];
+        };
+
+        Install.WantedBy = [ hyprlandSessionTarget ];
+
+        Service = {
+          Type = "oneshot";
+          ExecStart = "${unstable.waypaper}/bin/waypaper --restore";
+          Environment = [ "WALLPAPERS_DIR=${wallpapersDir}" ];
+        };
+      };
+
+      # Block idle while PipeWire reports active media playback, so videos,
+      # calls, and similar media do not let hypridle lock the session.
+      hypr-shell-media-idle-inhibit = {
+        Unit = {
+          Description = "Inhibit idle while PipeWire media is playing";
+          PartOf = [ hyprlandSessionTarget ];
+        };
+
+        Install.WantedBy = [ hyprlandSessionTarget ];
+
+        Service = {
+          ExecStart = "${pkgs.wayland-pipewire-idle-inhibit}/bin/wayland-pipewire-idle-inhibit";
+          Restart = "on-failure";
+        };
+      };
+    };
+
     # xdg-desktop-portal 1.17+ requires an explicit backend selection when
-    # portals are enabled. Hyprland handles compositor-specific portals such as
-    # screen sharing, while GTK covers generic interfaces Hyprland does not implement, such as the file picker.
+    # portals are enabled. The Home Manager Hyprland module already adds the
+    # Hyprland portal, which handles compositor-specific requests such as screen
+    # sharing. This block only adds the GTK portal fallback for generic desktop
+    # requests Hyprland does not implement, such as the file picker.
     #
     # Plain English: portals are the bridge apps use to ask the desktop for
     # things like screen sharing, screenshots, and file pickers in a Wayland
@@ -78,7 +584,6 @@ in
     xdg.portal = {
       enable = true;
       extraPortals = with pkgs; [
-        xdg-desktop-portal-hyprland
         xdg-desktop-portal-gtk
       ];
       config.common.default = [
