@@ -96,10 +96,17 @@ PanelWindow {
                 color: Theme.surfaceVariant
 
                 Rectangle {
+                    id: osdFill
+                    readonly property var fillGradient: Theme.osdGradient(osdWindow.osd.value)
+
                     width: Math.max(0, Math.min(1, osdWindow.osd.value / 100)) * parent.width
                     height: parent.height
                     radius: Theme.trackRadius
-                    color: Theme.primary
+                    gradient: Gradient {
+                        orientation: Gradient.Horizontal
+                        GradientStop { position: 0.0; color: osdFill.fillGradient.start }
+                        GradientStop { position: 1.0; color: osdFill.fillGradient.end }
+                    }
 
                     Behavior on width {
                         NumberAnimation {

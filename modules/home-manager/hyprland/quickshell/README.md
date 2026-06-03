@@ -12,8 +12,8 @@ parts of those windows and receive only the service objects they need.
 - `shell.qml`: top-level service wiring, timers, data pipes, and windows.
 - `GeneratedCommands.qml`: generated command/script paths from Nix.
 - `CommandRunner.qml`: shared command execution and refresh signaling.
-- `PopupCommandBridge.qml`: Hyprland keybind command-file polling exposed as
-  QML request signals.
+- `ShellShortcuts.qml`: Hyprland global shortcut bindings exposed as QML
+  actions.
 - `StatusController.qml`: public status façade passed to UI modules.
 - `AudioStatus.qml`, `BatteryStatus.qml`, `MediaStatus.qml`,
   `SystemStatus.qml`: private status-domain controllers used by
@@ -74,6 +74,12 @@ domain object they receive, such as `powerActions.runPowerProfileSet(...)`,
 instead of embedding command strings or depending on `shell.qml`. Prefer native
 Quickshell services over shell commands when Quickshell already exposes the
 domain, as it does for PipeWire audio, MPRIS media, and UPower battery state.
+
+Hyprland keybinds that target shell behavior should use the `global`
+dispatcher, for example `global, quickshell:quickSettings`, and the matching
+action should live in `ShellShortcuts.qml`. Avoid adding file-polling bridges
+for keybinds; use Quickshell IPC only when an external command-line entry point
+is genuinely needed.
 
 ## Popup Loading
 

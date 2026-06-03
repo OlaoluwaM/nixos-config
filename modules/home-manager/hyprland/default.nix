@@ -38,17 +38,6 @@ let
   wallpapersDir =
     config.home.sessionVariables.WALLPAPERS_DIR or "${config.xdg.userDirs.pictures}/wallpapers";
 
-  # Small command bridge used by Hyprland keybinds. It writes a command into a
-  # runtime file. The Quickshell popup bridge polls that file and opens the
-  # requested popover.
-  popupScript = pkgs.writeShellApplication {
-    name = "hypr-shell-popup";
-    runtimeInputs = with pkgs; [
-      coreutils
-    ];
-    text = builtins.readFile ./scripts/hypr-shell-popup.sh;
-  };
-
   # Waypaper manages the desktop wallpaper. Hyprlock still needs one stable file
   # path for its background, so Waypaper runs this tiny hook after a wallpaper is
   # selected. The hook only updates the lock-screen symlink; it does not choose
@@ -139,12 +128,6 @@ in
         description = "Packaged airctl helper used by Hyprland keybinds.";
       };
 
-      popupScript = lib.mkOption {
-        type = lib.types.package;
-        internal = true;
-        description = "Packaged Quickshell popup command bridge.";
-      };
-
       screenshotScript = lib.mkOption {
         type = lib.types.package;
         internal = true;
@@ -163,7 +146,6 @@ in
     local.hyprland.commands = {
       inherit
         airctl
-        popupScript
         screenshotScript
         screenrecordScript
         ;
@@ -323,7 +305,9 @@ in
           "$mod CTRL, R, exec, ${commands.screenrecordScript}/bin/hypr-shell-record full"
           "$mod ALT, R, exec, ${commands.screenrecordScript}/bin/hypr-shell-record stop"
 
-          "$mod, Q, exec, ${commands.popupScript}/bin/hypr-shell-popup quick-settings"
+          # See ShellShortcuts.qml: Hyprland owns the key chord, Quickshell owns
+          # the named shell actions.
+          "$mod, Q, global, quickshell:quickSettings"
 
           "$mod, E, exec, ${pkgs.nautilus}/bin/nautilus"
           "$mod, N, exec, ${commands.airctl}/bin/airctl"
@@ -363,24 +347,20 @@ in
           "$mod, SUPER_R, exec, ${vicinaeCommand} open"
         ];
 
-        # `e` = repeat while held, `l` = locked. These volume/brightness binds
-        # keep changing while the key is held and still work when input is
-        # inhibited, such as while the lock screen is active.
-        bindel = [
-          ", XF86AudioRaiseVolume, exec, ${commands.popupScript}/bin/hypr-shell-popup audio-up"
-          ", XF86AudioLowerVolume, exec, ${commands.popupScript}/bin/hypr-shell-popup audio-down"
-
-          ", XF86MonBrightnessUp, exec, ${pkgs.brightnessctl}/bin/brightnessctl set 5%+ && ${commands.popupScript}/bin/hypr-shell-popup osd-brightness"
-          ", XF86MonBrightnessDown, exec, ${pkgs.brightnessctl}/bin/brightnessctl set 5%- && ${commands.popupScript}/bin/hypr-shell-popup osd-brightness"
-
-          ", XF86KbdBrightnessUp, exec, ${pkgs.brightnessctl}/bin/brightnessctl -d '*::kbd_backlight' set 5%+ && ${commands.popupScript}/bin/hypr-shell-popup osd-keyboard"
-          ", XF86KbdBrightnessDown, exec, ${pkgs.brightnessctl}/bin/brightnessctl -d '*::kbd_backlight' set 5%- && ${commands.popupScript}/bin/hypr-shell-popup osd-keyboard"
-        ];
-
-        # `l` = locked: allow the mute key even when input is inhibited, such as
-        # while the lock screen is active.
+        # `l` = locked: allow media keys even when input is inhibited, such as
+        # while the lock screen is active. Do not use Hyprland's `e` repeat flag
+        # with `global`; ShellShortcuts.qml owns hold-repeat behavior so a tap
+        # cannot turn into a flood of global shortcut activations.
         bindl = [
-          ", XF86AudioMute, exec, ${commands.popupScript}/bin/hypr-shell-popup audio-mute"
+          ", XF86AudioRaiseVolume, global, quickshell:audioUp"
+          ", XF86AudioLowerVolume, global, quickshell:audioDown"
+          ", XF86AudioMute, global, quickshell:audioMute"
+
+          ", XF86MonBrightnessUp, global, quickshell:brightnessUp"
+          ", XF86MonBrightnessDown, global, quickshell:brightnessDown"
+
+          ", XF86KbdBrightnessUp, global, quickshell:keyboardBrightnessUp"
+          ", XF86KbdBrightnessDown, global, quickshell:keyboardBrightnessDown"
         ];
 
         # `m` = mouse-style bind: keep running the dispatcher while the mouse
@@ -418,7 +398,6 @@ in
       # Hyprland session utilities and apps launched by the keybinds above.
       brightnessctl
       commands.airctl
-      commands.popupScript
       commands.screenrecordScript
       commands.screenshotScript
       grim

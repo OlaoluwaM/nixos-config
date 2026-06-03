@@ -77,9 +77,9 @@ Scope {
                 if (t === "volume") {
                     osdController.show(Icons.volumeName(statusController.muted, statusController.volumePercent), statusController.volumePercent);
                 } else if (t === "brightness") {
-                    if (bri >= 0) osdController.show("brightness", bri);
+                    if (bri >= 0) osdController.show(Icons.brightnessName(bri), bri);
                 } else if (t === "keyboard") {
-                    if (kbd >= 0) osdController.show("keyboard", kbd);
+                    if (kbd >= 0) osdController.show(Icons.keyboardName(kbd), kbd);
                 }
             }
         }
@@ -124,7 +124,14 @@ Scope {
         onStatusRefreshRequested: statusRefreshTimer.restart()
     }
 
-    AudioActions { id: audioActions; runner: commandRunner; status: statusController }
+    AudioActions {
+        id: audioActions
+        runner: commandRunner
+        status: statusController
+        onOsdRequested: function(muted, volumePercent) {
+            osdController.show(Icons.volumeName(muted, volumePercent), volumePercent);
+        }
+    }
     BrightnessActions { id: brightnessActions; runner: commandRunner }
     CaffeineActions { id: caffeineActions; runner: commandRunner; status: statusController }
     MediaActions { id: mediaActions; status: statusController }
@@ -148,15 +155,11 @@ Scope {
     // ── OSD controller ────────────────────────────────────────────────
     OsdController { id: osdController }
 
-    // ── Popup command bridge (Hyprland keybind file → QML signals) ────
-    PopupCommandBridge {
-        onQuickSettingsRequested: popupController.toggle("quickSettings")
-        onAudioUpRequested: audioActions.adjustVolume(5)
-        onAudioDownRequested: audioActions.adjustVolume(-5)
-        onAudioMuteRequested: audioActions.toggleMute()
-        onOsdRefreshRequested: function(osdType) {
-            commandRunner.refreshOsd(osdType);
-        }
+    // ── Hyprland global shortcuts ────────────────────────────────────
+    ShellShortcuts {
+        popups: popupController
+        audioActions: audioActions
+        brightnessActions: brightnessActions
     }
 
     // ── Top bar ────────────────────────────────────────────────────────

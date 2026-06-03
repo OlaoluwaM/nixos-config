@@ -14,13 +14,13 @@ QtObject {
     function adjustBrightness(delta) {
         let op = delta > 0 ? (delta + "%+") : (Math.abs(delta) + "%-");
         root.runner.run(GeneratedCommands.brightnessCommand + " set " + op);
-        root.runner.refreshOsd("brightness");
+        root.runner.refreshOsdDelayed("brightness");
     }
 
     function adjustKbBacklight(delta) {
         let device = "--device='*::kbd_backlight'";
         let op = delta > 0 ? (delta + "%+") : (Math.abs(delta) + "%-");
         root.runner.run(GeneratedCommands.brightnessCommand + " " + device + " set " + op);
-        root.runner.refreshOsd("keyboard");
+        root.runner.refreshOsdDelayed("keyboard");
     }
 }

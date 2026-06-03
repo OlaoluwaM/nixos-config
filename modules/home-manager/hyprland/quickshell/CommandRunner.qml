@@ -3,8 +3,10 @@ pragma ComponentBehavior: Bound
 import QtQml
 import Quickshell
 
-QtObject {
+Scope {
     id: root
+
+    property string delayedOsdType: ""
 
     signal osdRefreshRequested(string osdType)
     signal statusRefreshRequested()
@@ -34,5 +36,19 @@ QtObject {
 
     function refreshOsd(osdType) {
         root.osdRefreshRequested(osdType);
+    }
+
+    function refreshOsdDelayed(osdType) {
+        root.delayedOsdType = osdType;
+        delayedOsdRefreshTimer.restart();
+    }
+
+    // Brightness changes run through detached brightnessctl commands. Wait a
+    // beat (120ms in this case) before the OSD re-reads the device, otherwise it can show the old
+    // value because the sysfs write has not landed yet.
+    Timer {
+        id: delayedOsdRefreshTimer
+        interval: 120
+        onTriggered: root.osdRefreshRequested(root.delayedOsdType)
     }
 }

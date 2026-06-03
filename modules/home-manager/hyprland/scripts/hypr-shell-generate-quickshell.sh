@@ -158,7 +158,6 @@ write_repo_script_wrapper hypr-shell-status "$scripts_dir/hypr-shell-status.sh"
 write_repo_script_wrapper hypr-shell-timezones "$scripts_dir/hypr-shell-timezones.sh"
 write_repo_script_wrapper hypr-shell-power-profile "$scripts_dir/hypr-shell-power-profile.sh"
 write_repo_script_wrapper hypr-shell-caffeine "$scripts_dir/hypr-shell-caffeine.sh"
-write_repo_script_wrapper hypr-shell-popup "$scripts_dir/hypr-shell-popup.sh"
 
 write_command_wrapper sh sh required
 write_command_wrapper cat cat required

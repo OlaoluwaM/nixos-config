@@ -130,13 +130,10 @@ mkdir -p "$session_dir"
 
 bash "$generator_script" --repo "$repo_root" --output "$config_dir"
 
-tty_bin_dir="$runtime_root/bin"
 printf -v quickshell_cmd '%q' "$quickshell_bin"
 printf -v config_dir_arg '%q' "$config_dir"
 printf -v wallpaper_arg '%q' "$wallpaper_path"
 printf -v qs_log_arg '%q' "$runtime_root/quickshell.log"
-printf -v popup_cmd '%q' "$tty_bin_dir/hypr-shell-popup"
-printf -v brightnessctl_cmd '%q' "$tty_bin_dir/brightnessctl"
 
 cat >"$start_wallpaper" <<EOF
 #!/usr/bin/env bash
@@ -235,13 +232,14 @@ bind = SUPER SHIFT, 7, movetoworkspace, 7
 bind = SUPER SHIFT, 8, movetoworkspace, 8
 bind = SUPER SHIFT, 9, movetoworkspace, 9
 
-bindel = , XF86AudioRaiseVolume, exec, ${popup_cmd} audio-up
-bindel = , XF86AudioLowerVolume, exec, ${popup_cmd} audio-down
-bindl = , XF86AudioMute, exec, ${popup_cmd} audio-mute
-bindel = , XF86MonBrightnessUp, exec, ${brightnessctl_cmd} set 5%+ && ${popup_cmd} osd-brightness
-bindel = , XF86MonBrightnessDown, exec, ${brightnessctl_cmd} set 5%- && ${popup_cmd} osd-brightness
-bindel = , XF86KbdBrightnessUp, exec, ${brightnessctl_cmd} -d '*::kbd_backlight' set 5%+ && ${popup_cmd} osd-keyboard
-bindel = , XF86KbdBrightnessDown, exec, ${brightnessctl_cmd} -d '*::kbd_backlight' set 5%- && ${popup_cmd} osd-keyboard
+bind = SUPER, Q, global, quickshell:quickSettings
+bindl = , XF86AudioRaiseVolume, global, quickshell:audioUp
+bindl = , XF86AudioLowerVolume, global, quickshell:audioDown
+bindl = , XF86AudioMute, global, quickshell:audioMute
+bindl = , XF86MonBrightnessUp, global, quickshell:brightnessUp
+bindl = , XF86MonBrightnessDown, global, quickshell:brightnessDown
+bindl = , XF86KbdBrightnessUp, global, quickshell:keyboardBrightnessUp
+bindl = , XF86KbdBrightnessDown, global, quickshell:keyboardBrightnessDown
 EOF
 
 printf 'hypr-shell-tty-test: Hyprland config: %s\n' "$hypr_config" >&2
@@ -252,8 +250,10 @@ printf 'hypr-shell-tty-test: keybinds:\n' >&2
 printf '  Super+Escape / Super+Shift+Q  Exit\n' >&2
 printf '  Super+Return                  Terminal\n' >&2
 printf '  Super+D                       App launcher\n' >&2
+printf '  Super+Q                       Quick settings\n' >&2
 printf '  Super+1-9                     Switch workspace\n' >&2
 printf '  Super+Shift+1-9               Move window to workspace\n' >&2
+printf '  XF86 audio/brightness keys    Quickshell OSD shortcuts\n' >&2
 
 # Always use dbus-run-session to get an isolated D-Bus bus. Without this,
 # the systemd user bus (/run/user/UID/bus) is shared with other sessions

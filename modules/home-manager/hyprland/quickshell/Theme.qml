@@ -109,4 +109,22 @@ Singleton {
     function capsuleGradientEnd() {
         return Qt.tint(surfaceVariant, Qt.rgba(secondary.r, secondary.g, secondary.b, 0.22));
     }
+
+    function osdGradient(value) {
+        // Make the OSD fill brighter as the value rises. OSD values are
+        // percentages, so clamp them to 0-100 and normalize that to 0.0-1.0.
+        // minAlpha is the accent mix at 0%; maxAlpha is the accent mix at 100%.
+        // curve controls when the fill brightens: 1.0 is linear, above 1.0
+        // stays dim longer, below 1.0 brightens sooner.
+        let minAlpha = 0.22;
+        let maxAlpha = 0.95;
+        let curve = 1.0;
+        let clamped = Math.max(0, Math.min(100, value));
+        let normalizedValue = Math.pow(clamped / 100, curve);
+        let alpha = minAlpha + normalizedValue * (maxAlpha - minAlpha);
+        return {
+            start: Qt.tint(surfaceVariant, Qt.rgba(primary.r, primary.g, primary.b, alpha)),
+            end: Qt.tint(surfaceVariant, Qt.rgba(secondary.r, secondary.g, secondary.b, alpha))
+        };
+    }
 }
