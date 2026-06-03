@@ -356,30 +356,18 @@ if have bluetoothctl; then
 fi
 
 # ── Power profile ──────────────────────────────────────────────────────────
-# Raw backend profile string + the list of available profiles. Try
-# power-profiles-daemon, then the vendor-neutral ACPI platform_profile, then
-# the asusctl-aware helper. Casing is left as the backend reports it.
+# The helper owns backend selection and normalization. Keep this status payload
+# aligned with the command QML uses for writes, so the UI never has to learn
+# powerprofilesctl/asusctl naming differences.
 pp_profile=""
 pp_source=""
 pp_available="[]"
-if have powerprofilesctl; then
-	pp_profile="$(powerprofilesctl get 2>/dev/null || true)"
-	[ -n "$pp_profile" ] && pp_source=powerprofilesctl
-	pp_available="$(powerprofilesctl list 2>/dev/null |
-		awk -F': ' '/^[* ] [a-z]/ { gsub(/[* ]/, "", $1); print $1 }' |
-		jq -R . | jq -cs . 2>/dev/null || printf '[]')"
-fi
-if [ -z "$pp_profile" ] && [ -r /sys/firmware/acpi/platform_profile ]; then
-	pp_profile="$(cat /sys/firmware/acpi/platform_profile 2>/dev/null || true)"
-	pp_source=platform_profile
-	if [ -r /sys/firmware/acpi/platform_profile_choices ]; then
-		pp_available="$(tr ' ' '\n' </sys/firmware/acpi/platform_profile_choices |
-			sed '/^$/d' | jq -R . | jq -cs . 2>/dev/null || printf '[]')"
-	fi
-fi
-if [ -z "$pp_profile" ] && have hypr-shell-power-profile; then
+if have hypr-shell-power-profile; then
 	pp_profile="$(hypr-shell-power-profile status 2>/dev/null || true)"
-	pp_source=helper
+	if [ -n "$pp_profile" ] && [ "$pp_profile" != "Unavailable" ]; then
+		pp_source=helper
+		pp_available='["performance","balanced","power-saver"]'
+	fi
 fi
 
 # ── Caffeine (manual idle inhibitor) ────────────────────────────────────────

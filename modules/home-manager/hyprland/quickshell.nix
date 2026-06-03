@@ -34,6 +34,11 @@ let
   # are packages placed on PATH when that executable runs. This is why the shell
   # scripts can call commands like jq, sensors, and nmcli without using
   # hardcoded paths inside the scripts.
+  powerProfileAdapterLib = pkgs.runCommandLocal "hypr-shell-power-profile-adapters" { } ''
+    mkdir -p "$out/lib/hypr-shell-power-profile"
+    cp ${./scripts/power-profile-adapters}/*.sh "$out/lib/hypr-shell-power-profile/"
+  '';
+
   powerProfileScript = pkgs.writeShellApplication {
     name = "hypr-shell-power-profile";
     runtimeInputs = [
@@ -45,7 +50,10 @@ let
       # The helper tries powerprofilesctl first, then asusctl as a fallback.
       unstable.asusctl
     ];
-    text = builtins.readFile ./scripts/hypr-shell-power-profile.sh;
+    text = ''
+      export HYPR_SHELL_POWER_PROFILE_LIB_DIR="${powerProfileAdapterLib}/lib/hypr-shell-power-profile"
+      ${builtins.readFile ./scripts/hypr-shell-power-profile.sh}
+    '';
   };
 
   caffeineScript = pkgs.writeShellApplication {

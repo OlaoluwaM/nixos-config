@@ -37,7 +37,7 @@ QtObject {
     property var bluetoothDevices: []
 
     // ── Power / misc ───────────────────────────────────────────────────
-    property string powerProfile: ""        // raw backend profile string (e.g. "balanced")
+    property string powerProfile: ""        // normalized profile, or "Unavailable"
     property bool caffeineManual: false
 
     // ── Clock (sourced from hypr-shell-timezones.sh) ─────────────────────

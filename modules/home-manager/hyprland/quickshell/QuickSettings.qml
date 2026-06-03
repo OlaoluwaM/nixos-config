@@ -19,11 +19,7 @@ ColumnLayout {
         : quickSettings.batteryPercent <= 20 && !quickSettings.isCharging ? Theme.warning
         : quickSettings.isCharging || quickSettings.status.batteryFull ? Theme.success
         : Theme.textSecondary
-    property string normalizedPowerProfile: {
-        let p = status.powerProfile.toLowerCase();
-        if (p === "saver" || p === "quiet") return "power-saver";
-        return p;
-    }
+    readonly property string currentPowerProfile: status.powerProfile
 
     property string batteryStatusLabel: status.batteryStatusLabel
     spacing: 18
@@ -250,7 +246,7 @@ ColumnLayout {
                 id: profileBtn
                 required property var modelData
 
-                active: quickSettings.normalizedPowerProfile === modelData.value
+                active: quickSettings.currentPowerProfile === modelData.value
                 activeColor: Theme.primary
                 accessibleName: modelData.label
                 bordered: true

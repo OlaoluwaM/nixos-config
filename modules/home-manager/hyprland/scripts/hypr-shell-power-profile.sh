@@ -16,144 +16,117 @@
 #   hypr-shell-power-profile set balanced
 # when the user clicks one exact profile button.
 #
-# If neither backend works, the script prints "Unavailable" instead of failing.
+# If neither backend works, `status` prints "Unavailable" instead of failing.
+# When a backend works, every command prints one normalized profile:
+# performance, balanced, or power-saver.
 
-# Try the standard Linux power profile command first.
-read_powerprofilesctl() {
-	powerprofilesctl get 2>/dev/null || true
-}
+script_dir="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
+adapter_dir="${HYPR_SHELL_POWER_PROFILE_LIB_DIR:-"$script_dir/power-profile-adapters"}"
+backends=""
 
-# ASUS-specific fallback. Nix can put asusctl on any machine, so checking only
-# for the command is not enough. Only try it when the hardware says it is ASUS.
-is_asus_machine() {
-	vendor="$(cat /sys/class/dmi/id/sys_vendor 2>/dev/null || true)"
-	case "$vendor" in
-	*ASUS*) return 0 ;;
-	*) return 1 ;;
-	esac
-}
-
-read_asusctl() {
-	command -v asusctl >/dev/null 2>&1 || return 1
-	is_asus_machine || return 1
-
-	profile="$(asusctl profile get 2>/dev/null || true)"
-	case "$profile" in
-	Quiet | Balanced | Performance) printf '%s\n' "$profile" ;;
+validate_profile() {
+	case "$1" in
+	power-saver | balanced | performance) return 0 ;;
 	*)
-		printf '%s\n' "$profile" |
-			sed -n -e 's/.*Active profile: //p' -e 's/.*Active profile is //p' |
-			head -n 1
+		printf 'hypr-shell-power-profile: unknown profile: %s\n' "$1" >&2
+		return 64
 		;;
 	esac
 }
 
-# Produce the short label shown in the UI.
+select_backend() {
+	for backend in $backends; do
+		if backend_call "$backend" available; then
+			printf '%s\n' "$backend"
+			return 0
+		fi
+	done
+
+	return 1
+}
+
+# Generic backend dispatcher. `backend_call asusctl get` becomes
+# `asusctl_get`, but only after confirming the backend name is in the trusted
+# backend list so arbitrary function names cannot be invoked through arguments.
+backend_call() {
+	backend="$1"
+	operation="$2"
+	shift 2
+
+	case " $backends " in
+	*" $backend "*) ;;
+	*) return 1 ;;
+	esac
+
+	"${backend}_${operation}" "$@"
+}
+
 current_profile() {
-	profile="$(read_powerprofilesctl)"
-
-	if [ -z "$profile" ]; then
-		profile="$(read_asusctl || true)"
-	fi
-
-	if [ -z "$profile" ]; then
+	backend="$(select_backend 2>/dev/null || true)"
+	if [ -z "$backend" ]; then
 		printf 'Unavailable\n'
 		return
 	fi
 
-	case "$profile" in
-	power-saver) printf 'Saver\n' ;;
-	balanced) printf 'Balanced\n' ;;
-	performance) printf 'Performance\n' ;;
-	Quiet | Balanced | Performance) printf '%s\n' "$profile" ;;
-	*) printf '%s\n' "$profile" ;;
-	esac
+	backend_call "$backend" get || printf 'Unavailable\n'
 }
 
-# Cycle through the three standard power-profiles-daemon modes.
-cycle_powerprofilesctl() {
-	current="$(read_powerprofilesctl)"
-
-	case "$current" in
-	power-saver) next="balanced" ;;
-	balanced) next="performance" ;;
-	performance) next="power-saver" ;;
-	*) next="balanced" ;;
-	esac
-
-	powerprofilesctl set "$next"
+no_backend_error() {
+	printf 'hypr-shell-power-profile: no usable power profile backend found\n' >&2
+	exit 1
 }
 
-# ASUS fallback cycle command.
-cycle_asusctl() {
-	command -v asusctl >/dev/null 2>&1 || return 1
-	is_asus_machine || return 1
-	asusctl profile next
-}
+# Adapter filenames are ordered as NN-name.sh. The numeric prefix controls
+# backend preference; the suffix becomes the backend function prefix.
+for adapter in "$adapter_dir"/*.sh; do
+	[ -e "$adapter" ] || {
+		printf 'hypr-shell-power-profile: no backend adapters found in: %s\n' "$adapter_dir" >&2
+		exit 1
+	}
 
-set_powerprofilesctl() {
-	case "$1" in
-	power-saver | balanced | performance) ;;
-	*)
-		printf 'hypr-shell-power-profile: unknown profile: %s\n' "$1" >&2
-		return 64
-		;;
-	esac
-
-	powerprofilesctl set "$1"
-}
-
-set_asusctl() {
-	command -v asusctl >/dev/null 2>&1 || return 1
-	is_asus_machine || return 1
-
-	case "$1" in
-	power-saver) profile="Quiet" ;;
-	balanced) profile="Balanced" ;;
-	performance) profile="Performance" ;;
-	*)
-		printf 'hypr-shell-power-profile: unknown profile: %s\n' "$1" >&2
-		return 64
-		;;
-	esac
-
-	asusctl profile set "$profile"
-}
+	adapter_name="${adapter##*/}"
+	adapter_name="${adapter_name%.sh}"
+	backend="${adapter_name#*-}"
+	backends="${backends:+$backends }$backend"
+	# shellcheck source=/dev/null
+	. "$adapter"
+done
 
 case "${1:-status}" in
 status)
 	current_profile
 	;;
 cycle)
-	changed=0
-	if cycle_powerprofilesctl 2>/dev/null; then
-		changed=1
-	elif cycle_asusctl 2>/dev/null; then
-		changed=1
-	fi
-	current_profile
-	if [ "$changed" -eq 0 ]; then
-		printf 'hypr-shell-power-profile: no usable power profile backend found\n' >&2
+	backend="$(select_backend 2>/dev/null || true)"
+	[ -n "$backend" ] || {
+		printf 'Unavailable\n'
+		no_backend_error
+	}
+
+	backend_call "$backend" cycle || {
+		backend_call "$backend" get 2>/dev/null || printf 'Unavailable\n'
 		exit 1
-	fi
+	}
+	backend_call "$backend" get || printf 'Unavailable\n'
 	;;
 set)
 	if [ -z "${2:-}" ]; then
 		printf 'hypr-shell-power-profile: set needs a profile\n' >&2
 		exit 64
 	fi
+	validate_profile "$2" || exit $?
 
-	changed=0
-	if set_powerprofilesctl "$2" 2>/dev/null; then
-		changed=1
-	elif set_asusctl "$2" 2>/dev/null; then
-		changed=1
-	fi
-	current_profile
-	if [ "$changed" -eq 0 ]; then
-		printf 'hypr-shell-power-profile: no usable power profile backend found\n' >&2
+	backend="$(select_backend 2>/dev/null || true)"
+	[ -n "$backend" ] || {
+		printf 'Unavailable\n'
+		no_backend_error
+	}
+
+	backend_call "$backend" set "$2" || {
+		backend_call "$backend" get 2>/dev/null || printf 'Unavailable\n'
 		exit 1
-	fi
+	}
+	backend_call "$backend" get || printf 'Unavailable\n'
 	;;
 *)
 	printf 'Usage: %s [status|cycle|set PROFILE]\n' "$0" >&2

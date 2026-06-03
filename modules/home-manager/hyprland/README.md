@@ -382,12 +382,18 @@ that behavior is wanted.
 
 ## Power Profiles
 
-The quick settings popover shows the current power profile and cycles it on click.
+The quick settings popover shows the current power profile and lets the user
+choose performance, balanced, or power-saver mode.
 
 The widget is intentionally backend-generic:
 
 - primary backend: `powerprofilesctl`, provided by `power-profiles-daemon`;
 - fallback backend: `asusctl`, only if the command is already available, the machine reports itself as ASUS hardware, and the generic backend cannot be used.
+
+Backend-specific behavior lives in ordered adapter scripts under
+`scripts/power-profile-adapters/`. `hypr-shell-power-profile` discovers those
+adapters, selects the first available backend, and exposes normalized profiles
+to QML: `performance`, `balanced`, `power-saver`, or `Unavailable`.
 
 This keeps Quickshell decoupled from host-specific ASUS policy. On Boreas, the system profile already enables `power-profiles-daemon` and `asusd`, with ASUS power behavior defined in `hosts/boreas/default.nix`.
 
@@ -396,6 +402,7 @@ Useful commands:
 ```sh
 hypr-shell-power-profile status
 hypr-shell-power-profile cycle
+hypr-shell-power-profile set balanced
 powerprofilesctl get
 powerprofilesctl list
 asusctl profile get
