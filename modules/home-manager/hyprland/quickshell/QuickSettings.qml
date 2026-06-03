@@ -82,7 +82,7 @@ ColumnLayout {
         spacing: 12
 
         ShellIcon {
-            name: brightnessSlider.value <= 1 ? "brightnessOff" : "brightness"
+            name: Icons.brightnessName(brightnessSlider.value)
             iconColor: brightnessSlider.value <= 1 ? Theme.textDim : Theme.textSecondary
             implicitSize: 16
         }
