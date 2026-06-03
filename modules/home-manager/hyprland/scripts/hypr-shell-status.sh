@@ -302,7 +302,10 @@ fi
 # ── rfkill (radio block state + airplane mode) ───────────────────────────────
 # There is no single "airplane mode" flag on Linux. Export the raw per-radio
 # block state and derive airplane mode as "devices exist AND all are blocked".
-rf="$(rfkill -J 2>/dev/null || printf '{"rfkilldevices":[]}')"
+if ! rf="$(rfkill -J 2>/dev/null |
+	jq -cs '.[0] // {"rfkilldevices":[]}' 2>/dev/null)" || [ -z "$rf" ]; then
+	rf='{"rfkilldevices":[]}'
+fi
 rf_blocked() {
 	# true if any device of the given type is soft- or hard-blocked
 	printf '%s' "$rf" |
