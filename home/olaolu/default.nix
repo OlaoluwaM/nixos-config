@@ -98,7 +98,6 @@ in
     atool
 
     bat-extras.core
-    bitwarden-desktop
 
     cmake
     claude-code # From https://github.com/sadjow/claude-code-nix
@@ -142,7 +141,7 @@ in
     playerctl
     pgcli
     protobuf
-    protonvpn-gui
+    proton-vpn
     powertop
 
     racket
@@ -166,6 +165,8 @@ in
     zsh-you-should-use # We can include them as plugins
 
     # Packages from unstable channel
+    unstable.bitwarden-desktop
+
     unstable.cabal-install
     unstable.cabal2nix
     unstable.cheat # Creating an overlay would involve more effort than I am willing to expend
@@ -355,5 +356,5 @@ in
   };
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
-  home.stateVersion = "25.11";
+  home.stateVersion = "26.05";
 }

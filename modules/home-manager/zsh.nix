@@ -38,7 +38,7 @@ in
 
     extraOhMyZshPlugins = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [];
+      default = [ ];
       description = "Oh My Zsh plugins to load.";
     };
   };
@@ -50,26 +50,26 @@ in
       # Home Manager sources zsh-autosuggestions directly; no need to also load it as an oh-my-zsh plugin.
       autosuggestion.enable = true;
 
-      sessionVariables =
-        {
-          NVM_DIR = cfg.nvmDir;
-        }
-        // lib.optionalAttrs (cfg.histFilePath != null) {
-          HISTFILE = cfg.histFilePath;
-        };
+      sessionVariables = {
+        NVM_DIR = cfg.nvmDir;
+      }
+      // lib.optionalAttrs (cfg.histFilePath != null) {
+        HISTFILE = cfg.histFilePath;
+      };
 
       oh-my-zsh = {
         enable = true;
         plugins = [
-        "git"
-        "command-not-found"
-        "git-escape-magic"
-        "safe-paste"
-        "gh"
-        "zoxide"
-        "nvm"
-        "direnv"
-      ] ++ cfg.extraOhMyZshPlugins;
+          "git"
+          "command-not-found"
+          "git-escape-magic"
+          "safe-paste"
+          "gh"
+          "zoxide"
+          "nvm"
+          "direnv"
+        ]
+        ++ cfg.extraOhMyZshPlugins;
 
         extraConfig = ''
           zstyle :omz:plugins:nvm autoload yes
