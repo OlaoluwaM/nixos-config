@@ -12,6 +12,7 @@ let
 in
 {
   config = lib.mkIf cfg.enable {
+    catppuccin.hyprlock.enable = true;
     # Beginner orientation:
     #
     # hyprlock is the lock screen. It is what you see after pressing SUPER+L or

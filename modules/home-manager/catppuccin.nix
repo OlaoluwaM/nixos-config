@@ -25,15 +25,17 @@ in
       enable = false;
       flavor = "mocha";
 
-      # Disabling cursors because we already have them configured in desktop.nix
-      cursors.enable = false;
+      kvantum.enable = true;
+      obs.enable = true;
 
       # Some items would require too much work to port to nix for catppuccin-nix theming so just disable them
       # They are all already themed in my dotfiles anyway
       starship.enable = false;
       hyprland.enable = false;
       kitty.enable = false;
+      nvim.enable = false;
       gtk.icon.enable = false; # Catppuccin defaults to the "Papirus" icon theme. We do not want that to clash with the Colloid icon theme we already set
+      cursors.enable = false; # Disabling cursors because we already have them configured in desktop.nix
     };
   };
 }

@@ -44,11 +44,14 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    catppuccin.zsh-syntax-highlighting.enable = true;
+
     programs.zsh = {
       enable = true;
       enableCompletion = true;
       # Home Manager sources zsh-autosuggestions directly; no need to also load it as an oh-my-zsh plugin.
       autosuggestion.enable = true;
+      syntaxHighlighting.enable = true;
 
       sessionVariables = {
         NVM_DIR = cfg.nvmDir;
@@ -81,11 +84,6 @@ in
         {
           name = "you-should-use";
           src = pkgs.zsh-you-should-use.src;
-        }
-
-        {
-          name = "fast-syntax-highlighting";
-          src = pkgs.zsh-fast-syntax-highlighting.src;
         }
       ];
 
