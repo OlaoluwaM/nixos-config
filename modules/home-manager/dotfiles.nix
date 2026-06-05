@@ -15,30 +15,19 @@ let
     config.lib.file.mkOutOfStoreSymlink "${cfg.dotsPath}/${relativeFilepathFromDotsSubPath}";
 
   homeLinks = {
-    "catppuccin.gitconfig".source = mkSourcePath "git/catppuccin.gitconfig";
     ".claude/CLAUDE.md".source = mkSourcePath "claude-code/CLAUDE.md";
     ".claude/settings.json".source = mkSourcePath "claude-code/settings.json";
     ".codex/config.toml".source = mkSourcePath "codex/config.toml";
     ".ghci".source = mkSourcePath "haskell/.ghci";
-    "gitCommitConventionTemplate.txt".source = mkSourcePath "git/gitCommitConventionTemplate.txt";
-    ".gitconfig".source = mkSourcePath "git/.gitconfig";
-    ".githelpers".source = mkSourcePath "git/.githelpers";
-    ".gitignore_global".source = mkSourcePath "git/.gitignore_global";
     ".noti.yaml".source = mkSourcePath "noti/noti.yaml";
-    ".shell-env".source = mkSourcePath "shell/.shell-env";
     ".stack/config.yaml".source = mkSourcePath "stack/config.yaml";
-    ".zshrc.nix.zsh".source = mkSourcePath "shell/.zshrc.nix.zsh";
   };
 
   configLinks = {
-    "fsh/catppuccin-mocha.ini".source = mkSourcePath "fsh/catppuccin-mocha.ini";
     "kitty/current-theme.conf".source = mkSourcePath "kitty/current-theme.conf";
     "kitty/kitty-dark.png".source = mkSourcePath "kitty/kitty-dark.png";
     "kitty/kitty.conf".source = mkSourcePath "kitty/kitty.conf";
     "lazydocker/config.yml".source = mkSourcePath "lazydocker/config.yml";
-    "yazi/Catppuccin Mocha.tmTheme".source = mkSourcePath "yazi/Catppuccin Mocha.tmTheme";
-    "yazi/theme.toml".source = mkSourcePath "yazi/theme.toml";
-    "yazi/yazi.toml".source = mkSourcePath "yazi/yazi.toml";
     "yt-dlp/config".source = mkSourcePath "yt-dlp/config";
   };
 
@@ -61,7 +50,6 @@ in
 
     home.sessionVariables = {
       DOTS = cfg.dotsPath;
-      SHELL_ENV = "${home}/.shell-env";
       SYS_BAK_DIR_NOT_UNDER_GIT = "${home}/sys-bak";
       SYS_BAK_DIR_UNDER_GIT = "${cfg.dotsPath}/system";
       WALLPAPERS_DIR = "${pictures}/wallpapers";

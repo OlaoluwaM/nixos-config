@@ -6,6 +6,12 @@
 }:
 let
   cfg = config.local.zsh;
+  dotfiles = config.local.dotfiles;
+  home = config.home.homeDirectory;
+
+  mkDotfileSource =
+    relativeFilepathFromDotsSubPath:
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles.dotsPath}/${relativeFilepathFromDotsSubPath}";
 in
 {
   options.local.zsh = {
@@ -45,6 +51,17 @@ in
 
   config = lib.mkIf cfg.enable {
     catppuccin.zsh-syntax-highlighting.enable = true;
+
+    home = {
+      file = {
+        ".shell-env".source = mkDotfileSource "shell/.shell-env";
+        ".zshrc.nix.zsh".source = mkDotfileSource "shell/.zshrc.nix.zsh";
+      };
+
+      sessionVariables = {
+        SHELL_ENV = "${home}/.shell-env";
+      };
+    };
 
     programs.zsh = {
       enable = true;

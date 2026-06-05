@@ -18,7 +18,16 @@ in
 
     programs.delta = {
       enable = true;
+      enableGitIntegration = true;
       package = unstable.delta;
+      options = {
+        dark = true;
+        hyperlinks = true;
+        hyperlinks-file-link-format = "vscode://file/{path}:{line}";
+        line-numbers = true;
+        navigate = true;
+        side-by-side = true;
+      };
     };
   };
 }

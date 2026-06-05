@@ -35,8 +35,11 @@ in
     ../../modules/home-manager/fs-layout.nix
     ../../modules/home-manager/fontconfig.nix
     ../../modules/home-manager/fzf.nix
+    ../../modules/home-manager/git.nix
     ../../modules/home-manager/gpg.nix
+    ../../modules/home-manager/lazygit.nix
     ../../modules/home-manager/lsd.nix
+    ../../modules/home-manager/yazi.nix
     ../../modules/home-manager/zsh.nix
   ];
 
@@ -163,7 +166,7 @@ in
     z3
 
     # Packages from unstable channel
-    unstable.bitwarden-desktop
+    unstable.bitwarden-desktop # Might fail due to electron_39 being used and deprecated
 
     unstable.cabal-install
     unstable.cabal2nix
@@ -181,10 +184,6 @@ in
     unstable.gdu
     unstable.git-credential-manager
     # Override example to add plugins, you can do this for any package
-    (unstable.git.override {
-      withSsh = true;
-      withLibsecret = true;
-    })
     unstable.gh
     unstable.go
 
@@ -202,7 +201,6 @@ in
 
     unstable.libdrm
     unstable.lazydocker
-    unstable.lazygit
     unstable.libgcc
     unstable.libva
     unstable.libva-utils
@@ -265,7 +263,6 @@ in
     unstable.witr
     unstable.wireshark
 
-    unstable.yazi
     unstable.yt-dlp
 
     unstable.zoxide
@@ -318,7 +315,10 @@ in
   local.bottom.enable = true;
   local.delta.enable = true;
   local.fzf.enable = true;
+  local.git.enable = true;
+  local.lazygit.enable = true;
   local.lsd.enable = true;
+  local.yazi.enable = true;
 
   local.fsLayout.devDirname = hostConfig.devDirname;
 
