@@ -4,8 +4,8 @@ pragma ComponentBehavior: Bound
 //
 //  This file wires shared services, command-backed data pipes, timers, and the
 //  three PanelWindows that make up the desktop shell. Visual content lives in
-//  Bar.qml, Popovers.qml, and ToastNotifications.qml. Colors, sizing, and
-//  generated command paths live in Theme.qml and GeneratedCommands.qml.
+//  Bar.qml, Popovers.qml, and ToastNotifications.qml. Theme.qml owns colors and
+//  sizing; generated command paths live in GeneratedCommands.qml.
 
 import QtQuick
 import Quickshell

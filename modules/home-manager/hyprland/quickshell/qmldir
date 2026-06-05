@@ -1,5 +1,6 @@
 singleton Theme Theme.qml
 singleton Icons Icons.qml
+singleton GeneratedTheme GeneratedTheme.qml
 singleton GeneratedCommands GeneratedCommands.qml
 ShellIcon 1.0 ShellIcon.qml
 MarqueeText 1.0 MarqueeText.qml

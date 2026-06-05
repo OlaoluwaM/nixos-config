@@ -158,10 +158,10 @@ chmod +x "$start_wallpaper"
 printf -v start_wallpaper_cmd '%q' "$start_wallpaper"
 
 # Mirror the window decoration of the real session so rounding/border tweaks
-# are visible here. Colours are read from the generated Theme.qml (single
-# source) rather than hardcoded; the geometry values mirror the general/
-# decoration blocks in quickshell.nix and must be kept in step with them.
-theme_qml="$config_dir/Theme.qml"
+# are visible here. Colours are read from generated theme tokens rather than
+# hardcoded; the geometry values mirror the general/decoration blocks in
+# quickshell.nix and must be kept in step with them.
+theme_qml="$config_dir/GeneratedTheme.qml"
 read_theme_color() {
 	grep -oE "property color $1:[[:space:]]*\"#[0-9a-fA-F]+\"" "$theme_qml" 2>/dev/null |
 		grep -oE '[0-9a-fA-F]{6,8}' | head -1

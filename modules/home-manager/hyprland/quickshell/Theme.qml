@@ -1,6 +1,5 @@
-// This file is the TTY-test fallback. During home-manager switch, Theme.qml
-// is generated from local.theme options in quickshell.nix. Edit the preset
-// in modules/home-manager/theme.nix instead.
+// Shared design system for the shell. Nix-owned color and font tokens come from
+// GeneratedTheme.qml; static geometry, animation, and helper functions live here.
 pragma Singleton
 
 import QtQuick
@@ -9,31 +8,31 @@ import Quickshell
 Singleton {
     id: root
 
-    // ── Catppuccin Mocha color palette ──────────────────────────────────
-    readonly property color base:           "#1e1e2e"
-    readonly property color surfaceVariant: "#313244"
-    readonly property color surfaceHover:   "#3a3c52"
-    readonly property color surfaceDeep:    "#15161a"
-    readonly property color scrim:          "#000000"
-    readonly property color outline:        "#45475a"
-    readonly property color text:           "#cdd6f4"
-    readonly property color textSecondary:  "#a6adc8"
-    readonly property color textDim:        "#6c7086"
-    readonly property color primary:        "#b4befe"
-    readonly property color secondary:      "#cba6f7"
-    readonly property color error:          "#f38ba8"
-    readonly property color success:        "#a6e3a1"
-    readonly property color warning:        "#f9e2af"
-    readonly property color primaryForeground: "#11111b"
-    readonly property color secondaryForeground: "#11111b"
-    readonly property color errorForeground: "#11111b"
-    readonly property color metricCpu:      "#89b4fa"
-    readonly property color metricMemory:   "#94e2d5"
-    readonly property color metricTemperature: "#fab387"
+    // ── Generated color palette ─────────────────────────────────────────
+    readonly property color base:           GeneratedTheme.base
+    readonly property color surfaceVariant: GeneratedTheme.surfaceVariant
+    readonly property color surfaceHover:   GeneratedTheme.surfaceHover
+    readonly property color surfaceDeep:    GeneratedTheme.surfaceDeep
+    readonly property color scrim:          GeneratedTheme.scrim
+    readonly property color outline:        GeneratedTheme.outline
+    readonly property color text:           GeneratedTheme.text
+    readonly property color textSecondary:  GeneratedTheme.textSecondary
+    readonly property color textDim:        GeneratedTheme.textDim
+    readonly property color primary:        GeneratedTheme.primary
+    readonly property color secondary:      GeneratedTheme.secondary
+    readonly property color error:          GeneratedTheme.error
+    readonly property color success:        GeneratedTheme.success
+    readonly property color warning:        GeneratedTheme.warning
+    readonly property color primaryForeground: GeneratedTheme.primaryForeground
+    readonly property color secondaryForeground: GeneratedTheme.secondaryForeground
+    readonly property color errorForeground: GeneratedTheme.errorForeground
+    readonly property color metricCpu:      GeneratedTheme.metricCpu
+    readonly property color metricMemory:   GeneratedTheme.metricMemory
+    readonly property color metricTemperature: GeneratedTheme.metricTemperature
 
-    // ── Fonts ───────────────────────────────────────────────────────────
-    readonly property string fontFamily:     "SF Pro Display"
-    readonly property string monoFontFamily: "Berkeley Mono"
+    // ── Generated fonts ─────────────────────────────────────────────────
+    readonly property string fontFamily:     GeneratedTheme.fontFamily
+    readonly property string monoFontFamily: GeneratedTheme.monoFontFamily
 
     // ── Type scale (px) ─────────────────────────────────────────────────
     // The recurring text roles, named so panels/capsules stop hardcoding the

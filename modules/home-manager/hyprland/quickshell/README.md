@@ -10,6 +10,7 @@ parts of those windows and receive only the service objects they need.
 ## Files To Start With
 
 - `shell.qml`: top-level service wiring, timers, data pipes, and windows.
+- `GeneratedTheme.qml`: generated color/font tokens from Nix.
 - `GeneratedCommands.qml`: generated command/script paths from Nix.
 - `CommandRunner.qml`: shared command execution and refresh signaling.
 - `ShellShortcuts.qml`: Hyprland global shortcut bindings exposed as QML
@@ -33,7 +34,8 @@ parts of those windows and receive only the service objects they need.
 - `ToastNotifications.qml`: temporary notification cards.
 - `NotificationCard.qml`: shared notification/toast card body.
 - `OsdOverlay.qml`: volume, brightness, and keyboard-backlight overlay.
-- `Theme.qml`: colors, sizes, animation durations, and shared color helpers.
+- `Theme.qml`: shared design system for sizes, animation durations, and color
+  helpers. It reads generated color/font tokens from `GeneratedTheme.qml`.
 - `Icons.qml` and `ShellIcon.qml`: SVG icon data and icon rendering.
 
 ## Shared UI Pieces
@@ -63,9 +65,10 @@ prefer changing one of these components instead of copying a new local block.
 Every new QML file must be added to `qmldir`. This directory has a `qmldir`
 manifest, so Qt does not auto-discover new files.
 
-Home Manager copies this directory as the Quickshell config. Generated files
-such as `Theme.qml` and `GeneratedCommands.qml` are copied first, then
-overwritten by `quickshell.nix` with generated content.
+Home Manager copies this directory as the Quickshell config. Hand-written files
+such as `Theme.qml` are copied as-is; generated files such as
+`GeneratedTheme.qml` and `GeneratedCommands.qml` are overwritten by
+`quickshell.nix` with generated content.
 
 Keep command placeholders such as `@STATUS_SCRIPT@` in
 `GeneratedCommands.qml` only. `quickshell.nix` replaces those placeholders
