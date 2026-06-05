@@ -176,7 +176,8 @@ Scope {
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.namespace: "quickshell-topbar"
 
-        margins { top: 6; left: 10; right: 10; bottom: 0 }
+        // To modify the topbar margins against the screen edge, change the values here
+        margins { top: 18; left: 8; right: 8; bottom: 0 }
         anchors { top: true; left: true; right: true }
 
         Bar {

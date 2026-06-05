@@ -15,13 +15,14 @@ BarCapsule {
     // NetworkCapsule's `connected` wiring so the two radio capsules behave the same.
     readonly property bool powered: !root.status.airplaneMode && root.status.bluetoothPowered
     readonly property var device: root.status.bluetoothDevices.length > 0 ? root.status.bluetoothDevices[0] : null
+    readonly property bool hasLabel: root.powered && root.device !== null
 
     // Live radio lights the capsule up with the primary→secondary accent
     // gradient, matching NetworkCapsule so the two radio capsules read identically.
     active: root.powered
     accentGradient: true
 
-    width: Math.max(Theme.capsuleHeight, btContent.implicitWidth + 20)
+    width: root.hasLabel ? btContent.implicitWidth + 36 : Theme.capsuleHeight
     opacity: root.status.airplaneMode ? 0.35 : 1.0
 
     Behavior on opacity { OpacityAnimator { duration: Theme.animNormal; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve } }
@@ -29,7 +30,7 @@ BarCapsule {
     RowLayout {
         id: btContent
         anchors.centerIn: parent
-        spacing: 5
+        spacing: 10
 
         ShellIcon {
             name: root.powered ? "bluetooth" : "bluetoothOff"
@@ -39,7 +40,7 @@ BarCapsule {
         }
 
         MarqueeText {
-            visible: root.powered && root.device !== null
+            visible: root.hasLabel
             // Append battery when the device reports it (audio gear often doesn't).
             text: root.device ? (root.device.batteryPercent !== null
                 ? root.device.name + " " + root.device.batteryPercent + "%"

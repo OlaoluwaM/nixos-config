@@ -127,12 +127,12 @@ ColumnLayout {
 
         Repeater {
             model: [
-                { icon: "lock",             activeIcon: "lock",             action: "lock",     danger: false, toggle: false },
-                { icon: "notifications",    activeIcon: "notificationsOff", action: "dnd",      danger: false, toggle: true  },
+                { label: qsTr("Lock"),              icon: "lock",             activeIcon: "lock",             action: "lock",     danger: false, toggle: false },
+                { label: qsTr("Do Not Disturb"),    icon: "notifications",    activeIcon: "notificationsOff", action: "dnd",      danger: false, toggle: true  },
                 // activeIcon swaps to the slashed glyph when engaged, matching the
                 // dnd toggle above (engaged → "off" glyph = radios suppressed).
-                { icon: "airplane",         activeIcon: "airplaneOff",      action: "airplane", danger: false, toggle: true  },
-                { icon: "power",            activeIcon: "power",            action: "power",    danger: true,  toggle: false }
+                { label: qsTr("Airplane Mode"),     icon: "airplane",         activeIcon: "airplaneOff",      action: "airplane", danger: false, toggle: true  },
+                { label: qsTr("Power Menu"),        icon: "power",            activeIcon: "power",            action: "power",    danger: true,  toggle: false }
             ]
 
             delegate: IconButton {
@@ -143,7 +143,7 @@ ColumnLayout {
                     || (modelData.action === "airplane" && quickSettings.status.airplaneMode)
                     || (modelData.action === "power" && quickSettings.showPowerMenu)
                 activeColor: modelData.danger ? Theme.error : Theme.primary
-                accessibleName: modelData.action
+                accessibleName: modelData.label
                 bordered: true
                 buttonSize: 42
                 danger: modelData.danger
@@ -160,6 +160,16 @@ ColumnLayout {
                         case "dnd": quickSettings.notifications.toggleDoNotDisturb(); break;
                         case "airplane": quickSettings.connectivityActions.toggleAirplaneMode(); break;
                         case "power": quickSettings.showPowerMenu = !quickSettings.showPowerMenu; break;
+                    }
+                }
+
+                HoverTooltip {
+                    active: toggleBtn.hovered
+                    text: toggleBtn.modelData.label
+                    anchors {
+                        horizontalCenter: parent.horizontalCenter
+                        bottom: parent.top
+                        bottomMargin: 6
                     }
                 }
             }

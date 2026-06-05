@@ -21,6 +21,7 @@ Rectangle {
     // (stop colours come from Theme) rather than copied into each radio capsule.
     property bool accentGradient: false
     readonly property bool activeAccent: root.accentGradient && root.active
+    readonly property bool hoverActive: root.respondToHover && root.hovered
     readonly property Gradient accentFill: Gradient {
         orientation: Gradient.Horizontal
         GradientStop { position: 0.0; color: Theme.capsuleGradientStart() }
@@ -29,11 +30,12 @@ Rectangle {
 
     height: Theme.capsuleHeight
     radius: Theme.capsuleRadius
-    color: Theme.capsuleColor(root.active, root.respondToHover && root.hovered)
+    color: Theme.capsuleColor(root.active, root.hoverActive)
     // Rectangle uses the gradient over `color` when one is set; only live radio
-    // capsules supply one, so every other capsule falls back to `color` above.
-    gradient: root.activeAccent ? root.accentFill : null
-    border.color: Theme.capsuleBorderColor(root.active, root.respondToHover && root.hovered)
+    // capsules supply one. While hovered, live radio capsules fall back to the
+    // same active hover fill as the rest of the bar so feedback stays obvious.
+    gradient: root.activeAccent && !root.hoverActive ? root.accentFill : null
+    border.color: Theme.capsuleBorderColor(root.active, root.hoverActive)
     border.width: 1
     clip: root.clipped
 

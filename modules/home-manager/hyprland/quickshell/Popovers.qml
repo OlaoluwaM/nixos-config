@@ -16,7 +16,7 @@ PanelWindow {
     required property PopupController popups
 
     readonly property int topbarBottom: 70
-    readonly property int topbarGap: 9 // The gap between the topbar/capsules and the top of a popup.
+    readonly property int topbarGap: 18 // The gap between the topbar/capsules and the top of a popup.
     readonly property int popoverTop: root.topbarBottom + root.topbarGap
     readonly property int popoverWindowHeight: 780
     readonly property real trayDefaultHeight: 260

@@ -19,6 +19,7 @@ BarCapsule {
     // radios are not killed. airplaneMode stays separate below to drive dimming.
     readonly property bool connected: !root.status.airplaneMode && root.status.networkOnline
     readonly property bool ethernet: root.status.networkType === "ethernet"
+    readonly property bool hasLabel: root.connected
     // VPN is only shown while there is also a live link for it to ride on.
     readonly property bool vpnActive: root.connected && root.status.vpnOn
 
@@ -28,7 +29,7 @@ BarCapsule {
     active: root.connected
     accentGradient: true
 
-    width: Math.max(Theme.capsuleHeight, netContent.implicitWidth + 28)
+    width: root.hasLabel ? netContent.implicitWidth + 36 : Theme.capsuleHeight
     opacity: root.status.airplaneMode ? 0.35 : 1.0
 
     Behavior on opacity { OpacityAnimator { duration: Theme.animNormal; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve } }
@@ -36,7 +37,7 @@ BarCapsule {
     RowLayout {
         id: netContent
         anchors.centerIn: parent
-        spacing: 5
+        spacing: 10
 
         ShellIcon {
             name: !root.connected ? "networkOff" : (root.ethernet ? "ethernet" : "network")
@@ -46,7 +47,7 @@ BarCapsule {
         }
 
         MarqueeText {
-            visible: root.connected
+            visible: root.hasLabel
             // Ethernet connection names ("Wired connection 1") aren't meaningful,
             // so show a plain label; Wi-Fi keeps its connection/SSID name.
             text: root.ethernet ? qsTr("Ethernet") : root.status.networkName
