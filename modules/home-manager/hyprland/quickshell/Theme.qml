@@ -102,11 +102,11 @@ Singleton {
     // it composites over the capsule surface, not the transparent bar window.
     // Border and text for these capsules stay on the standard accent helpers
     // (capsuleBorderColor / capsuleTextColor with active = true).
-    function capsuleGradientStart() {
-        return Qt.tint(surfaceVariant, Qt.rgba(primary.r, primary.g, primary.b, 0.22));
-    }
-    function capsuleGradientEnd() {
-        return Qt.tint(surfaceVariant, Qt.rgba(secondary.r, secondary.g, secondary.b, 0.22));
+    function capsuleGradient() {
+        return {
+            start: Qt.tint(surfaceVariant, Qt.rgba(primary.r, primary.g, primary.b, 0.22)),
+            end: Qt.tint(surfaceVariant, Qt.rgba(secondary.r, secondary.g, secondary.b, 0.22))
+        };
     }
 
     function osdGradient(value) {

@@ -22,10 +22,11 @@ Rectangle {
     property bool accentGradient: false
     readonly property bool activeAccent: root.accentGradient && root.active
     readonly property bool hoverActive: root.respondToHover && root.hovered
+    readonly property var accentGradientStops: Theme.capsuleGradient()
     readonly property Gradient accentFill: Gradient {
         orientation: Gradient.Horizontal
-        GradientStop { position: 0.0; color: Theme.capsuleGradientStart() }
-        GradientStop { position: 1.0; color: Theme.capsuleGradientEnd() }
+        GradientStop { position: 0.0; color: root.accentGradientStops.start }
+        GradientStop { position: 1.0; color: root.accentGradientStops.end }
     }
 
     height: Theme.capsuleHeight
