@@ -38,6 +38,8 @@ Scope {
     property alias batteryReady: battery.batteryReady
     property alias batteryCharging: battery.batteryCharging
     property alias batteryFull: battery.batteryFull
+    property alias batteryIconName: battery.batteryIconName
+    property alias batteryVisualState: battery.batteryVisualState
     property alias batteryStatusLabel: battery.batteryStatusLabel
 
     // Media (MPRIS, native)

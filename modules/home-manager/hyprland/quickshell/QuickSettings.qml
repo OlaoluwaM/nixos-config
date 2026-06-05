@@ -13,16 +13,19 @@ ColumnLayout {
     required property NotificationService notifications
 
     property int batteryPercent: status.batteryPercent
-    property bool isCharging: status.batteryCharging
     property bool showPowerMenu: false
-    readonly property color batteryStateColor: !quickSettings.status.batteryReady ? Theme.textSecondary
-        : quickSettings.batteryPercent <= 20 && !quickSettings.isCharging ? Theme.warning
-        : quickSettings.isCharging || quickSettings.status.batteryFull ? Theme.success
-        : Theme.textSecondary
+    readonly property color batteryStateColor: quickSettings.batteryColor(quickSettings.status.batteryVisualState)
     readonly property string currentPowerProfile: status.powerProfile
 
     property string batteryStatusLabel: status.batteryStatusLabel
     spacing: 18
+
+    function batteryColor(state) {
+        if (state === "success") return Theme.success;
+        if (state === "error") return Theme.error;
+        if (state === "warning") return Theme.warning;
+        return Theme.textSecondary;
+    }
 
     // ── Battery display ──────────────────────────────────────────────
     Item {
@@ -62,9 +65,21 @@ ColumnLayout {
                 spacing: 6
 
                 ShellIcon {
-                    name: quickSettings.isCharging ? "batteryCharging" : "battery"
+                    id: batteryIcon
+
+                    name: quickSettings.status.batteryIconName
                     iconColor: quickSettings.batteryStateColor
                     implicitSize: 18
+                    opacity: 1.0
+
+                    SequentialAnimation on opacity {
+                        running: quickSettings.status.batteryVisualState === "error"
+                        loops: Animation.Infinite
+                        onStopped: batteryIcon.opacity = 1.0
+
+                        OpacityAnimator { to: 0.35; duration: 550; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve }
+                        OpacityAnimator { to: 1.0; duration: 550; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve }
+                    }
                 }
 
                 StyledText {
