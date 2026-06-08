@@ -21,7 +21,7 @@ Enable the profile by setting the host `desktopProfile` to `"hyprland"` in `flak
 The production launch path is:
 
 ```text
-greetd -> tuigreet -> Hyprland -> Home Manager hyprland.conf -> hyprland-session.target -> user services -> Quickshell QML
+greetd -> tuigreet -> Hyprland -> Home Manager hyprland.lua -> hyprland-session.target -> user services -> Quickshell QML
 ```
 
 Plain English version:
@@ -29,9 +29,9 @@ Plain English version:
 1. `modules/nixos/hyprland.nix` enables Hyprland and `greetd`.
 2. `greetd` shows the `tuigreet` login prompt.
 3. After login, `tuigreet --cmd Hyprland` starts Hyprland directly.
-4. Home Manager writes `~/.config/hypr/hyprland.conf` from `modules/home-manager/hyprland/default.nix`.
-5. Hyprland reads that config and runs the Home Manager-generated `exec-once` near the top of the file.
-6. That `exec-once` imports the Wayland session environment into systemd, stops any stale `hyprland-session.target`, and starts a fresh `hyprland-session.target`.
+4. Home Manager writes `~/.config/hypr/hyprland.lua` from `modules/home-manager/hyprland/default.nix`.
+5. Hyprland reads that config and runs the Home Manager-generated startup hook near the end of the file.
+6. That startup hook imports the Wayland session environment into systemd, stops any stale `hyprland-session.target`, and starts a fresh `hyprland-session.target`.
 7. `hypr-shell-quickshell.service` runs `quickshell --config hyprland`, which loads `~/.config/quickshell/hyprland/shell.qml`.
 
 The setup deliberately avoids UWSM for now. That means this profile does not
@@ -554,7 +554,7 @@ perl -0pi -e 's/^let\n  version = "25\.11";\nin\n//; s/\$\{version\}/25.11/g; s/
 nix eval --json "path:$tmpdir/repo#homeConfigurations.olaolu@boreas.config.systemd.user.services.vicinae.Install.WantedBy"
 nix eval --json "path:$tmpdir/repo#homeConfigurations.olaolu@boreas.config.systemd.user.services.hypr-shell-quickshell.Install.WantedBy"
 nix eval --json "path:$tmpdir/repo#homeConfigurations.olaolu@boreas.config.systemd.user.services.hypr-shell-awww.Install.WantedBy"
-nix eval --raw "path:$tmpdir/repo#homeConfigurations.olaolu@boreas.config.xdg.configFile.\"hypr/hyprland.conf\".text" | sed -n '1,24p'
+nix eval --raw "path:$tmpdir/repo#homeConfigurations.olaolu@boreas.config.xdg.configFile.\"hypr/hyprland.lua\".text" | sed -n '1,24p'
 ```
 
 Expected target result:
@@ -563,9 +563,9 @@ Expected target result:
 ["hyprland-session.target"]
 ```
 
-The generated `hyprland.conf` should start with a Home Manager-generated
-`exec-once` that imports the Wayland session variables and starts
-`hyprland-session.target`.
+The generated `hyprland.lua` should start with Home Manager-generated Lua
+settings and end with a startup hook that imports the Wayland session variables
+and starts `hyprland-session.target`.
 
 Build check:
 
@@ -578,13 +578,12 @@ Hyprland parser check, when the local Hyprland binary supports it:
 
 ```sh
 hyprland=$(nix build "path:$tmpdir/repo#nixosConfigurations.boreas.pkgs.hyprland" --no-link --print-out-paths | tail -n 1)
-"$hyprland/bin/Hyprland" --verify-config --config "$home_profile/home-files/.config/hypr/hyprland.conf"
+"$hyprland/bin/Hyprland" --verify-config --config "$home_profile/home-files/.config/hypr/hyprland.lua"
 ```
 
-This parser check assumes Home Manager is still generating
-`~/.config/hypr/hyprland.conf`. If the profile is later switched to
-`wayland.windowManager.hyprland.configType = "lua"`, update the generated path
-and migrate the keybind syntax before relying on this check.
+This parser check assumes Hyprland's `--verify-config` supports the generated
+Lua config path. If it does not, rely on Nix evaluation/build checks and runtime
+testing inside a real Hyprland session.
 
 Expected parser result:
 

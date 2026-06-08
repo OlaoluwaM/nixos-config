@@ -28,8 +28,27 @@ let
   theme = config.local.theme.colors;
   stripHash = s: lib.removePrefix "#" s;
   hyprlandSessionTarget = "hyprland-session.target";
+  lua = lib.generators.mkLuaInline;
+  luaString = builtins.toJSON;
+  mod = "SUPER";
+  terminal = "kitty";
 
   vicinaeCommand = lib.getExe' config.programs.vicinae.package "vicinae";
+
+  execDispatcher = command: "hl.dsp.exec_cmd(${luaString command})";
+  mkBind = keys: dispatcher: {
+    _args = [
+      keys
+      (lua dispatcher)
+    ];
+  };
+  mkBindWithFlags = keys: dispatcher: flags: {
+    _args = [
+      keys
+      (lua dispatcher)
+      flags
+    ];
+  };
 
   airctl = pkgs.callPackage ../../../pkgs/airctl { };
 
@@ -175,6 +194,11 @@ in
       # the GTK portal fallback is configured below.
       package = null;
 
+      # Hyprland 0.55+ and Home Manager 26.05 support Lua config generation.
+      # Keep this explicit so the profile writes ~/.config/hypr/hyprland.lua
+      # regardless of future Home Manager default changes.
+      configType = "lua";
+
       # When Hyprland starts, Home Manager can copy important session variables
       # into the environment inherited by services run through `systemctl --user`
       # before starting hyprland-session.target. Services started this way, such
@@ -196,179 +220,262 @@ in
         ];
       };
 
-      # Hyprland 0.55+ supports Lua config, and newer Home Manager releases can
-      # generate ~/.config/hypr/hyprland.lua instead of hyprland.conf via
-      # wayland.windowManager.hyprland.configType = "lua". Do not flip that on
-      # casually: many settings below, especially the keybinds, are currently
-      # written as hyprlang-style strings and may need migration before the
-      # generated Lua config works correctly.
       settings = {
         # Monitor rule. Blank monitor name means "apply to all monitors".
         # preferred = use the monitor's preferred resolution/refresh rate.
         # auto = let Hyprland choose the position. 1 = scale factor.
-        monitor = [ ",preferred,auto,1" ];
+        monitor = {
+          output = "";
+          mode = "preferred";
+          position = "auto";
+          scale = 1;
+        };
 
         env = [
-          "XDG_CURRENT_DESKTOP,Hyprland"
-          "XDG_SESSION_DESKTOP,Hyprland"
-          "NIXOS_OZONE_WL,1"
+          {
+            _args = [
+              "XDG_CURRENT_DESKTOP"
+              "Hyprland"
+            ];
+          }
+          {
+            _args = [
+              "XDG_SESSION_DESKTOP"
+              "Hyprland"
+            ];
+          }
+          {
+            _args = [
+              "NIXOS_OZONE_WL"
+              "1"
+            ];
+          }
         ];
 
-        # Runs when Hyprland is already shutting down so no need for hyprshutdown
-        "exec-shutdown" = [
-          "${pkgs.systemd}/bin/systemctl --user stop ${hyprlandSessionTarget}"
-        ];
-
-        input = {
-          kb_layout = "us";
-          follow_mouse = 1;
-          touchpad.natural_scroll = true;
-        };
-
-        general = {
-          gaps_in = 4;
-          gaps_out = 8;
-          border_size = 2;
-          "col.active_border" = "rgb(${stripHash theme.primary})";
-          "col.inactive_border" = "rgb(${stripHash theme.outline})";
-          layout = "dwindle";
-        };
-
-        decoration = {
-          rounding = 14;
-          rounding_power = 3.5;
-          blur = {
-            enabled = true;
-            size = 5;
-            passes = 2;
-          };
-          shadow = {
-            enabled = true;
-            range = 12;
-            render_power = 2;
-            color = "rgba(${stripHash theme.shadowColor})";
-          };
-        };
-
-        animations = {
-          enabled = true;
-          bezier = [ "easeOut, 0.22, 1, 0.36, 1" ];
-          animation = [
-            "windows, 1, 3, easeOut"
-            "border, 1, 4, default"
-            "fade, 1, 3, easeOut"
-            "workspaces, 1, 3, easeOut"
+        # Runs when Hyprland is already shutting down so no need for hyprshutdown.
+        on = {
+          _args = [
+            "hyprland.shutdown"
+            (lua ''
+              function()
+                hl.exec_cmd(${luaString "${pkgs.systemd}/bin/systemctl --user stop ${hyprlandSessionTarget}"})
+              end
+            '')
           ];
         };
 
-        dwindle = {
-          pseudotile = true;
-          preserve_split = true;
+        config = {
+          input = {
+            kb_layout = "us";
+            follow_mouse = 1;
+            touchpad.natural_scroll = true;
+          };
+
+          general = {
+            gaps_in = 4;
+            gaps_out = 8;
+            border_size = 2;
+            "col.active_border" = "rgb(${stripHash theme.primary})";
+            "col.inactive_border" = "rgb(${stripHash theme.outline})";
+            layout = "dwindle";
+          };
+
+          decoration = {
+            rounding = 14;
+            rounding_power = 3.5;
+            blur = {
+              enabled = true;
+              size = 5;
+              passes = 2;
+            };
+            shadow = {
+              enabled = true;
+              range = 12;
+              render_power = 2;
+              color = "rgba(${stripHash theme.shadowColor})";
+            };
+          };
+
+          animations = {
+            enabled = true;
+          };
+
+          dwindle = {
+            preserve_split = true;
+          };
+
+          misc = {
+            disable_hyprland_logo = true;
+            disable_splash_rendering = true;
+            focus_on_activate = true;
+          };
         };
 
-        misc = {
-          disable_hyprland_logo = true;
-          disable_splash_rendering = true;
-          focus_on_activate = true;
+        curve = {
+          _args = [
+            "easeOut"
+            {
+              type = "bezier";
+              points = [
+                [
+                  0.22
+                  1
+                ]
+                [
+                  0.36
+                  1
+                ]
+              ];
+            }
+          ];
         };
 
-        windowrulev2 = [
-          "float,class:^(vicinae)$"
-          "center,class:^(vicinae)$"
-          "size 42% 48%,class:^(vicinae)$"
-          "float,class:^(io.github.airctl)$"
-          "float,class:^(io.github.kaii_lb.Overskride)$"
-          "float,class:^(mission-center)$"
+        animation = [
+          {
+            leaf = "windows";
+            enabled = true;
+            speed = 3;
+            bezier = "easeOut";
+          }
+          {
+            leaf = "border";
+            enabled = true;
+            speed = 4;
+            bezier = "default";
+          }
+          {
+            leaf = "fade";
+            enabled = true;
+            speed = 3;
+            bezier = "easeOut";
+          }
+          {
+            leaf = "workspaces";
+            enabled = true;
+            speed = 3;
+            bezier = "easeOut";
+          }
         ];
 
-        "$mod" = "SUPER";
-        "$terminal" = "kitty";
+        window_rule = [
+          {
+            match.class = "^(vicinae)$";
+            float = true;
+          }
+          {
+            match.class = "^(vicinae)$";
+            center = true;
+          }
+          {
+            match.class = "^(vicinae)$";
+            size = "42% 48%";
+          }
+          {
+            match.class = "^(io.github.airctl)$";
+            float = true;
+          }
+          {
+            match.class = "^(io.github.kaii_lb.Overskride)$";
+            float = true;
+          }
+          {
+            match.class = "^(mission-center)$";
+            float = true;
+          }
+        ];
 
-        # Hyprland bind names can have extra flag letters after `bind`.
-        # The groups below use plain `bind`, `bindr`, `bindel`, `bindl`, and `bindm`.
-        # Docs: https://wiki.hypr.land/0.52.0/Configuring/Binds/#bind-flags
-        #
-        # Plain `bind` runs once when the key is pressed.
+        # Plain binds run once when the key is pressed.
         bind = [
-          "$mod, Return, exec, $terminal"
+          (mkBind "${mod} + Return" (execDispatcher terminal))
 
-          "$mod, Space, exec, ${vicinaeCommand} open"
-          "$mod SHIFT, V, exec, ${vicinaeCommand} 'vicinae://launch/clipboard/history?toggle=true'"
+          (mkBind "${mod} + Space" (execDispatcher "${vicinaeCommand} open"))
+          (mkBind "${mod} + SHIFT + V" (
+            execDispatcher "${vicinaeCommand} 'vicinae://launch/clipboard/history?toggle=true'"
+          ))
 
-          "$mod SHIFT, W, exec, ${unstable.waypaper}/bin/waypaper"
+          (mkBind "${mod} + SHIFT + W" (execDispatcher "${unstable.waypaper}/bin/waypaper"))
 
-          ", F6, exec, ${commands.screenshotScript}/bin/hypr-shell-screenshot area"
-          "SHIFT, F6, exec, ${commands.screenshotScript}/bin/hypr-shell-screenshot full"
-          "CTRL, F6, exec, ${commands.screenshotScript}/bin/hypr-shell-screenshot window"
+          (mkBind "F6" (execDispatcher "${commands.screenshotScript}/bin/hypr-shell-screenshot area"))
+          (mkBind "SHIFT + F6" (execDispatcher "${commands.screenshotScript}/bin/hypr-shell-screenshot full"))
+          (mkBind "CTRL + F6" (
+            execDispatcher "${commands.screenshotScript}/bin/hypr-shell-screenshot window"
+          ))
 
-          "$mod SHIFT, R, exec, ${commands.screenrecordScript}/bin/hypr-shell-record area"
-          "$mod CTRL, R, exec, ${commands.screenrecordScript}/bin/hypr-shell-record full"
-          "$mod ALT, R, exec, ${commands.screenrecordScript}/bin/hypr-shell-record stop"
+          (mkBind "${mod} + SHIFT + R" (
+            execDispatcher "${commands.screenrecordScript}/bin/hypr-shell-record area"
+          ))
+          (mkBind "${mod} + CTRL + R" (
+            execDispatcher "${commands.screenrecordScript}/bin/hypr-shell-record full"
+          ))
+          (mkBind "${mod} + ALT + R" (
+            execDispatcher "${commands.screenrecordScript}/bin/hypr-shell-record stop"
+          ))
 
           # See ShellShortcuts.qml: Hyprland owns the key chord, Quickshell owns
           # the named shell actions.
-          "$mod, Q, global, quickshell:quickSettings"
+          (mkBind "${mod} + Q" "hl.dsp.global(\"quickshell:quickSettings\")")
 
-          "$mod, E, exec, ${pkgs.nautilus}/bin/nautilus"
-          "$mod, N, exec, ${commands.airctl}/bin/airctl"
-          "$mod, B, exec, ${unstable.overskride}/bin/overskride"
+          (mkBind "${mod} + E" (execDispatcher "${pkgs.nautilus}/bin/nautilus"))
+          (mkBind "${mod} + N" (execDispatcher "${commands.airctl}/bin/airctl"))
+          (mkBind "${mod} + B" (execDispatcher "${unstable.overskride}/bin/overskride"))
 
-          "$mod, M, exec, ${pkgs.mission-center}/bin/missioncenter"
+          (mkBind "${mod} + M" (execDispatcher "${pkgs.mission-center}/bin/missioncenter"))
 
-          "$mod, Escape, exec, ${unstable.hyprshutdown}/bin/hyprshutdown"
-          ", XF86PowerOff, exec, ${unstable.hyprshutdown}/bin/hyprshutdown"
+          (mkBind "${mod} + Escape" (execDispatcher "${unstable.hyprshutdown}/bin/hyprshutdown"))
+          (mkBind "XF86PowerOff" (execDispatcher "${unstable.hyprshutdown}/bin/hyprshutdown"))
 
-          "$mod, L, exec, ${pkgs.systemd}/bin/loginctl lock-session"
+          (mkBind "${mod} + L" (execDispatcher "${pkgs.systemd}/bin/loginctl lock-session"))
 
-          "$mod SHIFT, Q, killactive,"
-          "ALT, F4, killactive,"
+          (mkBind "${mod} + SHIFT + Q" "hl.dsp.window.close()")
+          (mkBind "ALT + F4" "hl.dsp.window.close()")
 
-          "$mod, F, fullscreen,"
-          "$mod, V, togglefloating,"
+          (mkBind "${mod} + F" "hl.dsp.window.fullscreen()")
+          (mkBind "${mod} + V" "hl.dsp.window.float()")
 
-          "$mod, 1, workspace, 1"
-          "$mod, 2, workspace, 2"
-          "$mod, 3, workspace, 3"
-          "$mod, 4, workspace, 4"
-          "$mod, 5, workspace, 5"
+          (mkBind "${mod} + 1" "hl.dsp.focus({ workspace = 1 })")
+          (mkBind "${mod} + 2" "hl.dsp.focus({ workspace = 2 })")
+          (mkBind "${mod} + 3" "hl.dsp.focus({ workspace = 3 })")
+          (mkBind "${mod} + 4" "hl.dsp.focus({ workspace = 4 })")
+          (mkBind "${mod} + 5" "hl.dsp.focus({ workspace = 5 })")
 
-          "$mod SHIFT, 1, movetoworkspace, 1"
-          "$mod SHIFT, 2, movetoworkspace, 2"
-          "$mod SHIFT, 3, movetoworkspace, 3"
-          "$mod SHIFT, 4, movetoworkspace, 4"
-          "$mod SHIFT, 5, movetoworkspace, 5"
-        ];
+          (mkBind "${mod} + SHIFT + 1" "hl.dsp.window.move({ workspace = 1 })")
+          (mkBind "${mod} + SHIFT + 2" "hl.dsp.window.move({ workspace = 2 })")
+          (mkBind "${mod} + SHIFT + 3" "hl.dsp.window.move({ workspace = 3 })")
+          (mkBind "${mod} + SHIFT + 4" "hl.dsp.window.move({ workspace = 4 })")
+          (mkBind "${mod} + SHIFT + 5" "hl.dsp.window.move({ workspace = 5 })")
 
-        # `r` = release: run when the key is released. This is useful for
-        # "press Super by itself" behavior because it avoids firing before
-        # Hyprland knows whether Super is part of a combo like Super+Space.
-        bindr = [
-          "$mod, SUPER_L, exec, ${vicinaeCommand} open"
-          "$mod, SUPER_R, exec, ${vicinaeCommand} open"
-        ];
+          # Release binds are useful for "press Super by itself" behavior because
+          # they avoid firing before Hyprland knows whether Super is part of a combo.
+          (mkBindWithFlags "${mod} + SUPER_L" (execDispatcher "${vicinaeCommand} open") { release = true; })
+          (mkBindWithFlags "${mod} + SUPER_R" (execDispatcher "${vicinaeCommand} open") { release = true; })
 
-        # `l` = locked: allow media keys even when input is inhibited, such as
-        # while the lock screen is active. Do not use Hyprland's `e` repeat flag
-        # with `global`; ShellShortcuts.qml owns hold-repeat behavior so a tap
-        # cannot turn into a flood of global shortcut activations.
-        bindl = [
-          ", XF86AudioRaiseVolume, global, quickshell:audioUp"
-          ", XF86AudioLowerVolume, global, quickshell:audioDown"
-          ", XF86AudioMute, global, quickshell:audioMute"
+          # Locked binds allow media keys even when input is inhibited, such as
+          # while the lock screen is active. ShellShortcuts.qml owns hold-repeat
+          # behavior so a tap cannot turn into a flood of global shortcut activations.
+          (mkBindWithFlags "XF86AudioRaiseVolume" "hl.dsp.global(\"quickshell:audioUp\")" { locked = true; })
+          (mkBindWithFlags "XF86AudioLowerVolume" "hl.dsp.global(\"quickshell:audioDown\")" {
+            locked = true;
+          })
+          (mkBindWithFlags "XF86AudioMute" "hl.dsp.global(\"quickshell:audioMute\")" { locked = true; })
 
-          ", XF86MonBrightnessUp, global, quickshell:brightnessUp"
-          ", XF86MonBrightnessDown, global, quickshell:brightnessDown"
+          (mkBindWithFlags "XF86MonBrightnessUp" "hl.dsp.global(\"quickshell:brightnessUp\")" {
+            locked = true;
+          })
+          (mkBindWithFlags "XF86MonBrightnessDown" "hl.dsp.global(\"quickshell:brightnessDown\")" {
+            locked = true;
+          })
 
-          ", XF86KbdBrightnessUp, global, quickshell:keyboardBrightnessUp"
-          ", XF86KbdBrightnessDown, global, quickshell:keyboardBrightnessDown"
-        ];
+          (mkBindWithFlags "XF86KbdBrightnessUp" "hl.dsp.global(\"quickshell:keyboardBrightnessUp\")" {
+            locked = true;
+          })
+          (mkBindWithFlags "XF86KbdBrightnessDown" "hl.dsp.global(\"quickshell:keyboardBrightnessDown\")" {
+            locked = true;
+          })
 
-        # `m` = mouse-style bind: keep running the dispatcher while the mouse
-        # button is held. Used here so Super+left-drag moves a window and
-        # Super+right-drag resizes one.
-        bindm = [
-          "$mod, mouse:272, movewindow"
-          "$mod, mouse:273, resizewindow"
+          # Mouse binds keep running while the mouse button is held. Used here so
+          # Super+left-drag moves a window and Super+right-drag resizes one.
+          (mkBindWithFlags "${mod} + mouse:272" "hl.dsp.window.drag()" { mouse = true; })
+          (mkBindWithFlags "${mod} + mouse:273" "hl.dsp.window.resize()" { mouse = true; })
         ];
       };
     };
