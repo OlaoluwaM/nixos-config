@@ -12,7 +12,14 @@ let
 in
 {
   config = lib.mkIf cfg.enable {
-    catppuccin.hyprlock.enable = true;
+    # Only theme the lock screen through the Catppuccin port when that preset is
+    # active, and never let it source its example layout: the explicit
+    # background/input-field/label blocks below already define every widget, so
+    # useDefaultConfig would append a second, duplicate set of them.
+    catppuccin.hyprlock = {
+      enable = config.local.catppuccin.enable;
+      useDefaultConfig = false;
+    };
     # Beginner orientation:
     #
     # hyprlock is the lock screen. It is what you see after pressing SUPER+L or
