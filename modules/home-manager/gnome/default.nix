@@ -147,15 +147,19 @@ in
     programs.gnome-shell = {
       enable = true;
 
+      # Extensions must match the running GNOME Shell version, which comes from
+      # stable nixpkgs. Source them all from stable `pkgs` so the GNOME version
+      # stays aligned by construction; pulling them from `unstable` works only
+      # while both channels happen to share a GNOME release.
       extensions = [
-        { package = unstable.gnomeExtensions.appindicator; }
-        { package = unstable.gnomeExtensions.blur-my-shell; }
-        { package = unstable.gnomeExtensions.caffeine; }
-        { package = unstable.gnomeExtensions.clipboard-indicator; }
-        { package = unstable.gnomeExtensions.gsconnect; }
-        { package = unstable.gnomeExtensions.just-perfection; }
-        { package = unstable.gnomeExtensions.mpris-label; }
-        { package = unstable.gnomeExtensions.vitals; }
+        { package = pkgs.gnomeExtensions.appindicator; }
+        { package = pkgs.gnomeExtensions.blur-my-shell; }
+        { package = pkgs.gnomeExtensions.caffeine; }
+        { package = pkgs.gnomeExtensions.clipboard-indicator; }
+        { package = pkgs.gnomeExtensions.gsconnect; }
+        { package = pkgs.gnomeExtensions.just-perfection; }
+        { package = pkgs.gnomeExtensions.mpris-label; }
+        { package = pkgs.gnomeExtensions.vitals; }
         { package = pkgs.gnomeExtensions.space-bar; }
       ];
     };
