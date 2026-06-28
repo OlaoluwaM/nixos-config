@@ -55,23 +55,6 @@ in
       #     patches = [ ./change-hello-to-hi.patch ];
       #   });
       # })
-      # For https://github.com/kepano/defuddle
-      (final: prev: {
-        defuddle =
-          let
-            version = "0.18.1";
-          in
-          unstable.defuddle.overrideAttrs (old: {
-            inherit version;
-            src = prev.fetchFromGitHub {
-              owner = "kepano";
-              repo = "defuddle";
-              rev = version;
-              hash = "sha256-e/+eigIzpP0g+ZqTeyZnF6mloaY6UeKcMWfqryCcLbM=";
-            };
-          });
-      })
-
     ];
     # Configure your nixpkgs instance
     config = {
@@ -106,7 +89,7 @@ in
     claude-code # From https://github.com/sadjow/claude-code-nix
     codex # From https://github.com/sadjow/codex-cli-nix
 
-    defuddle # Uses overlay
+    unstable.defuddle
     direnv
     duf
 
