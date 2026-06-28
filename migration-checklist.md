@@ -72,6 +72,7 @@
 - [x] Upgrade to nixos 26.05
 - [x] Ensure hyprland config outputs the new lua config
 - [ ] Do a careful review of the entire thing, particularly, the Hyprland quickshell stuff. just to maintain an understanding of what's going on. The nix stuff specifically, leave out the quickshell stuff for now
+- [ ] Replace the VM-only bootloader before the first real `nixos-rebuild`. `hosts/boreas/default.nix` currently sets `boot.loader.grub.device = "/dev/vda"`, which only exists in the QEMU VM. On the Zephyrus (UEFI/NVMe) switch to `systemd-boot` (`boot.loader.systemd-boot.enable = true` + `boot.loader.efi.canTouchEfiVariables = true`) and drop the GRUB block. This is separate from copying `hardware-configuration.nix`; see the README Troubleshooting section.
 
 ## Optional
 

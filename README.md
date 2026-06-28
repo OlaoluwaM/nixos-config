@@ -17,19 +17,19 @@ After we must setup/initialize home-manager using the following command (the fla
 
 This repo intentionally uses a stable base with selected unstable packages:
 
-- `nixpkgs` points at `nixos-25.11`.
-- `home-manager` points at `release-25.11` and follows stable `nixpkgs`.
+- `nixpkgs` points at `nixos-26.05`.
+- `home-manager` points at `release-26.05` and follows stable `nixpkgs`.
 - `nixpkgs-unstable` is imported separately and passed in as `unstable` for specific packages that benefit from newer versions.
 
 That keeps the NixOS and Home Manager module systems aligned while still allowing newer user packages where needed. This is the safer default for a daily-driver machine and is friendlier while learning Nix than running the whole config on unstable.
 
-If we want to move Home Manager to `master`, then we'd need to have Home Manager track nixpkgs-unstable. In `flake.nix`, change `home-manager.url` to `github:nix-community/home-manager/master` and strongly consider changing `home-manager.inputs.nixpkgs.follows` from `nixpkgs` to `nixpkgs-unstable`. For a fully unstable setup, also make the standalone Home Manager `pkgs` come from `nixpkgs-unstable`. Do not change `home.stateVersion` just because the branch changes; that value is a compatibility pin for migration defaults, not the active Home Manager version. In the command below, we'd also replace `release-25.11` with `master` too.
+If we want to move Home Manager to `master`, then we'd need to have Home Manager track nixpkgs-unstable. In `flake.nix`, change `home-manager.url` to `github:nix-community/home-manager/master` and strongly consider changing `home-manager.inputs.nixpkgs.follows` from `nixpkgs` to `nixpkgs-unstable`. For a fully unstable setup, also make the standalone Home Manager `pkgs` come from `nixpkgs-unstable`. Do not change `home.stateVersion` just because the branch changes; that value is a compatibility pin for migration defaults, not the active Home Manager version. In the command below, we'd also replace `release-26.05` with `master` too.
 
 But the current setup is fine for now. It seems to be the ideal/standard setup. No need to switch it unless there is a compelling reason and if one does arise, it should be documented.
 
 ```bash
 # Match the Home Manager branch pinned in flake.nix.
-nix run github:nix-community/home-manager/release-25.11 -- switch -b backup --flake ~/nixos-config#olaolu@boreas
+nix run github:nix-community/home-manager/release-26.05 -- switch -b backup --flake ~/nixos-config#olaolu@boreas
 ```
 
 Finally, after the above command completes successfully we should be able to just run `home-manager` as a standalone tool like so to apply your home configuration.
@@ -65,3 +65,12 @@ You probably need to update the `hosts/<hostname>/hardware-configuration.nix` fi
 ```shell
 cp /etc/nixos/hardware-configuration.nix ~/nixos-config/hosts/<hostname>/
 ```
+
+The bootloader is configured separately, in `hosts/<hostname>/default.nix`, and
+the current `boreas` values are VM-only (`boot.loader.grub.device = "/dev/vda"`).
+On real hardware this must be replaced before the first `nixos-rebuild`:
+
+- UEFI machines (e.g. the Zephyrus): use `boot.loader.systemd-boot.enable = true`
+  with `boot.loader.efi.canTouchEfiVariables = true`, and drop the GRUB block.
+- BIOS machines: keep GRUB but point `boot.loader.grub.device` at the actual disk
+  (e.g. `/dev/nvme0n1` / `/dev/sda`), not `/dev/vda`.
