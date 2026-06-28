@@ -20,19 +20,25 @@ parts of those windows and receive only the service objects they need.
   `SystemStatus.qml`: private status-domain controllers used by
   `StatusController`.
 - `AudioActions.qml`, `BrightnessActions.qml`, `MediaActions.qml`,
-  `PowerActions.qml`, `ConnectivityActions.qml`: domain APIs used by UI
-  components. Audio/media use native Quickshell services; the others wrap
-  command-backed integrations.
+  `PowerActions.qml`, `ConnectivityActions.qml`, `CaffeineActions.qml`: domain
+  APIs used by UI components. Audio/media use native Quickshell services; the
+  others wrap command-backed integrations.
+- `NotificationService.qml`: the notification server, history/popup models, and
+  do-not-disturb state.
+- `PopupController.qml`, `OsdController.qml`: small state controllers for the
+  active popover and the OSD, driven from `shell.qml`.
 - `Bar.qml`: top bar layout and capsule composition.
 - `WorkspaceCapsule.qml`, `StatsCapsule.qml`, `MediaCapsule.qml`,
   `ClockCapsule.qml`, `NotificationCapsule.qml`, `TrayCapsule.qml`,
   `AirplaneModeCapsule.qml`, `NetworkCapsule.qml`, `BluetoothCapsule.qml`,
-  `QuickSettingsCapsule.qml`: top-bar capsule implementations.
+  `CaffeineCapsule.qml`, `QuickSettingsCapsule.qml`: top-bar capsule
+  implementations.
 - `Popovers.qml`: the popup window and the Loader that swaps popup panels.
 - `QuickSettings.qml`, `CalendarPanel.qml`, `TrayPanel.qml`, `MediaPanel.qml`,
   `NotificationPanel.qml`: popup contents.
 - `ToastNotifications.qml`: temporary notification cards.
 - `NotificationCard.qml`: shared notification/toast card body.
+- `ConfirmDialog.qml`: confirmation modal for destructive power actions.
 - `OsdOverlay.qml`: volume, brightness, and keyboard-backlight overlay.
 - `Theme.qml`: shared design system for sizes, animation durations, and color
   helpers. It reads generated color/font tokens from `GeneratedTheme.qml`.
@@ -46,13 +52,14 @@ The small reusable files keep common visual patterns in one place:
 - `WorkspaceCapsule.qml`, `StatsCapsule.qml`, `MediaCapsule.qml`,
   `ClockCapsule.qml`, `NotificationCapsule.qml`, `TrayCapsule.qml`,
   `AirplaneModeCapsule.qml`, `NetworkCapsule.qml`, `BluetoothCapsule.qml`,
-  `QuickSettingsCapsule.qml`: domain-specific top-bar capsules built on
-  `BarCapsule` or the same geometry constants.
+  `CaffeineCapsule.qml`, `QuickSettingsCapsule.qml`: domain-specific top-bar
+  capsules built on `BarCapsule` or the same geometry constants.
 - `IconButton.qml`: small icon-only button.
 - `ActionButton.qml`: short text action button.
 - `HoverTooltip.qml`: hover label bubble.
+- `StyledText.qml`: the shared text element with the shell's default font.
 - `StyledSlider.qml`: quick-settings slider skin.
-- `NotificationActions.qml`: notification action buttons.
+- `NotificationActionRow.qml`: notification action buttons.
 - `NotificationCard.qml`: shared notification card shell used by toasts and
   the notification panel.
 - `MarqueeText.qml`: text that scrolls only when it is too wide.
