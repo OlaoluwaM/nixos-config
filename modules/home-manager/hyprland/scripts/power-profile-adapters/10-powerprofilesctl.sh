@@ -35,6 +35,9 @@ powerprofilesctl_cycle() {
 	power-saver) next="balanced" ;;
 	balanced) next="performance" ;;
 	performance) next="power-saver" ;;
+	# If the daemon vanished between the availability check and now, $current is
+	# empty; fall back to balanced so set -u can't kill the helper on unset $next.
+	*) next="balanced" ;;
 	esac
 
 	powerprofilesctl_set "$next"

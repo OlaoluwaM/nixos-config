@@ -26,13 +26,16 @@ notify_location() {
 }
 
 record() {
-	notify-send "Recording started" "$output_file"
+	# Guard notifications with `|| true`: under writeShellApplication's `set -e`,
+	# a failing notify-send (daemon down, e.g. during a shell restart) would
+	# otherwise abort before wf-recorder ever starts, or mask the real exit code.
+	notify-send "Recording started" "$output_file" || true
 
 	if wf-recorder "$@" -f "$output_file"; then
 		notify_location "Recording saved" "$output_file" "$screenrecord_dir"
 	else
 		exit_code=$?
-		notify-send "Recording failed" "wf-recorder exited with status $exit_code"
+		notify-send "Recording failed" "wf-recorder exited with status $exit_code" || true
 		exit "$exit_code"
 	fi
 }
@@ -48,9 +51,9 @@ full)
 	;;
 stop)
 	if pkill -INT -x wf-recorder; then
-		notify-send "Stopping recording" "Saving the video file now."
+		notify-send "Stopping recording" "Saving the video file now." || true
 	else
-		notify-send "No recording is running"
+		notify-send "No recording is running" || true
 	fi
 	;;
 *)

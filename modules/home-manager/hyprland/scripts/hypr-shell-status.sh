@@ -347,7 +347,10 @@ if have bluetoothctl; then
 			icon="$(printf '%s\n' "$info" | awk -F': ' '/^[[:space:]]*Icon:/ { print $2; exit }')"
 			# "Battery Percentage: 0x55 (85)" -> the decimal in parens is authoritative.
 			batt="$(printf '%s\n' "$info" | awk -F'[()]' '/Battery Percentage:/ { print $2; exit }')"
-			[ -n "$batt" ] && batt_json="$batt" || batt_json=null
+			# batt feeds --argjson; accept it only when numeric, otherwise a
+			# malformed line would make `jq -n` fail and (under set -e) drop the
+			# entire status payload the QML shell depends on.
+			if [[ "${batt:-}" =~ ^[0-9]+$ ]]; then batt_json="$batt"; else batt_json=null; fi
 			obj="$(jq -n --arg name "$name" --arg mac "$mac" --arg icon "$icon" --argjson battery "$batt_json" \
 				'{ name: $name, mac: $mac, batteryPercent: $battery, icon: $icon }')"
 			bt_devices="$(jq -n --argjson a "$bt_devices" --argjson o "$obj" '$a + [$o]')"
