@@ -17,6 +17,11 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell-notifications"
 
+    // Clip input to the actual toast stack. The window spans the full screen
+    // height/right edge, so without this the empty space below the toasts both
+    // steals clicks and (via the list's HoverHandler) freezes toast timeouts.
+    mask: Region { item: toastList }
+
     anchors {
         top: true
         bottom: true
@@ -26,7 +31,9 @@ PanelWindow {
     ListView {
         id: toastList
         width: 400
-        height: parent.height - 58
+        // Size to the visible cards (capped to available height) so the mask and
+        // the HoverHandler cover only the stack, not the empty space below it.
+        height: Math.min(contentHeight, parent.height - 58)
         spacing: 12
         interactive: false
         model: root.notifications.popupModel

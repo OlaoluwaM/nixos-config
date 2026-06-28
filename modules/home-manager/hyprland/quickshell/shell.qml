@@ -176,11 +176,17 @@ Scope {
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.namespace: "quickshell-topbar"
 
+        // Clip the input region to the visible bar. Without this the whole 96px
+        // surface — including the empty tooltip strip below the bar — accepts
+        // pointer input and steals clicks from windows underneath.
+        mask: Region { item: bar }
+
         // To modify the topbar margins against the screen edge, change the values here
         margins { top: 18; left: 8; right: 8; bottom: 0 }
         anchors { top: true; left: true; right: true }
 
         Bar {
+            id: bar
             caffeineActions: caffeineActions
             connectivityActions: connectivityActions
             mediaActions: mediaActions

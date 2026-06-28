@@ -18,6 +18,11 @@ PanelWindow {
     implicitHeight: 120
     exclusionMode: ExclusionMode.Ignore
 
+    // Clip input to the small OSD card. The window is a full-width bottom strip,
+    // so without this it would intercept clicks across the whole bottom edge for
+    // ~1.8s on every volume/brightness key press.
+    mask: Region { item: osdCard }
+
     anchors {
         bottom: true
         left: true
