@@ -71,20 +71,18 @@ let
     name = "hypr-shell-status";
     runtimeInputs = with pkgs; [
       bluez
-      brightnessctl
       coreutils
-      findutils
       gawk
       gnused
       iproute2
       jq
-      lm_sensors
       networkmanager
-      # hypr-shell-status.sh reads the active profile with `powerprofilesctl`
-      # directly, so the daemon's CLI must be on PATH. (powerProfileScript below
-      # only wraps the *write* path, not this read.)
-      power-profiles-daemon
       caffeineScript
+      # The active power profile is read via `hypr-shell-power-profile status`
+      # (powerProfileScript), which carries its own power-profiles-daemon/asusctl
+      # inputs, so the daemon CLI is not needed directly here. The script reads
+      # temperature and brightness straight from sysfs, so lm_sensors and
+      # brightnessctl are not needed either.
       powerProfileScript
       systemd
       util-linux
