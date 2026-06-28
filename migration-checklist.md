@@ -4,8 +4,7 @@
 - [x] Git install
 - [x] Curl & wget install
 - [x] OMZ installation & Setup
-  - [x] Cleanup dotfiles
-- [ ] Create and add ssh keys to GitHub: Create an idempotent nix script via `writeShellApplication`. Authenticate the GitHub CLI manually
+- [x] Cleanup dotfiles
 - [x] Bootstrap file system using `home.activation`
 - [x] Docker install & setup
 - [x] VSCode install
@@ -17,7 +16,6 @@
   - [x] notebooklm-mcp-cli install
   - [x] Claude-Code install
   - [x] Codex install
-- [ ] AstroNvim setup: I have a [repo](https://github.com/OlaoluwaM/nvim-setup) already so I'll just make a nix script like what I've got in distro-setup
 - [x] Crates install: Handled via nixpkgs
 - [x] Global npm packages
 - [x] Add dotfiles symlink home-manager module using `home.file`
@@ -49,8 +47,32 @@
 - [x] Setup fonts
 - [x] Configure catppuccin-cursors
 - [x] Configure colloid icon theme
-- [ ] Configure catppuccin-nix
-  - [ ] Address potentially conflicting dotfiles: ~~bat~~, fsh, ~~kitty~~, ~~starship~~, yazi, hyprland (might not be an issue)
+  - [x] Address gtk catppuccin conflicts
+- [x] Revise Hyprland config
+- [x] Configure catppuccin-nix
+  - [x] Decide how you want to integrate catppuccin-nix with desktop.nix and theme.nix. Specifically with GTK and QT (Adwatia vs Kvantum). I'd prefer if, when catppuccin is the set theme, we have GTK and QT use it and fallback to Adwatia-dark otherwise
+    - Icon theme should always be Colloid
+    - Cursor theme should always be catppuccin-curosr-mocha-dark
+  - [x] Address potentially conflicting dotfiles: ~~atuin~~, ~~bat~~, ~~kitty~~, ~~starship~~, ~~hyprland (might not be an issue)~~
+  - [x] Theme delta with catppuccin-nix
+  - [x] Theme fzf with catppuccin-nix
+    - [x] There is likely an env variable for fzf theming in the .zshrc file for boreas/nixos, this will need to be removed
+  - [x] Theme lsd with catppuccin-nix
+  - [x] Theme vicinae with catppuccin-nix, but only when hyprland is the desktop profile
+  - [x] Theme lazygit with catppuccin-nix
+  - [x] Theme yazi with catppuccin-nix
+    - [x] Port over config from dotfiles (boreas/nixos)
+  - [x] There are two sources of truth for `delta` theming: delta.nix and the `.gitconfig` in our dotfiles. We need to pick one
+  - [x] Go through and explicitly enable the things you want catppuccin-nix to integrate with
+  - [x] Theme `zsh-syntax-highlighting` with catppuccin-nix
+- [x] Switch from fast-syntax-highlighting back to zsh-syntax-highlighting
+- [x] Handle clashes between catppuccin-nix and the configuration in desktop.nix
 - [x] Document how all `nixos` and `home-manager` commands will now always need to reference our flake to work as we expect
   - [ ] Create shell aliases
-- [ ] Configure borgbackup
+- [x] Upgrade to nixos 26.05
+- [x] Ensure hyprland config outputs the new lua config
+- [ ] Do a careful review of the entire thing, particularly, the Hyprland quickshell stuff. just to maintain an understanding of what's going on. The nix stuff specifically, leave out the quickshell stuff for now
+
+## Optional
+
+- [ ] Configure a non-asus auto power profile management solution

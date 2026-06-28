@@ -121,3 +121,4 @@ or unsubstituted placeholders.
   - Particularly, grouping some of the rightmost capsules together
 - Quickshell script test suite
 - A Quickshell widget that displays device usage metric like AppBlock. Similar to [this](https://github.com/ilyamiro/nixos-configuration/blob/master/previews/screenshot6.png)
+- Frosted glass effect
