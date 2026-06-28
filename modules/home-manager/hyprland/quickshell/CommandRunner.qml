@@ -40,7 +40,12 @@ Scope {
 
     function refreshOsdDelayed(osdType) {
         root.delayedOsdType = osdType;
-        delayedOsdRefreshTimer.restart();
+        // Coalesce instead of restart: key-hold repeats fire every 85ms, so
+        // restarting a 120ms timer each time would defer it forever and freeze
+        // the OSD until release. Leaving a pending timer alone lets it fire mid-
+        // hold and re-arm on the next change, so the OSD tracks the held key.
+        if (!delayedOsdRefreshTimer.running)
+            delayedOsdRefreshTimer.start();
     }
 
     // Brightness changes run through detached brightnessctl commands. Wait a

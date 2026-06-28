@@ -65,18 +65,21 @@ Scope {
         stdout: StdioCollector {
             onStreamFinished: {
                 let parts = this.text.trim().split(" ");
-                let bri = parseInt(parts[0]) || 0;
-                let kbd = parseInt(parts[1]) || 0;
+                // Keep the shell's -1 "no backlight" sentinel intact: parseInt of
+                // a missing/blank field is NaN, which `|| 0` would wrongly turn
+                // into a phantom 0% reading. Map NaN back to -1 instead.
+                let bri = parseInt(parts[0]);
+                if (isNaN(bri)) bri = -1;
+                let kbd = parseInt(parts[1]);
+                if (isNaN(kbd)) kbd = -1;
 
                 statusController.systemStatus.updateOsdReadings(bri);
 
+                // Only brightness/keyboard reach this process now (volume is
+                // shown directly from native state in onOsdRefreshRequested).
+                // Suppress the OSD on the -1 sentinel instead of flashing 0%.
                 let t = osdRefreshTimer.osdType;
-                // bri/kbd come through as -1 when the device has no backlight
-                // (the shell prints the -1 sentinel). Suppress the OSD in that
-                // case instead of flashing a phantom 0% bar.
-                if (t === "volume") {
-                    osdController.show(Icons.volumeName(statusController.muted, statusController.volumePercent), statusController.volumePercent);
-                } else if (t === "brightness") {
+                if (t === "brightness") {
                     if (bri >= 0) osdController.show(Icons.brightnessName(bri), bri);
                 } else if (t === "keyboard") {
                     if (kbd >= 0) osdController.show(Icons.keyboardName(kbd), kbd);
@@ -117,6 +120,13 @@ Scope {
     CommandRunner {
         id: commandRunner
         onOsdRefreshRequested: function(osdType) {
+            // Volume reads live PipeWire state, so show it directly instead of
+            // spawning the brightness-read process (which would also wrongly
+            // gate a real volume OSD behind a backlight read).
+            if (osdType === "volume") {
+                osdController.show(Icons.volumeName(statusController.muted, statusController.volumePercent), statusController.volumePercent);
+                return;
+            }
             osdRefreshTimer.osdType = osdType;
             osdRefreshTimer.restart();
         }
