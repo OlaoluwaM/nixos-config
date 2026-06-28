@@ -108,7 +108,7 @@ ColumnLayout {
             from: 1; to: 100
             // brightnessPercent is null when there is no backlight (e.g. VMs);
             // fall back to empty rather than a fabricated mid-range reading.
-            value: quickSettings.status.brightnessPercent !== null ? quickSettings.status.brightnessPercent : 0
+            externalValue: quickSettings.status.brightnessPercent !== null ? quickSettings.status.brightnessPercent : 0
             accentColor: Theme.primary
             onMoved: quickSettings.brightnessActions.setBrightness(value)
         }
@@ -129,7 +129,9 @@ ColumnLayout {
             id: volumeSlider
             Layout.fillWidth: true
             from: 0; to: 100
-            value: Number(quickSettings.status.volumeText.replace("%", "")) || 0
+            // Use the numeric facade alias, not the presentation string — parsing
+            // volumeText breaks on the "N/A" (no-audio) case, coercing it to 0.
+            externalValue: quickSettings.status.volumePercent
             accentColor: Theme.primary
             onMoved: quickSettings.audioActions.setVolume(value)
         }
