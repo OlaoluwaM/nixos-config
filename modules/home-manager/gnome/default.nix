@@ -458,7 +458,7 @@ in
       # Custom keybindings
       "${mkCustomKeybindingKey 0}" = {
         binding = "<Super>o";
-        command = "flatpak run md.obsidian.Obsidian";
+        command = "obsidian";
         name = "Obsidian";
       };
 
@@ -482,13 +482,14 @@ in
 
       "${mkCustomKeybindingKey 4}" = {
         binding = "<Alt>s";
-        command = "flatpak run com.spotify.Client";
+        command = "spotify";
         name = "Spotify";
       };
 
       "${mkCustomKeybindingKey 5}" = {
         binding = "<Super>d";
-        command = "flatpak run com.discordapp.Discord";
+        # nixpkgs' discord ships the binary as "Discord" (capitalised).
+        command = "Discord";
         name = "Discord";
       };
 

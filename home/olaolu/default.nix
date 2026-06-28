@@ -154,6 +154,7 @@ in
     spotify
 
     texliveFull
+    ticktick # GNOME keybind <Control><Alt>t launches this
     typescript
     typst
 
