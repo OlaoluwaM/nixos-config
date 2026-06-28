@@ -60,6 +60,8 @@ Singleton {
     readonly property int animFast:       150
     readonly property int animNormal:     300
     readonly property int animFade:       200
+    readonly property int animPulse:      550   // slow attention pulse (e.g. low-battery blink)
+    readonly property int animSpring:     400   // playful overshoot move (see spring easing below)
 
     // ── Easing vocabulary (all Easing.Bezier; pick the curve by motion role) ──
     readonly property int easingType: Easing.Bezier
@@ -69,6 +71,11 @@ Singleton {
     readonly property list<real> easingDecel: [0.0, 0.0, 0.2, 1.0, 1.0, 1.0]
     // accel (ease-in) — exits: an element leaves and accelerates away
     readonly property list<real> easingAccel: [0.4, 0.0, 1.0, 1.0, 1.0, 1.0]
+    // spring — overshoots past the target then settles. Uses Qt's built-in Back
+    // easing (not the bezier vocabulary above) because a single cubic bezier
+    // can't express an overshoot beyond the end value. Pair with animSpring.
+    readonly property int easingSpringType: Easing.OutBack
+    readonly property real springOvershoot: 1.4
 
     // ── Capsule state helpers ───────────────────────────────────────────
     // Uniform (active, hovered) signature; each responds to the state it needs:

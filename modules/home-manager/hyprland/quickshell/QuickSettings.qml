@@ -77,8 +77,8 @@ ColumnLayout {
                         loops: Animation.Infinite
                         onStopped: batteryIcon.opacity = 1.0
 
-                        OpacityAnimator { to: 0.35; duration: 550; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve }
-                        OpacityAnimator { to: 1.0; duration: 550; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve }
+                        OpacityAnimator { to: 0.35; duration: Theme.animPulse; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve }
+                        OpacityAnimator { to: 1.0; duration: Theme.animPulse; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve }
                     }
                 }
 

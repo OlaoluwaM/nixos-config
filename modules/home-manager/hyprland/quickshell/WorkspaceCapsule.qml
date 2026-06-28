@@ -119,9 +119,9 @@ Rectangle {
             id: wsHighlightAnim
             enabled: false
             NumberAnimation {
-                duration: 400
-                easing.type: Easing.OutBack
-                easing.overshoot: 1.4
+                duration: Theme.animSpring
+                easing.type: Theme.easingSpringType
+                easing.overshoot: Theme.springOvershoot
             }
         }
 
