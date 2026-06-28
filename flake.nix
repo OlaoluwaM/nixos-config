@@ -56,6 +56,18 @@
       };
 
       boreas = hosts.boreas;
+
+      # Single unstable pkgs instance shared by the NixOS and Home Manager
+      # entrypoints. electron-39 is marked insecure upstream but is pulled in
+      # transitively by unstable.bitwarden-desktop; permit it here so the config
+      # evaluates without --impure / NIXPKGS_ALLOW_INSECURE.
+      unstable = import nixpkgs-unstable {
+        system = boreas.system; # NOTE: replace x86_64-linux with your architecture if necessary
+        config = {
+          allowUnfree = true;
+          permittedInsecurePackages = [ "electron-39.8.10" ];
+        };
+      };
     in
     {
       # NixOS configuration entrypoint
@@ -64,14 +76,8 @@
         # For a new system, just add a new entry like boreas. Although you may want to replace the system arch if necessary
         boreas = nixpkgs.lib.nixosSystem {
           specialArgs = {
-            inherit inputs;
+            inherit inputs unstable;
             hostConfig = boreas;
-            unstable = import nixpkgs-unstable {
-              system = boreas.system; # NOTE: replace x86_64-linux with your architecture if necessary
-              config = {
-                allowUnfree = true;
-              };
-            };
           };
           # > Our main nixos configuration file <
           # For another system config, you'd want to replace this too, to match the new system name
@@ -91,14 +97,8 @@
           pkgs = nixpkgs.legacyPackages.${boreas.system}; # NOTE: replace x86_64-linux with your architecture if necessary
           # All of these will be passed to every imported HM module
           extraSpecialArgs = {
-            inherit inputs;
+            inherit inputs unstable;
             hostConfig = boreas;
-            unstable = import nixpkgs-unstable {
-              system = boreas.system; # NOTE: replace x86_64-linux with your architecture if necessary
-              config = {
-                allowUnfree = true;
-              };
-            };
           };
           # > Our main home-manager configuration file <
           # For a new user profile, you'd need a new entry and replace `./home/olaolu` with whatever the new profile user name is
