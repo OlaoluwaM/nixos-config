@@ -326,7 +326,9 @@ in
   local.zsh = {
     enable = true;
     zshrcConfigPath = "${home}/.zshrc.nix.zsh";
-    histFilePath = "${config.local.dotfiles.dotsPath}/shell/.zsh_history";
+    # Keep shell history OUT of the dotfiles git tree — it can contain secrets,
+    # and atuin already handles cross-machine history. Lives under XDG data.
+    histFilePath = "${config.xdg.dataHome}/zsh/.zsh_history";
   };
 
   local.desktop.profile = hostConfig.desktopProfile;

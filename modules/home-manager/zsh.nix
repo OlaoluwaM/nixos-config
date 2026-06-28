@@ -61,6 +61,15 @@ in
       sessionVariables = {
         SHELL_ENV = "${home}/.shell-env";
       };
+
+      # zsh writes HISTFILE on exit but never creates its parent directory, so
+      # ensure it exists — otherwise history silently fails to persist when
+      # HISTFILE points outside the home root (e.g. under XDG data).
+      activation = lib.mkIf (cfg.histFilePath != null) {
+        ensureZshHistDir = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+          run mkdir -p $VERBOSE_ARG ${lib.escapeShellArg (builtins.dirOf cfg.histFilePath)}
+        '';
+      };
     };
 
     programs.zsh = {
