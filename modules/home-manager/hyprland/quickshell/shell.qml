@@ -57,11 +57,9 @@ Scope {
 
     Process {
         id: osdReadProcess
-        command: [GeneratedCommands.shellCommand, "-c",
-            "bri=$(" + GeneratedCommands.brightnessCommand + " -m 2>/dev/null | " + GeneratedCommands.awkCommand + " -F, '{print $4}' | " + GeneratedCommands.trCommand + " -d '%');" +
-            "kbd=$(" + GeneratedCommands.brightnessCommand + " -m -d '*::kbd_backlight' 2>/dev/null | " + GeneratedCommands.awkCommand + " -F, '{print $4}' | " + GeneratedCommands.trCommand + " -d '%');" +
-            "printf '%s %s' \"${bri:--1}\" \"${kbd:--1}\""
-        ]
+        // Brightness read lives in the generated hypr-shell-osd-read script;
+        // it prints "<display> <keyboard>" percents (-1 when no backlight).
+        command: [GeneratedCommands.osdReadScript]
         stdout: StdioCollector {
             onStreamFinished: {
                 let parts = this.text.trim().split(" ");

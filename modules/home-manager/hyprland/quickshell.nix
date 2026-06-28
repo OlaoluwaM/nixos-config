@@ -103,6 +103,19 @@ let
     text = builtins.readFile ./scripts/hypr-shell-timezones.sh;
   };
 
+  # Reads display + keyboard backlight percents for the OSD. Keeps the brightness
+  # read out of shell.qml so QML calls a single command instead of assembling a
+  # brightnessctl | awk | tr pipeline inline.
+  osdReadScript = pkgs.writeShellApplication {
+    name = "hypr-shell-osd-read";
+    runtimeInputs = with pkgs; [
+      brightnessctl
+      coreutils
+      gawk
+    ];
+    text = builtins.readFile ./scripts/hypr-shell-osd-read.sh;
+  };
+
   # GeneratedTheme.qml contains only Nix-owned tokens. Theme.qml stays in the
   # editable QML tree and owns static geometry, animation, and helper functions.
   generatedThemeQml = ''
@@ -150,11 +163,9 @@ let
   # /nix/store/.../bin/brightnessctl, not simply /usr/bin/brightnessctl.
   commandPlaceholders = [
     "@SHELL_COMMAND@"
-    "@CAT_COMMAND@"
-    "@AWK_COMMAND@"
-    "@TR_COMMAND@"
     "@STATUS_SCRIPT@"
     "@TIMEZONE_SCRIPT@"
+    "@OSD_READ_SCRIPT@"
     "@NETWORK_COMMAND@"
     "@BLUETOOTH_COMMAND@"
     "@POWER_COMMAND@"
@@ -171,11 +182,9 @@ let
 
   commandReplacements = [
     "${pkgs.bash}/bin/sh"
-    "${pkgs.coreutils}/bin/cat"
-    "${pkgs.gawk}/bin/awk"
-    "${pkgs.coreutils}/bin/tr"
     "${statusScript}/bin/hypr-shell-status"
     "${timezoneScript}/bin/hypr-shell-timezones"
+    "${osdReadScript}/bin/hypr-shell-osd-read"
     "${commands.airctl}/bin/airctl"
     "${unstable.overskride}/bin/overskride"
     "${unstable.hyprshutdown}/bin/hyprshutdown -t 'Shutting down...' --post-cmd '${pkgs.systemd}/bin/systemctl poweroff'"
@@ -214,6 +223,7 @@ in
       powerProfileScript
       statusScript
       timezoneScript
+      osdReadScript
     ];
 
     xdg.configFile = {
