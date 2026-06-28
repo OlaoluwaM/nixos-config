@@ -162,7 +162,7 @@ Rectangle {
             Layout.fillWidth: true
         }
 
-        NotificationActions {
+        NotificationActionRow {
             hasActions: root.hasActions
             actionLabels: root.actionLabels
             urgency: root.urgency

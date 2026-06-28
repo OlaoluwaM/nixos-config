@@ -22,7 +22,7 @@ ActionButton 1.0 ActionButton.qml
 StyledText 1.0 StyledText.qml
 StyledSlider 1.0 StyledSlider.qml
 NotificationCard 1.0 NotificationCard.qml
-NotificationActions 1.0 NotificationActions.qml
+NotificationActionRow 1.0 NotificationActionRow.qml
 NotificationService 1.0 NotificationService.qml
 AudioStatus 1.0 AudioStatus.qml
 BatteryStatus 1.0 BatteryStatus.qml

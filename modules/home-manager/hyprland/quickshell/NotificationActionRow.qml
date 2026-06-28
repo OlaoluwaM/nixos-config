@@ -1,11 +1,13 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 
 // Renders the action buttons attached to a notification.
 //
 // Quickshell gives notification actions as live objects, but ListModel entries
-// can only store simple values. shell.qml stores the visible labels as JSON;
-// this component turns those labels back into buttons and reports which index
-// was clicked so shell.qml can invoke the real action object.
+// can only store simple values. NotificationService stores the visible labels
+// as JSON; this component turns those labels back into buttons and reports which
+// index was clicked so NotificationService can invoke the real action object.
 Flow {
     id: root
 
