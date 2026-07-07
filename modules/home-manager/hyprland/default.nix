@@ -487,11 +487,10 @@ in
       # General font/icon support. The Quickshell bar should not depend on Nerd
       # Font glyph icons; it uses SVG icons instead. The symbols font is kept as
       # a broad fallback for terminal/app text that may still contain those
-      # characters outside this shell.
+      # characters outside this shell. Noto (incl. color emoji) comes from the
+      # fontconfig module, which owns the fallback fonts for every profile.
       font-awesome
       nerd-fonts.symbols-only
-      noto-fonts
-      noto-fonts-color-emoji
 
       # Qt Wayland/QML support. Quickshell is a Qt/QML program, so these help
       # editor tooling and Qt apps understand the Wayland session.
@@ -519,7 +518,6 @@ in
       unstable.waypaper
       wayland-pipewire-idle-inhibit
       wf-recorder
-      wl-clipboard
     ];
 
     home.sessionVariables = {

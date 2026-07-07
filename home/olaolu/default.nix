@@ -92,6 +92,7 @@ in
     unstable.defuddle
     duf
 
+    ente-auth
     expect
 
     fish
@@ -148,8 +149,6 @@ in
     z3
 
     # Packages from unstable channel
-    unstable.bitwarden-desktop # Might fail due to electron_39 being used and deprecated
-
     unstable.cabal-install
     unstable.cabal2nix
     unstable.cheat # Creating an overlay would involve more effort than I am willing to expend
@@ -215,6 +214,7 @@ in
     ]))
 
     unstable.rainfrog
+    unstable.readest
     unstable.rip2
     unstable.ripgrep
     unstable.ripgrep-all
@@ -253,12 +253,11 @@ in
   services.flatpak = {
     enable = true;
     packages = [
-      "io.ente.auth"
       "im.riot.Riot"
       "it.mijorus.gearlever"
-      "com.bilingify.readest"
-      "io.github.flattool.Warehouse"
+      "com.bitwarden.desktop"
       "com.github.tchx84.Flatseal"
+      "io.github.flattool.Warehouse"
     ];
     update.auto = {
       enable = true;

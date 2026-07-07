@@ -68,7 +68,6 @@
 - [x] Switch from fast-syntax-highlighting back to zsh-syntax-highlighting
 - [x] Handle clashes between catppuccin-nix and the configuration in desktop.nix
 - [x] Document how all `nixos` and `home-manager` commands will now always need to reference our flake to work as we expect
-  - [ ] Create shell aliases
 - [x] Upgrade to nixos 26.05
 - [x] Ensure hyprland config outputs the new lua config
 - [ ] Do a careful review of the entire thing, particularly, the Hyprland quickshell stuff. just to maintain an understanding of what's going on. The nix stuff specifically, leave out the quickshell stuff for now

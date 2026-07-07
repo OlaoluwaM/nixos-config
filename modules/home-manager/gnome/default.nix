@@ -122,14 +122,16 @@ in
       libappindicator-gtk3
       libgda5
 
+      # Stable to match the hyprland module, so both profiles run the same
+      # version of the same app.
+      mission-center
+
       seahorse
       sticky-notes
 
       # Unstable Packages
       unstable.gthumb
       unstable.gtk3
-
-      unstable.mission-center
 
       unstable.refine
     ];
