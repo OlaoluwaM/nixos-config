@@ -29,6 +29,7 @@ in
     ../../modules/home-manager/atuin.nix
     ../../modules/home-manager/bat.nix
     ../../modules/home-manager/bottom.nix
+    ../../modules/home-manager/deja-dup.nix
     ../../modules/home-manager/delta.nix
     ../../modules/home-manager/desktop.nix
     ../../modules/home-manager/dotfiles.nix
@@ -297,6 +298,7 @@ in
   local.atuin.enable = true;
   local.bat.enable = true;
   local.bottom.enable = true;
+  local.dejaDup.enable = true;
   local.delta.enable = true;
   local.fzf.enable = true;
   local.git.enable = true;
