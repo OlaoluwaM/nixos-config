@@ -84,6 +84,64 @@ in
     (lib.mkIf (cfg.profile != "none") {
       catppuccin.kvantum.enable = useCatppuccinForQt;
 
+      # Default applications for every desktop profile, codifying the explicit
+      # choices from the Fedora install's user-level mimeapps.list. Stock GNOME
+      # defaults (Evince, Loupe, Totem, Nautilus, ...) are deliberately not
+      # pinned: GNOME ships those anyway, and pinning them would leave dangling
+      # entries on the Hyprland profile.
+      #
+      # mimeapps.list is the freedesktop-standard mechanism, honored by GNOME,
+      # Hyprland (via xdg-open and the portals), and anything else that opens
+      # links or files. Note this makes the file Home Manager-managed: changing
+      # default apps in GNOME Settings or "Open With" dialogs won't stick;
+      # change it here instead.
+      xdg.mimeApps = {
+        enable = true;
+
+        defaultApplications =
+          # Firefox owns web content and the browser scheme handlers. It is
+          # installed system-wide by the NixOS config (programs.firefox.enable).
+          # The x-extension-* entries are Firefox-convention pseudo-types for
+          # local HTML-ish files; about/unknown are what GNOME consults when
+          # deciding what "the default browser" is.
+          lib.genAttrs [
+            "text/html"
+            "application/xhtml+xml"
+            "application/x-extension-htm"
+            "application/x-extension-html"
+            "application/x-extension-shtml"
+            "application/x-extension-xhtml"
+            "application/x-extension-xht"
+            "x-scheme-handler/http"
+            "x-scheme-handler/https"
+            "x-scheme-handler/about"
+            "x-scheme-handler/unknown"
+          ] (_: "firefox.desktop")
+          // {
+            # TeX and JSON sources open in VS Code (vscode-fhs ships
+            # code.desktop). JSON used GNOME Text Editor on Fedora, but VS Code
+            # works on every profile.
+            "text/x-tex" = "code.desktop";
+            "application/json" = "code.desktop";
+
+            # slack:// deep links (the nixpkgs slack package ships slack.desktop).
+            "x-scheme-handler/slack" = "slack.desktop";
+
+            # claude-cli:// OAuth callbacks. The claude-code package ships no
+            # desktop file — the CLI writes claude-code-url-handler.desktop
+            # into ~/.local/share/applications at runtime. It can no longer
+            # register the scheme itself (mimeapps.list is read-only under
+            # Home Manager), so the association is pinned here.
+            "x-scheme-handler/claude-cli" = "claude-code-url-handler.desktop";
+          };
+
+        # The gnome module contributes GSConnect's sms:/tel: associations here;
+        # HM merges xdg.mimeApps contributions across modules.
+      };
+
+      # For terminal tools that read $BROWSER instead of going through xdg-open.
+      home.sessionVariables.BROWSER = "firefox";
+
       # Shared app theming for graphical desktop sessions.
       gtk = {
         enable = true;
