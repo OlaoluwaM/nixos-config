@@ -8,6 +8,7 @@
 let
   cfg = config.local.dejaDup;
   home = config.home.homeDirectory;
+  inherit (config.xdg) configHome dataHome userDirs;
 in
 {
   options.local.dejaDup = {
@@ -43,27 +44,29 @@ in
         # Carried over verbatim from the Fedora install. Some entries are
         # Fedora-era (rpms, flatpak data under ~/.var) and are pruned by hand,
         # not by this module.
+        # XDG variables where one exists; plain ${home} only for dirs outside
+        # the XDG layout (sys-bak, flatpak's ~/.var, agent CLIs' dotdirs).
         "include-list" = [
-          "${home}/Downloads/rpms"
-          "${home}/Pictures/memorables"
-          "${home}/Pictures/useful-images"
-          "${home}/.local/share/fonts"
+          "${userDirs.download}/rpms"
+          "${userDirs.pictures}/memorables"
+          "${userDirs.pictures}/useful-images"
+          "${dataHome}/fonts"
           "${home}/sys-bak"
-          "${home}/Videos/useful-stuff"
-          "${home}/Documents"
-          "${home}/Downloads/image-merge-staging-area"
-          "${home}/Videos/random-vids"
-          "${home}/Videos/YouTube"
-          "${home}/Music/local-music"
-          "${home}/Music/lies-o-p-full-soundtrack-original"
-          "${home}/Music/lies-o-p-full-soundtrack-partitioned"
+          "${userDirs.videos}/useful-stuff"
+          userDirs.documents
+          "${userDirs.download}/image-merge-staging-area"
+          "${userDirs.videos}/random-vids"
+          "${userDirs.videos}/YouTube"
+          "${userDirs.music}/local-music"
+          "${userDirs.music}/lies-o-p-full-soundtrack-original"
+          "${userDirs.music}/lies-o-p-full-soundtrack-partitioned"
           "${home}/.var/app/io.github.flattool.Warehouse/data/Snapshots"
           "${home}/.var"
-          "${home}/Desktop/digital-brain"
+          "${userDirs.desktop}/digital-brain"
           "${home}/.claude"
           "${home}/.codex"
-          "${home}/.config"
-          "${home}/Pictures/wallpapers"
+          configHome
+          "${userDirs.pictures}/wallpapers"
         ];
         "exclude-list" = [
           "$TRASH"
