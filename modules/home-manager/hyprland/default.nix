@@ -509,7 +509,12 @@ in
       grim
       jq
       libnotify
+      # Image viewer and PDF reader for the session; GNOME ships equivalents as
+      # part of the desktop, Hyprland has to bring its own. These two are the
+      # defaults declared in xdg.mimeApps below.
+      loupe
       mission-center
+      papers
       satty
       slurp
       unstable.awww
@@ -519,6 +524,44 @@ in
       wayland-pipewire-idle-inhibit
       wf-recorder
     ];
+
+    # Everyday file-type defaults for the Hyprland session, merged into the
+    # xdg.mimeApps set that desktop.nix enables. GNOME gets these as stock
+    # desktop defaults; outside GNOME they must be declared, or xdg-open falls
+    # back to whatever app happens to advertise the type (opening a directory
+    # in VS Code, say). Loupe and Papers are installed above; Nautilus is in
+    # this module's Qt/Wayland group, VLC and Gapless come from home.packages.
+    xdg.mimeApps.defaultApplications =
+      lib.genAttrs [
+        "image/png"
+        "image/jpeg"
+        "image/gif"
+        "image/webp"
+        "image/svg+xml"
+        "image/bmp"
+        "image/tiff"
+        "image/avif"
+      ] (_: "org.gnome.Loupe.desktop")
+      // lib.genAttrs [
+        "video/mp4"
+        "video/x-matroska"
+        "video/webm"
+        "video/mpeg"
+        "video/x-msvideo"
+        "video/quicktime"
+      ] (_: "vlc.desktop")
+      // lib.genAttrs [
+        "audio/mpeg"
+        "audio/flac"
+        "audio/ogg"
+        "audio/x-vorbis+ogg"
+        "audio/mp4"
+        "audio/x-wav"
+      ] (_: "com.github.neithern.g4music.desktop")
+      // {
+        "application/pdf" = "org.gnome.Papers.desktop";
+        "inode/directory" = "org.gnome.Nautilus.desktop";
+      };
 
     home.sessionVariables = {
       # Helps Chromium/Electron apps prefer Wayland behavior under NixOS.
