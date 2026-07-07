@@ -96,7 +96,8 @@ in
           "gh"
           "zoxide"
           "nvm"
-          "direnv"
+          # No "direnv" plugin here: the direnv module's enableZshIntegration
+          # provides the shell hook, and both together would run it twice.
         ]
         ++ cfg.extraOhMyZshPlugins;
 

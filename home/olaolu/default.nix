@@ -32,6 +32,7 @@ in
     ../../modules/home-manager/deja-dup.nix
     ../../modules/home-manager/delta.nix
     ../../modules/home-manager/desktop.nix
+    ../../modules/home-manager/direnv.nix
     ../../modules/home-manager/dotfiles.nix
     ../../modules/home-manager/fs-layout.nix
     ../../modules/home-manager/fontconfig.nix
@@ -91,7 +92,6 @@ in
     codex # From https://github.com/sadjow/codex-cli-nix
 
     unstable.defuddle
-    direnv
     duf
 
     expect
@@ -300,6 +300,7 @@ in
   local.bottom.enable = true;
   local.dejaDup.enable = true;
   local.delta.enable = true;
+  local.direnv.enable = true;
   local.fzf.enable = true;
   local.git.enable = true;
   local.lazygit.enable = true;
