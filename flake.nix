@@ -57,6 +57,14 @@
 
       boreas = hosts.boreas;
 
+      # A variant of the boreas host for running this config inside a QEMU/KVM
+      # guest used to dry-run the migration, where no NVIDIA GPU is passed
+      # through. Reuses all of boreas's host data but reports no GPU, so the
+      # NVIDIA driver + container toolkit (and the CDI generator service that
+      # fails without a GPU) are gated off. Build it in the VM with
+      # `nixos-rebuild switch --flake .#boreas-vm`.
+      boreas-vm = boreas // { gpu = "none"; };
+
       # Single unstable pkgs instance shared by the NixOS and Home Manager
       # entrypoints. electron-39 is marked insecure upstream but is pulled in
       # transitively by unstable.bitwarden-desktop; permit it here so the config
@@ -83,6 +91,19 @@
           # For another system config, you'd want to replace this too, to match the new system name
           modules = [
             nixos-hardware.nixosModules.asus-zephyrus-gu603h
+            ./hosts/boreas
+          ];
+        };
+
+        # VM test target. Same modules as boreas but without the Asus laptop
+        # hardware profile (irrelevant in a guest) and with the no-GPU hostConfig
+        # so the NVIDIA bits are gated off.
+        boreas-vm = nixpkgs.lib.nixosSystem {
+          specialArgs = {
+            inherit inputs unstable;
+            hostConfig = boreas-vm;
+          };
+          modules = [
             ./hosts/boreas
           ];
         };

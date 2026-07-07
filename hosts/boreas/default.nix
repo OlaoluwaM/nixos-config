@@ -17,6 +17,13 @@ let
     username
     userFullName
     ;
+
+  # boreas runs both on bare metal (with a real NVIDIA GPU) and as a QEMU/KVM
+  # guest used to test this config, where no GPU is passed through. Gate all the
+  # NVIDIA bits on the host's declared GPU so the VM rebuild doesn't try to run
+  # the CDI generator (which probes NVML and fails with "Driver Not Loaded").
+  # Mirrors the same flag the home-manager config already uses.
+  hasNvidiaGpu = (hostConfig.gpu or null) == "nvidia";
 in
 {
   # You can import other NixOS modules here
@@ -150,23 +157,25 @@ in
   # Install ZSH
   programs.zsh.enable = true;
 
-  # Enable docker
+  # Enable docker. CDI is only useful with the NVIDIA container toolkit, so it's
+  # gated on the GPU too — otherwise dockerd advertises a feature nothing backs.
   virtualisation.docker = {
     enable = true;
     daemon.settings.features = {
-      cdi = true;
+      cdi = hasNvidiaGpu;
     };
   };
 
-  # Setup docker with nvidia & nvidia-container-toolkit
-  # Nvidia configuration isn't made conditional because boreas will always have an NVIDIA GPU
-  hardware.nvidia-container-toolkit = {
+  # Setup docker with nvidia & nvidia-container-toolkit.
+  # Gated on hasNvidiaGpu so the CDI generator service isn't pulled in on the VM,
+  # where it would fail to initialize NVML (no GPU passed through).
+  hardware.nvidia-container-toolkit = lib.mkIf hasNvidiaGpu {
     enable = true;
     package = unstable.nvidia-container-toolkit;
   };
 
   # Use nvidia proprietary drivers
-  hardware.nvidia = {
+  hardware.nvidia = lib.mkIf hasNvidiaGpu {
     open = false;
     modesetting.enable = true;
     package = config.boot.kernelPackages.nvidiaPackages.production;
@@ -174,15 +183,17 @@ in
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
-  environment.systemPackages = with pkgs; [
-    vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is installed by default.
-    wget
-    curl
-    memtest86plus
-    unstable.nvidia-container-toolkit
-    spice-vdagent
-    virt-viewer
-  ];
+  environment.systemPackages =
+    with pkgs;
+    [
+      vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is installed by default.
+      wget
+      curl
+      memtest86plus
+      spice-vdagent
+      virt-viewer
+    ]
+    ++ lib.optional hasNvidiaGpu unstable.nvidia-container-toolkit;
 
   # All this spice stuff is to make this config viable on a VM guest. Specifically to allow for copy-pasting between host and guest
   # Though it looks like we still need to run spice-vdagent in the foreground for this all to work
