@@ -85,8 +85,6 @@ in
     acpi
     atool
 
-    bat-extras.core
-
     cmake
     claude-code # From https://github.com/sadjow/claude-code-nix
     codex # From https://github.com/sadjow/codex-cli-nix

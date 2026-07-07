@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 
@@ -17,6 +18,10 @@ in
 
     programs.bat = {
       enable = true;
+
+      # The batgrep/batman/batwatch/... companion scripts belong to bat, so
+      # this module owns their installation rather than home.packages.
+      extraPackages = [ pkgs.bat-extras.core ];
 
       config = {
         style = "numbers,header,grid,snip";
