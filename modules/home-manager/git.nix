@@ -2,6 +2,7 @@
   config,
   hostConfig,
   lib,
+  pkgs,
   unstable,
   ...
 }:
@@ -21,6 +22,10 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    # git-adjacent tooling is owned here rather than in home.packages;
+    # programs.git has no extraPackages option, hence the manual entry.
+    home.packages = [ pkgs.git-extras ];
+
     home.file = {
       ".githelpers".source = mkDotfileSource "git/.githelpers";
       ".gitignore_global".source = mkDotfileSource "git/.gitignore_global";

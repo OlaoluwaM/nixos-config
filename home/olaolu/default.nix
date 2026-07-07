@@ -98,7 +98,6 @@ in
     fdupes
 
     gapless
-    git-extras
     glmark2
     gnumake
     google-chrome
