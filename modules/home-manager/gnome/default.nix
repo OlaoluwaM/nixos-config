@@ -146,6 +146,16 @@ in
       "gtk-4.0/bookmarks".text = gtkBookmarks;
     };
 
+    # GSConnect handles sms:/tel: links. Declared next to the extension that
+    # provides the desktop file (merged into the xdg.mimeApps set that
+    # desktop.nix enables); kept as associations rather than defaults,
+    # mirroring the Fedora setup. GSConnect cannot add them itself at runtime
+    # because Home Manager owns mimeapps.list.
+    xdg.mimeApps.associations.added = {
+      "x-scheme-handler/sms" = "org.gnome.Shell.Extensions.GSConnect.desktop";
+      "x-scheme-handler/tel" = "org.gnome.Shell.Extensions.GSConnect.desktop";
+    };
+
     programs.gnome-shell = {
       enable = true;
 
