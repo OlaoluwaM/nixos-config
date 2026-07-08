@@ -10,7 +10,8 @@ Rectangle {
     required property string summary
     required property string body
     required property bool hasActions
-    required property string actionLabels
+    required property string actionsJson
+    required property int defaultActionIndex
     required property int urgency
 
     property bool expanded: false
@@ -59,6 +60,11 @@ Rectangle {
         onClicked: {
             if (root.expandable) {
                 root.cardClicked();
+            } else if (root.defaultActionIndex >= 0) {
+                // Freedesktop convention: the "default" action is invoked by
+                // activating the notification itself, never shown as a button.
+                // Expandable (history) cards keep click-to-expand instead.
+                root.actionInvoked(root.defaultActionIndex);
             }
         }
     }
@@ -164,7 +170,7 @@ Rectangle {
 
         NotificationActionRow {
             hasActions: root.hasActions
-            actionLabels: root.actionLabels
+            actionsJson: root.actionsJson
             urgency: root.urgency
             Layout.fillWidth: true
             Layout.topMargin: 16

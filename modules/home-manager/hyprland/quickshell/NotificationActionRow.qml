@@ -5,14 +5,17 @@ import QtQuick
 // Renders the action buttons attached to a notification.
 //
 // Quickshell gives notification actions as live objects, but ListModel entries
-// can only store simple values. NotificationService stores the visible labels
-// as JSON; this component turns those labels back into buttons and reports which
-// index was clicked so NotificationService can invoke the real action object.
+// can only store simple values. NotificationService stores the button actions
+// as JSON entries of { label, index }, where index points into the live
+// notification.actions array (buttons are a filtered subset — the unlabeled
+// "default" action is excluded). This component turns those entries back into
+// buttons and reports the original index so NotificationService can invoke the
+// real action object.
 Flow {
     id: root
 
     property bool hasActions: false
-    property string actionLabels: "[]"
+    property string actionsJson: "[]"
     property int urgency: 1
     readonly property color accentColor: root.urgency === 2 ? Theme.error
         : root.urgency === 0 ? Theme.secondary
@@ -30,21 +33,20 @@ Flow {
         id: actionButtonDelegate
 
         ActionButton {
-            required property string modelData
-            required property int index
+            required property var modelData
 
-            label: modelData
+            label: modelData.label
             accentColor: root.accentColor
             textColor: root.accentTextColor
             hoverTextColor: root.accentTextColor
             width: implicitWidth
             height: implicitHeight
-            onClicked: root.actionInvoked(index)
+            onClicked: root.actionInvoked(modelData.index)
         }
     }
 
     Repeater {
-        model: root.hasActions ? JSON.parse(root.actionLabels) : []
+        model: root.hasActions ? JSON.parse(root.actionsJson) : []
         delegate: actionButtonDelegate
     }
 }

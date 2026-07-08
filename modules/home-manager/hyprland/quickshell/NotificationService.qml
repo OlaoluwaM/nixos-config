@@ -128,9 +128,23 @@ Scope {
             // Clean up our popup if the app closes/replaces this notification.
             notification.closed.connect(function(reason) { root.handleClosed(id); });
 
-            let labels = [];
-            for (let i = 0; i < notification.actions.length; i++)
-                labels.push(notification.actions[i].text);
+            // Only actions with a visible label become buttons. The freedesktop
+            // "default" action is the click-on-the-notification action, not a
+            // button: GLib apps (Deja Dup et al) send it with an empty label,
+            // so rendering it produced blank buttons. Each button keeps its
+            // original index into notification.actions so invokeAction targets
+            // the right live action object after filtering.
+            let buttons = [];
+            let defaultActionIndex = -1;
+            for (let i = 0; i < notification.actions.length; i++) {
+                let action = notification.actions[i];
+                if (action.identifier === "default") {
+                    if (defaultActionIndex === -1) defaultActionIndex = i;
+                    continue;
+                }
+                if ((action.text || "").trim().length === 0) continue;
+                buttons.push({ label: action.text, index: i });
+            }
 
             let entry = {
                 notifId: id,
@@ -138,8 +152,9 @@ Scope {
                 summary: (notification.summary || "").trim() || "Notification",
                 body: notification.body || "",
                 timestamp: Date.now(),
-                hasActions: notification.actions.length > 0,
-                actionLabels: JSON.stringify(labels),
+                hasActions: buttons.length > 0,
+                actionsJson: JSON.stringify(buttons),
+                defaultActionIndex: defaultActionIndex,
                 urgency: notification.urgency || 0
             };
             root.addEntry(entry);
