@@ -12,7 +12,7 @@ This module is a small Hyprland baseline for the `hyprland` desktop profile. It 
 - `modules/home-manager/hyprland/hyprlock.nix`: lock screen.
 - `modules/home-manager/hyprland/hypridle.nix`: idle lock and display-off behavior.
 - `modules/home-manager/vicinae.nix`: generic Vicinae program config. The Hyprland profile imports and targets it at `hyprland-session.target`.
-- `modules/home-manager/hyprland/scripts/`: Quickshell helper scripts, Hyprland keybind helpers, and temporary TTY test helpers.
+- `modules/home-manager/hyprland/scripts/`: Quickshell helper scripts and Hyprland keybind helpers.
 
 Enable the profile by setting the host `desktopProfile` to `"hyprland"` in `flake.nix`.
 
@@ -90,15 +90,8 @@ and deliberately **omits** both a `#!/usr/bin/env bash` shebang and an in-body
   `SC2148` and the POSIX-`sh` false positives on bash-isms like `[[ ]]`, `<<<`,
   arrays, and `${var//pat/repl}`.
 
-Caveat: the Fast Host Testing harness runs these via `exec bash "$script"`, so
-they do not get strict mode in the TTY path (same as production relies on the
-builder). If a script ever becomes directly invoked by its own path, restore a
-real shebang.
-
-The two host-side harness scripts — `hypr-shell-generate-quickshell.sh` and
-`hypr-shell-tty-test.sh` — are the exception. They are run directly (not
-embedded in a builder), so they intentionally keep a `#!/usr/bin/env bash`
-shebang and their own `set -euo pipefail`.
+If a script ever becomes directly invoked by its own path, restore a real
+shebang and its own `set -euo pipefail`.
 
 ## Desktop Shape
 
@@ -139,122 +132,6 @@ use Nerd Font glyph icons. Glyph icons are special characters inside patched
 fonts; when the patched font is missing or Qt chooses a different font, those
 icons show up as boxes or incorrect symbols. SVG icons avoid that dependency.
 
-## Fast Host Testing
-
-For faithful host-side testing on a non-NixOS machine, run Hyprland from a real
-TTY and launch Quickshell inside it. This helper is deliberately not installed
-by Home Manager and is not part of the production NixOS setup.
-
-A TTY is the full-screen text login reached with `Ctrl+Alt+F3`, `Ctrl+Alt+F4`, etc. It is not a terminal window inside GNOME. The TTY helper intentionally refuses to run when `DISPLAY` or `WAYLAND_DISPLAY` is set because that means you are still inside a graphical desktop.
-
-Typical flow from the Fedora host:
-
-```sh
-Ctrl+Alt+F3
-login
-cd ~/Desktop/labs/nixos-config
-./modules/home-manager/hyprland/scripts/hypr-shell-tty-test.sh
-```
-
-The helper reads the working-tree `shell.qml`, generates a temporary Quickshell config under `$XDG_RUNTIME_DIR/hypr-shell-tty-test`, writes a temporary Hyprland config, and launches:
-
-```sh
-Hyprland --config "$XDG_RUNTIME_DIR/hypr-shell-tty-test/hyprland/hyprland.conf"
-```
-
-That temporary Hyprland config launches Quickshell with real `PanelWindow`/layer-shell behavior. Quickshell startup logs for this test session are written under:
-
-```text
-$XDG_RUNTIME_DIR/hypr-shell-tty-test/quickshell.log
-```
-
-If the wallpaper appears but the top bar does not, check that log first. It should show whether Quickshell started, whether it exited, and which temporary config directory it loaded.
-
-The helper writes the generated configs under:
-
-```text
-$XDG_RUNTIME_DIR/hypr-shell-tty-test/quickshell
-$XDG_RUNTIME_DIR/hypr-shell-tty-test/hyprland
-```
-
-For layer-shell state while the test session is running, switch to another TTY and run `hyprctl layers`.
-
-If the normal bar still does not appear, run the TTY helper in smoke-test mode:
-
-```sh
-HYPR_SHELL_TTY_SMOKE=1 ./modules/home-manager/hyprland/scripts/hypr-shell-tty-test.sh
-```
-
-Smoke-test mode replaces the full shell with one bright red `PanelWindow` named
-`quickshell-smoke-test`. If that red bar appears, Quickshell and Hyprland can
-create layer-shell panels and the bug is inside the full shell QML. If it does
-not appear, the problem is below the shell design layer: Quickshell, Hyprland,
-the host TTY session, or the Fedora package/build.
-
-By default, the TTY test uses this mock wallpaper:
-
-```text
-/home/olaolu/Pictures/wallpapers/skeleton-prophet.jpg
-```
-
-Quickshell is still launched before the wallpaper process. That ordering matters
-because the bar test should not depend on wallpaper startup.
-
-Pass a wallpaper explicitly when you want to test a different image:
-
-```sh
-./modules/home-manager/hyprland/scripts/hypr-shell-tty-test.sh --wallpaper /path/to/image.jpg
-```
-
-The wallpaper path can also come from an environment variable:
-
-```sh
-HYPR_SHELL_TTY_WALLPAPER=/path/to/image.jpg ./modules/home-manager/hyprland/scripts/hypr-shell-tty-test.sh
-```
-
-The temporary TTY session applies this test wallpaper with `swaybg`. This is
-separate from the normal Hyprland profile, which uses Waypaper with `awww` for
-regular wallpapers. The helper expects `swaybg` to already be available on the
-non-NixOS test host.
-
-When you edit QML or helper scripts, close the temporary Hyprland session and
-run `hypr-shell-tty-test` again. That keeps the test path simple and predictable.
-
-To close the temporary Hyprland test session, press either:
-
-```text
-Super+Escape
-Super+Shift+Q
-```
-
-Those keys are bound to Hyprland's `exit` command in the generated temporary config. If the keybinds do not work, switch to another TTY with `Ctrl+Alt+F3`, `Ctrl+Alt+F4`, or similar, log in, and run:
-
-```sh
-pkill Hyprland
-```
-
-Switch back to GNOME with its original virtual-terminal shortcut, commonly `Ctrl+Alt+F2` on Fedora Workstation.
-
-The TTY helper uses this monitor rule by default:
-
-```sh
-monitor = ,preferred,auto,1
-```
-
-Override it only when needed:
-
-```sh
-./modules/home-manager/hyprland/scripts/hypr-shell-tty-test.sh --monitor ',1920x1080@60,auto,1'
-```
-
-This is meant for bar/popover styling and real Hyprland shell behavior. It is not a full replacement for the VM. Use the VM when changing NixOS boot, greetd, PAM, Home Manager activation, package installation, or systemd service wiring.
-
-To remove this temporary TTY test harness after it has served its purpose:
-
-1. Delete `modules/home-manager/hyprland/scripts/hypr-shell-tty-test.sh`.
-2. Delete `modules/home-manager/hyprland/scripts/hypr-shell-generate-quickshell.sh`.
-3. Delete this `Fast Host Testing` section.
-
 ## Keybinds
 
 See Hyprland nix config in ./default.nix
@@ -271,10 +148,9 @@ jobs:
 - Lock uses `loginctl lock-session`.
 
 `hyprshutdown` is used for logout, reboot, and power off because it asks apps to
-close before Hyprland exits. A raw `hyprctl dispatch exit` quits Hyprland more
-abruptly, so it is kept only in the temporary TTY test harness as an emergency
-way to leave that throwaway session. Suspend is different: it should keep the
-session alive, so it goes straight through systemd instead of exiting Hyprland.
+close before Hyprland exits; a raw `hyprctl dispatch exit` quits Hyprland more
+abruptly. Suspend is different: it should keep the session alive, so it goes
+straight through systemd instead of exiting Hyprland.
 
 ## Wallpapers
 
@@ -409,10 +285,6 @@ asusctl profile get
 asusctl profile next
 asusctl profile set Balanced
 ```
-
-The TTY test uses the host's current PATH instead of Home Manager's Nix wrapper.
-Power profile switching in the TTY test only works if the host already has a
-usable `powerprofilesctl` or a working `asusctl`/`asusd` setup.
 
 ## Removable Media
 

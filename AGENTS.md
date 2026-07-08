@@ -87,7 +87,7 @@ greetd -> tuigreet -> Hyprland -> Home Manager hyprland.conf -> hyprland-session
 
 Do not casually switch only one Hyprland ecosystem package to unstable. If Hyprland itself moves, verify the compositor, portal, lock, idle, and shell stack coherently.
 
-Helper scripts under `modules/home-manager/hyprland/scripts/` are usually embedded with `pkgs.writeShellApplication`. Preserve the existing convention: raw embedded scripts use `# shellcheck shell=bash` and omit a direct shebang unless they are intentionally host-side executable harnesses.
+Helper scripts under `modules/home-manager/hyprland/scripts/` are embedded with `pkgs.writeShellApplication`. Preserve the existing convention: scripts use `# shellcheck shell=bash` and omit a direct shebang.
 
 ## Qt Documentation MCP
 

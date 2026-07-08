@@ -107,19 +107,10 @@ The normal path is Home Manager:
 - `quickshell.nix` writes `~/.config/quickshell/hyprland/shell.qml`.
 - The `hypr-shell-quickshell` user service runs
   `quickshell --config hyprland`.
-- The TTY helper is only a temporary host-side test harness. The QML does not
-  import it or call it.
 
-For real layer-shell behavior before a full Home Manager switch, test from a
-TTY:
-
-```sh
-./modules/home-manager/hyprland/scripts/hypr-shell-tty-test.sh
-```
-
-After the test session exits, check the Quickshell log printed by the helper.
-That log is the fastest way to find QML load errors, missing `qmldir` entries,
-or unsubstituted placeholders.
+After a Home Manager switch, the service journal
+(`journalctl --user -u hypr-shell-quickshell`) is the fastest way to find QML
+load errors, missing `qmldir` entries, or unsubstituted placeholders.
 
 ## Future Items to Consider
 
