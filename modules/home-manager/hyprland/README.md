@@ -28,15 +28,15 @@ Plain English version:
 
 1. `modules/nixos/hyprland.nix` enables Hyprland and `greetd`.
 2. `greetd` shows the `tuigreet` login prompt.
-3. After login, `tuigreet --cmd Hyprland` starts Hyprland directly.
+3. After login, `tuigreet --cmd .../start-hyprland` runs upstream's launch wrapper, which prepares the session environment (XDG vars, D-Bus/systemd activation-environment imports) before starting the compositor.
 4. Home Manager writes `~/.config/hypr/hyprland.lua` from `modules/home-manager/hyprland/default.nix`.
 5. Hyprland reads that config and runs the Home Manager-generated startup hook near the end of the file.
 6. That startup hook imports the Wayland session environment into systemd, stops any stale `hyprland-session.target`, and starts a fresh `hyprland-session.target`.
 7. `hypr-shell-quickshell.service` runs `quickshell --config hyprland`, which loads `~/.config/quickshell/hyprland/shell.qml`.
 
-The setup deliberately avoids UWSM for now. That means this profile does not
-depend on UWSM to activate `graphical-session.target`; Home Manager's Hyprland
-module activates `hyprland-session.target` from the generated Hyprland config.
+The setup deliberately avoids UWSM. This profile does not depend on UWSM to
+activate `graphical-session.target`; Home Manager's Hyprland module activates
+`hyprland-session.target` from the generated Hyprland config.
 
 Services started or tied to this Hyprland session include:
 
@@ -54,11 +54,11 @@ Services started or tied to this Hyprland session include:
 being used for clipboard history, so this profile does not configure a separate
 `cliphist`/`wl-paste` collector right now.
 
-If `local.hyprland.withUWSM` is enabled later, revisit both sides of the launch:
-the `greetd` command should start the UWSM-managed Hyprland session, and the
-Home Manager Hyprland systemd integration may no longer be the right owner for
-the session target. Do not flip only the boolean and assume the rest of the
-startup chain is unchanged.
+If UWSM is adopted later, revisit both sides of the launch: the `greetd`
+command should start the UWSM-managed Hyprland session (via `uwsm start ...`,
+not `start-hyprland`), and the Home Manager Hyprland systemd integration may no
+longer be the right owner for the session target. Do not change only the launch
+command and assume the rest of the startup chain is unchanged.
 
 ## Helper Scripts
 

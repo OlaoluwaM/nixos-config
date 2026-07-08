@@ -10,18 +10,6 @@ in
 {
   options.local.hyprland = {
     enable = lib.mkEnableOption "Hyprland system configuration";
-
-    withUWSM = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      description = ''
-        Whether to launch Hyprland through UWSM.
-
-        UWSM gives Hyprland better systemd user-session integration, but may
-        require launch-command and service-startup changes. Leave this false
-        while greetd starts Hyprland directly.
-      '';
-    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -30,7 +18,6 @@ in
     programs.hyprland = {
       enable = true;
       xwayland.enable = true;
-      withUWSM = cfg.withUWSM;
     };
 
     # Nautilus and other GTK/GNOME apps store settings in dconf. GNOME enables
@@ -39,14 +26,15 @@ in
 
     # Login screen replacement for GDM in the Hyprland profile.
     #
-    # This command intentionally starts Hyprland directly because withUWSM is
-    # false by default. If local.hyprland.withUWSM is enabled later, revisit
-    # this command too; UWSM sessions are launched through `uwsm start ...`, not
-    # plain `Hyprland`.
+    # `start-hyprland` is upstream's launch wrapper (shipped in the hyprland
+    # package). It prepares the session environment (XDG vars, D-Bus/systemd
+    # activation-environment imports) that xdg-desktop-portal and screen
+    # sharing depend on; launching the bare `Hyprland` binary skips that and
+    # makes recent Hyprland versions warn at startup.
     services.greetd = {
       enable = true;
       settings.default_session = {
-        command = "${pkgs.tuigreet}/bin/tuigreet --time --cmd Hyprland";
+        command = "${pkgs.tuigreet}/bin/tuigreet --time --cmd ${config.programs.hyprland.package}/bin/start-hyprland";
         user = "greeter";
       };
     };
