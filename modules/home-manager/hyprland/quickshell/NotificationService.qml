@@ -78,16 +78,47 @@ Scope {
         }
     }
 
+    // Feedback toast when a click lands on a notification whose sender is
+    // gone (e.g. a history card after the app closed the notification). The
+    // shell is the server, so this is synthesized straight into the popup
+    // model: no notificationStore object exists for it, which is safe —
+    // releaseNotification and invokeAction both tolerate a missing entry.
+    // Deliberately popup-only and shown even in Do Not Disturb: it answers a
+    // click the user just made, and it would only crowd history as a log row.
+    function showInternalNotice(summary, body) {
+        notificationPopups.insert(0, {
+            notifId: root.nextNotifId++,
+            appName: "Shell",
+            summary: summary,
+            body: body,
+            timestamp: Date.now(),
+            hasActions: false,
+            actionsJson: "[]",
+            defaultActionIndex: -1,
+            urgency: 0,
+            expiresAt: Date.now() + root.popupDuration
+        });
+        root.scheduleTrim();
+    }
+
     function invokeAction(notifId, actionIndex) {
         try {
             let notif = root.notificationStore[notifId];
-            if (!notif || actionIndex >= notif.actions.length) return;
+            if (!notif || actionIndex >= notif.actions.length) {
+                root.showInternalNotice("Action unavailable",
+                    "The app closed this notification, so its actions can no longer be invoked.");
+                return;
+            }
             notif.actions[actionIndex].invoke();
             if (!notif.resident) {
                 root.removeFromModel(notificationPopups, notifId);
                 root.scheduleTrim();
             }
-        } catch (e) { console.warn("hypr-shell: notification action invoke failed:", e); }
+        } catch (e) {
+            console.warn("hypr-shell: notification action invoke failed:", e);
+            root.showInternalNotice("Action failed",
+                "This notification's actions are no longer available.");
+        }
     }
 
     function dismissPopup(notifId) {
@@ -155,7 +186,10 @@ Scope {
                 hasActions: buttons.length > 0,
                 actionsJson: JSON.stringify(buttons),
                 defaultActionIndex: defaultActionIndex,
-                urgency: notification.urgency || 0
+                // ?? not ||: 0 is Low, a valid urgency that || would clobber.
+                // Only a missing value falls back, and the freedesktop default
+                // for an unspecified urgency is Normal (1), not Low.
+                urgency: notification.urgency ?? 1
             };
             root.addEntry(entry);
             if (!root.doNotDisturb) {
