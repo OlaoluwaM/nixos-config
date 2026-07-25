@@ -67,6 +67,7 @@ in
           "${home}/.codex"
           configHome
           "${userDirs.pictures}/wallpapers"
+          "${userDirs.desktop}/${config.local.fsLayout.devDirname}/archive"
         ];
         "exclude-list" = [
           "$TRASH"
