@@ -37,6 +37,7 @@ in
     ../../modules/home-manager/fs-layout.nix
     ../../modules/home-manager/fontconfig.nix
     ../../modules/home-manager/fzf.nix
+    ../../modules/home-manager/gh.nix
     ../../modules/home-manager/git.nix
     ../../modules/home-manager/gpg.nix
     ../../modules/home-manager/lazygit.nix
@@ -163,9 +164,6 @@ in
     unstable.fx
 
     unstable.gdu
-    unstable.git-credential-manager
-    # Override example to add plugins, you can do this for any package
-    unstable.gh
     unstable.go
 
     unstable.httpie
@@ -298,6 +296,7 @@ in
   local.delta.enable = true;
   local.direnv.enable = true;
   local.fzf.enable = true;
+  local.gh.enable = true;
   local.git.enable = true;
   local.lazygit.enable = true;
   local.lsd.enable = true;

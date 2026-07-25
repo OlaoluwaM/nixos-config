@@ -20,7 +20,7 @@
 - [x] Global npm packages
 - [x] Add dotfiles symlink home-manager module using `home.file`
 - [x] Migrate cron jobs: wallpaper compression is now a Home Manager user systemd timer. Other legacy cron jobs were intentionally left out.
-- [ ] `gh` extensions and aliases: Handle manually get them from dotfiles directory
+- [x] `gh` extensions and aliases: Declared in `gh.nix`. Aliases come straight from the dotfiles `config.yml`; extensions are nix-packaged (script extensions pinned via `fetchFromGitHub`, `gh-screensaver` from nixpkgs; `gh-copilot` dropped — archived upstream, superseded by the standalone `github-copilot-cli`). Auth (`hosts.yml`) stays imperative via `gh auth login`
 - [x] Automatic updates
 - [x] Configure flatpaks and flathub
 - [x] Configure Haskell: The NixOS convention is to not install Haskell globally, but to instead have it be a local setup per project using a flake.nix. However, we'd still want to install stack and/or cabal globally
@@ -75,6 +75,7 @@
 - [x] Font fallbacks for all desktop environments
 - [x] Declare default applications (`xdg.mimeApps` in `desktop.nix`): Firefox as default browser plus the explicit Fedora defaults (VS Code for TeX/JSON, slack:// and claude-cli:// handlers). The gnome module contributes the GSConnect sms/tel associations; the hyprland module contributes session defaults GNOME otherwise ships stock (Loupe for images, Papers for PDF, VLC for video, Gapless for audio, Nautilus for directories). Deliberately skipped: stock GNOME defaults under the GNOME profile, and the ImHex octet-stream default (ImHex isn't in the nix config)
 - [x] Remove Hyprland TTY test script and harness
+- [x] Configure Github CLI (`gh.nix`: `programs.gh` with aliases and nix-packaged extensions; `gitCredentialHelper` disabled since git already uses SSH + libsecret)
 - [ ] Delete the temporary `boreas-vm` flake targets after the migration: the `boreas-vm` host data in the `let` block, `nixosConfigurations.boreas-vm`, and `homeConfigurations."olaolu@boreas-vm"`. All three are marked with `TEMPORARY (migration dry-run)` comments in `flake.nix`, so a search for either string will round them up.
 - [ ] Replace the VM-only bootloader before the first real `nixos-rebuild`. `hosts/boreas/default.nix` currently sets `boot.loader.grub.device = "/dev/vda"`, which only exists in the QEMU VM. On the Zephyrus (UEFI/NVMe) switch to `systemd-boot` (`boot.loader.systemd-boot.enable = true` + `boot.loader.efi.canTouchEfiVariables = true`) and drop the GRUB block. This is separate from copying `hardware-configuration.nix`; see the README Troubleshooting section.
 
