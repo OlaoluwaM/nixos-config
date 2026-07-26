@@ -52,7 +52,7 @@
 - [x] Configure catppuccin-nix
   - [x] Decide how you want to integrate catppuccin-nix with desktop.nix and theme.nix. Specifically with GTK and QT (Adwatia vs Kvantum). I'd prefer if, when catppuccin is the set theme, we have GTK and QT use it and fallback to Adwatia-dark otherwise
     - Icon theme should always be Colloid
-    - Cursor theme should always be catppuccin-curosr-mocha-dark
+    - Cursor theme should always be catppuccin-cursor-mocha-dark
   - [x] Address potentially conflicting dotfiles: ~~atuin~~, ~~bat~~, ~~kitty~~, ~~starship~~, ~~hyprland (might not be an issue)~~
   - [x] Theme delta with catppuccin-nix
   - [x] Theme fzf with catppuccin-nix
@@ -81,4 +81,4 @@
 
 ## Optional
 
-- [ ] Configure a non-asus auto power profile management solution
+- [x] Configure a non-asus auto power profile management solution: the `battery-profile-threshold` timer in `hosts/boreas/default.nix` drives `powerprofilesctl`, which works on any host running power-profiles-daemon, and owns power-source switching outright (asusd's own auto-switching is disabled on both edges). On ASUS hardware, asusd links platform profiles to power-profiles-daemon, so the firmware profile follows; the asusd unit itself is skipped under virtualization (`ConditionVirtualization = false`), which keeps the VM dry-run quiet.

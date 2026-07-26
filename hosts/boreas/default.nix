@@ -218,6 +218,13 @@ in
   # asusd's platform profile switching is backed by power-profiles-daemon.
   services.power-profiles-daemon.enable = true;
 
+  # asusd probes ASUS firmware that doesn't exist inside the QEMU dry-run
+  # guest, where it would only fail and restart-loop. This host is ASUS by
+  # definition, so "not virtualized" is the whole distinction — a systemd
+  # condition covers it without threading a host-data flag through the flake.
+  # The unit is skipped cleanly (condition-failed, not failed) in the VM.
+  systemd.services.asusd.unitConfig.ConditionVirtualization = false;
+
   # Setup asusctl and rog-control-center (https://asus-linux.org/guides/nixos/)
   services = {
     asusd = {
@@ -250,13 +257,20 @@ in
             // changes the firmware profile but leaves CPU energy bias untouched.
             platform_profile_linked_epp: true,
 
-            // Native baseline for power-source changes. AC goes straight to Performance.
-            // Battery starts at Balanced so unplugging does not over-throttle a healthy
-            // battery; the timer below lowers it to Quiet when capacity is <= 35%.
+            // Power-source switching is fully owned by the generic
+            // battery-profile-threshold timer below, which drives
+            // power-profiles-daemon (asusd links platform profiles to it).
+            // asusd's own switching is disabled on both edges so the two
+            // control loops can never fight — with both active, unplugging
+            // above 65% set Balanced and the timer flipped it back to
+            // Performance minutes later. Plug/unplug still reacts instantly:
+            // a udev rule below kicks the same service on AC adapter events.
+            // The baseline values are kept as documentation of what we'd want
+            // if the timer ever went away.
             platform_profile_on_battery: Balanced,
-            change_platform_profile_on_battery: true,
+            change_platform_profile_on_battery: false,
             platform_profile_on_ac: Performance,
-            change_platform_profile_on_ac: true,
+            change_platform_profile_on_ac: false,
 
             // EPP mapping used when platform_profile_linked_epp is true.
             profile_quiet_epp: Power,
@@ -303,27 +317,34 @@ in
     };
   };
 
-  # Adds the battery-percentage behavior from the old Fedora tuned scripts, but
-  # keeps ASUS Linux as the control plane by calling asusctl profile set.
-  systemd.services.asus-battery-profile-threshold =
+  # Adds the battery-percentage behavior from the old Fedora tuned scripts.
+  # Backend-generic on purpose: it drives power-profiles-daemon through
+  # powerprofilesctl, which every host here runs, so the same timer works on
+  # non-ASUS hardware. On ASUS, asusd links platform profiles to
+  # power-profiles-daemon (see asusdConfig above), so the firmware profile
+  # follows. This service owns power-source switching outright; asusd's own
+  # auto-switching is disabled above (both edges) so the two cannot fight.
+  # It runs from two triggers: the timer below (threshold crossings while
+  # discharging) and a udev rule further down (instant AC plug/unplug edges).
+  systemd.services.battery-profile-threshold =
     let
+      # asusd.service is condition-skipped in the VM; a wanted unit that
+      # doesn't start doesn't block this one.
       serviceUnitDependencies = [
         "asusd.service"
         "power-profiles-daemon.service"
       ];
     in
     {
-      description = "Select ASUS platform profile based on battery threshold";
+      description = "Select power profile based on battery threshold";
 
-      # Together, `after` & `wants` express an ordered dependency relationship between this service and the "asusd" service and "power-profiles-daemon" service. Specifically, it expresses that this asus-battery-profile-threshold service requires that the two aforementioned units be started (`wants`) when trying to start this one and that they should have been started up "before" this one (`after`).
+      # Together, `after` & `wants` express an ordered dependency relationship between this service and the daemons it drives. Specifically, it expresses that this battery-profile-threshold service requires that the listed units be started (`wants`) when trying to start this one and that they should have been started up "before" this one (`after`).
       after = serviceUnitDependencies;
       wants = serviceUnitDependencies;
 
       path = [
-        unstable.asusctl
         pkgs.coreutils
-        pkgs.gnugrep
-        pkgs.gnused
+        pkgs.power-profiles-daemon
         pkgs.systemd
       ];
 
@@ -343,7 +364,7 @@ in
         done
 
         if [ -z "$battery_dir" ]; then
-          systemd-cat -t asus-battery-profile-threshold -p warning echo "No battery found; skipping profile update"
+          systemd-cat -t battery-profile-threshold -p warning echo "No battery found; skipping profile update"
           exit 0
         fi
 
@@ -352,43 +373,66 @@ in
 
         case "$status" in
           Charging|Full|Not\ charging)
-            target=Performance
+            target=performance
             ;;
           Discharging)
             if [ "$capacity" -le 35 ]; then
-              target=Quiet
+              target=power-saver
             elif [ "$capacity" -le 65 ]; then
-              target=Balanced
+              target=balanced
             else
-              target=Performance
+              target=performance
             fi
             ;;
           *)
-            systemd-cat -t asus-battery-profile-threshold -p warning echo "Unknown battery status '$status'; skipping profile update"
+            systemd-cat -t battery-profile-threshold -p warning echo "Unknown battery status '$status'; skipping profile update"
             exit 0
             ;;
         esac
 
-        current="$(asusctl profile get | grep 'Active profile:' | sed 's/.*Active profile: //')"
-        if [ "$current" = "$target" ]; then
-          systemd-cat -t asus-battery-profile-threshold echo "ASUS profile already $target ($status, ''${capacity}%)"
+        # Guarded because this script runs under set -e; an unreadable current
+        # profile should fall through to an (idempotent) set, not fail the unit.
+        current="$(powerprofilesctl get || true)"
+        if [ -n "$current" ] && [ "$current" = "$target" ]; then
+          systemd-cat -t battery-profile-threshold echo "Power profile already $target ($status, ''${capacity}%)"
           exit 0
         fi
 
-        asusctl profile set "$target"
-        systemd-cat -t asus-battery-profile-threshold echo "Set ASUS profile to $target ($status, ''${capacity}%)"
+        # Some drivers expose no `performance` profile (VMs in particular);
+        # degrade to balanced instead of failing the unit.
+        if ! powerprofilesctl set "$target"; then
+          systemd-cat -t battery-profile-threshold -p warning echo "Profile $target unavailable; falling back to balanced"
+          powerprofilesctl set balanced || true
+          target=balanced
+        fi
+        systemd-cat -t battery-profile-threshold echo "Set power profile to $target ($status, ''${capacity}%)"
       '';
     };
 
-  systemd.timers.asus-battery-profile-threshold = {
-    description = "Periodically select ASUS platform profile from battery threshold";
+  systemd.timers.battery-profile-threshold = {
+    description = "Periodically select power profile from battery threshold";
     wantedBy = [ "timers.target" ];
     timerConfig = {
       OnBootSec = "1min";
       OnUnitActiveSec = "3min";
-      Unit = "asus-battery-profile-threshold.service";
+      Unit = "battery-profile-threshold.service";
     };
   };
+
+  # Instant edge response for AC plug/unplug: the timer alone would leave up to
+  # a 3-minute lag after a power-source change. Kicking the same idempotent
+  # oneshot from udev cannot conflict with the timer — both runs compute the
+  # target from the current battery state, and a second run exits early once
+  # the profile already matches. RUN+= (not SYSTEMD_WANTS) because the adapter
+  # device never disappears; plug/unplug is a "change" uevent on it, which
+  # SYSTEMD_WANTS would only honor once. --no-block keeps the udev event
+  # handler from waiting on the service.
+  #
+  # A VM guest typically has no Mains power_supply device, so the rule simply
+  # never fires there.
+  services.udev.extraRules = ''
+    SUBSYSTEM=="power_supply", ACTION=="change", ATTR{type}=="Mains", RUN+="${pkgs.systemd}/bin/systemctl start --no-block battery-profile-threshold.service"
+  '';
 
   # This setups a SSH server. Very important if you're setting up a headless system.
   # Feel free to remove if you don't need it.
