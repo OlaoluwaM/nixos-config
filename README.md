@@ -40,6 +40,15 @@ home-manager switch --flake .#username@hostname
 
 NOTE: All `nixos-rebuild` or `home-manager` commands must reference the flake (using `--flake`) to work as you'd expect.
 
+### Apply order: system first, then home
+
+```bash
+sudo nixos-rebuild switch --flake ~/nixos-config#boreas
+home-manager switch --flake ~/nixos-config#olaolu@boreas
+```
+
+On a fresh install this order is mandatory: standalone Home Manager can only run once `nixos-rebuild` has produced what it needs (our user account, the nix daemon, `allowed-users`). Afterwards the two are independent — if only one layer changed, running just that layer's `switch` is fine — but for changes spanning both, keep system first: the home config usually assumes system plumbing (sessions, groups, dbus services) that should land before it. Cross-layer changes may also need a re-login for `hm-session-vars.sh` to take effect.
+
 ## Automatic Updates (Deprecated)
 
 > [!note]
