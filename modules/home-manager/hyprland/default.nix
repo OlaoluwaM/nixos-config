@@ -386,10 +386,10 @@ in
 
         # Plain binds run once when the key is pressed.
         bind = [
-          (mkBind "${mod} + Return" (execDispatcher terminal))
+          (mkBind "${mod} + T" (execDispatcher terminal))
 
           (mkBind "${mod} + Space" (execDispatcher "${vicinaeCommand} open"))
-          (mkBind "${mod} + SHIFT + V" (
+          (mkBind "${mod} + V" (
             execDispatcher "${vicinaeCommand} 'vicinae://launch/clipboard/history?toggle=true'"
           ))
 
