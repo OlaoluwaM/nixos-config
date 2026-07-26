@@ -59,7 +59,10 @@ in
       FONT_DIR = "${data}/fonts";
       NAVI_PATH = "${cfg.dotsPath}/navi/cheats";
       NAVI_CONFIG_PATH = "${cfg.dotsPath}/navi/config.yaml";
-      _ZO_DATA_DIR = "${cfg.dotsPath}/zoxide";
+      # zoxide's default XDG location, made explicit. The database is mutable
+      # runtime state, so it belongs outside the dotfiles repo; it's captured
+      # by backups instead (see deja-dup.nix).
+      _ZO_DATA_DIR = "${data}/zoxide";
       TEALDEER_CONFIG_DIR = "${cfg.dotsPath}/tldr";
       STARSHIP_CONFIG = "${cfg.dotsPath}/starship/starship.toml";
     };

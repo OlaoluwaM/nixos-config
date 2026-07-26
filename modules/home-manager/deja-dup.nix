@@ -51,6 +51,7 @@ in
           "${userDirs.pictures}/memorables"
           "${userDirs.pictures}/useful-images"
           "${dataHome}/fonts"
+          "${dataHome}/zoxide" # _ZO_DATA_DIR (see dotfiles.nix)
           "${home}/sys-bak"
           "${userDirs.videos}/useful-stuff"
           userDirs.documents
