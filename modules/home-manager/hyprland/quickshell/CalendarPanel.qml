@@ -20,10 +20,7 @@ Item {
     }
 
     function calendarTitle() {
-        let d = calPanel.calendarDate();
-        let months = ["January","February","March","April","May","June",
-                      "July","August","September","October","November","December"];
-        return months[d.getMonth()] + " " + d.getFullYear();
+        return calPanel.calendarDate().toLocaleDateString(Qt.locale(), "MMMM yyyy");
     }
 
     function calendarDays() {
@@ -63,10 +60,7 @@ Item {
             let s = now.getSeconds();
             calPanel.hoursMinutes = (h < 10 ? "0" + h : h) + ":" + (m < 10 ? "0" + m : m);
             calPanel.seconds = ":" + (s < 10 ? "0" + s : s);
-            let days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-            let months = ["January","February","March","April","May","June",
-                          "July","August","September","October","November","December"];
-            calPanel.dateLine = days[now.getDay()] + ", " + months[now.getMonth()] + " " + now.getDate();
+            calPanel.dateLine = now.toLocaleDateString(Qt.locale(), "dddd, MMMM d");
         }
     }
 
@@ -127,13 +121,15 @@ Item {
                     columnSpacing: 2
 
                     Repeater {
-                        model: ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
+                        // Monday-first (Locale.dayName counts 1=Monday..7=Sunday),
+                        // matching calendarDays(); localized like the month title.
+                        model: [1, 2, 3, 4, 5, 6, 7]
                         delegate: StyledText {
-                            required property string modelData
+                            required property int modelData
                             width: 34
                             height: 18
                             horizontalAlignment: Text.AlignHCenter
-                            text: modelData
+                            text: Qt.locale().dayName(modelData, Locale.ShortFormat)
                             color: Theme.textDim
                             font.pixelSize: Theme.fontSmall
                         }

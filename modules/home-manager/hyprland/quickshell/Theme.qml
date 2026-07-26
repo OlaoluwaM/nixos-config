@@ -56,6 +56,14 @@ Singleton {
     readonly property int cardRadius:           14
     readonly property int trackRadius:          3   // thin slider / progress bars
 
+    // ── Bar geometry ────────────────────────────────────────────────────
+    // Shared between shell.qml (which draws the bar window) and Popovers.qml
+    // (which positions popup cards below it), so the two can't drift apart.
+    readonly property int barTopMargin:      18   // gap between screen edge and bar
+    readonly property int barHeight:         62   // the visible bar strip
+    readonly property int barExclusiveZone:  70   // space reserved from tiled windows
+    readonly property int barWindowHeight:   96   // taller than the bar so tooltips can draw below it
+
     // ── Animation durations (ms) ────────────────────────────────────────
     readonly property int animFast:       150
     readonly property int animNormal:     300

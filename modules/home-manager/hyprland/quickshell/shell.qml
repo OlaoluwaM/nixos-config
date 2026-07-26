@@ -176,10 +176,10 @@ Scope {
         color: "transparent"
         aboveWindows: true
         implicitWidth: 1200
-        // The visible bar is 62px tall. The window is taller so bar tooltips
-        // can draw below the capsules instead of being clipped by layer-shell.
-        implicitHeight: 96
-        exclusiveZone: 70
+        // The window is taller than the visible bar so bar tooltips can draw
+        // below the capsules instead of being clipped by layer-shell.
+        implicitHeight: Theme.barWindowHeight
+        exclusiveZone: Theme.barExclusiveZone
 
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.namespace: "quickshell-topbar"
@@ -190,7 +190,7 @@ Scope {
         mask: Region { item: bar }
 
         // To modify the topbar margins against the screen edge, change the values here
-        margins { top: 18; left: 8; right: 8; bottom: 0 }
+        margins { top: Theme.barTopMargin; left: 8; right: 8; bottom: 0 }
         anchors { top: true; left: true; right: true }
 
         Bar {
@@ -201,7 +201,7 @@ Scope {
             status: statusController
             notifications: notificationService
             popups: popupController
-            height: 62
+            height: Theme.barHeight
             anchors { top: parent.top; left: parent.left; right: parent.right }
         }
     }

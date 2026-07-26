@@ -15,8 +15,10 @@ PanelWindow {
     required property NotificationService notifications
     required property PopupController popups
 
-    readonly property int topbarBottom: 70
-    readonly property int topbarGap: 18 // The gap between the topbar/capsules and the top of a popup.
+    // Measured from the bar's real on-screen footprint (top margin + bar strip),
+    // not the exclusive zone, so tuning any bar token moves the popups with it.
+    readonly property int topbarBottom: Theme.barTopMargin + Theme.barHeight
+    readonly property int topbarGap: 8 // The gap between the topbar/capsules and the top of a popup.
     readonly property int popoverTop: root.topbarBottom + root.topbarGap
     readonly property int popoverWindowHeight: 780
     readonly property real trayDefaultHeight: 260
