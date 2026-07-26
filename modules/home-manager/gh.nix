@@ -25,7 +25,14 @@ let
     pkgs.stdenvNoCC.mkDerivation {
       pname = repo;
       version = builtins.substring 0 7 rev;
-      src = pkgs.fetchFromGitHub { inherit owner repo rev hash; };
+      src = pkgs.fetchFromGitHub {
+        inherit
+          owner
+          repo
+          rev
+          hash
+          ;
+      };
       dontBuild = true;
       installPhase = ''
         install -Dm755 ${repo} $out/bin/${repo}
@@ -103,7 +110,7 @@ in
           b = "branch";
           bugs = "issue list --label=bug";
           d = "download";
-          features = "issue list\n--label=enhancement";
+          features = "issue list --label=enhancement";
           igrep = ''!gh issue list --label="$1" | grep "$2"'';
           pc = "pr create -w";
           pv = "pr view -w";

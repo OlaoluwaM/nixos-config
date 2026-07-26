@@ -430,7 +430,7 @@ in
           (mkBind "ALT + F4" "hl.dsp.window.close()")
 
           (mkBind "${mod} + F" "hl.dsp.window.fullscreen()")
-          (mkBind "${mod} + V" "hl.dsp.window.float()")
+          (mkBind "${mod} + SHIFT + V" "hl.dsp.window.float()")
 
           (mkBind "${mod} + 1" "hl.dsp.focus({ workspace = 1 })")
           (mkBind "${mod} + 2" "hl.dsp.focus({ workspace = 2 })")

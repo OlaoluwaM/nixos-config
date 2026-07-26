@@ -84,7 +84,7 @@
     in
     {
       # NixOS configuration entrypoint
-      # Available through 'nixos-rebuild --flake #your-hostname'
+      # Available through 'nixos-rebuild --flake .#your-hostname'
       nixosConfigurations = {
         # For a new system, just add a new entry like boreas. Although you may want to replace the system arch if necessary
         boreas = nixpkgs.lib.nixosSystem {

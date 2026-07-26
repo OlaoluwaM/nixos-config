@@ -18,7 +18,7 @@ let
     "${data}/icons"
     "${data}/themes"
     "${data}/fonts"
-    # See ./gnome/default.nix on why these two need to be title caseed
+    # See ./gnome/default.nix on why these two need to be title cased
     "${config.xdg.userDirs.videos}/Screencasts"
     "${pictures}/Screenshots"
     "${pictures}/wallpapers"

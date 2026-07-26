@@ -52,7 +52,7 @@ On a fresh install this order is mandatory: standalone Home Manager can only run
 ## Automatic Updates (Deprecated)
 
 > [!note]
-> We have disabled automatic updates because they seem like they'll be more trouble than they're worth, at least on NixOS. Updates will happen manually with a `nix flake update` followed by a `sudo nixos-rebuild switch --flake ...` then a `home-manager switch --flake ...`. Perhaps I ought to wrap all that up in a shell funciton or alias. In any case, no auto upgrades. Though, it might interest us to look into update the `flake.lock` using Github Actions in CI. Apparently people do that...
+> We have disabled automatic updates because they seem like they'll be more trouble than they're worth, at least on NixOS. Updates will happen manually with a `nix flake update` followed by a `sudo nixos-rebuild switch --flake ...` then a `home-manager switch --flake ...`. Perhaps I ought to wrap all that up in a shell function or alias. In any case, no auto upgrades. Though, it might interest us to look into update the `flake.lock` using Github Actions in CI. Apparently people do that...
 
 This repo uses two automatic upgrade timers with separate responsibilities:
 

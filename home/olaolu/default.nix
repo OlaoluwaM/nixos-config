@@ -67,7 +67,7 @@ in
   };
 
   home = {
-    username = username;
+    inherit username;
     homeDirectory = home;
     sessionVariables = {
       VISUAL = visual;
