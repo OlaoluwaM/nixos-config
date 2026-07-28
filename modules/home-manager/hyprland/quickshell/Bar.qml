@@ -42,7 +42,6 @@ Item {
     //  LEFT: Media capsule (visible only when playing/paused)
     // ════════════════════════════════════════════════════════════════════
     MediaCapsule {
-        id: mediaCapsule
         mediaActions: root.mediaActions
         popups: root.popups
         status: root.status
@@ -61,13 +60,11 @@ Item {
         spacing: 10
 
         ClockCapsule {
-            id: clockPill
             popups: root.popups
             status: root.status
         }
 
         NotificationCapsule {
-            id: notifCapsule
             popups: root.popups
             notifications: root.notifications
         }
@@ -77,7 +74,6 @@ Item {
     //  RIGHT: Tray, wifi, bluetooth, quick-settings capsules
     // ════════════════════════════════════════════════════════════════════
     Row {
-        id: rightStatus
         spacing: 10
         anchors {
             right: parent.right
@@ -86,7 +82,6 @@ Item {
         }
 
         TrayCapsule {
-            id: trayCapsule
             popups: root.popups
         }
 
@@ -95,25 +90,21 @@ Item {
         }
 
         NetworkCapsule {
-            id: networkCapsule
             connectivityActions: root.connectivityActions
             status: root.status
         }
 
         BluetoothCapsule {
-            id: btCapsule
             connectivityActions: root.connectivityActions
             status: root.status
         }
 
         CaffeineCapsule {
-            id: caffeineCapsule
             caffeineActions: root.caffeineActions
             status: root.status
         }
 
         QuickSettingsCapsule {
-            id: quickSettingsCapsule
             popups: root.popups
         }
     }

@@ -12,12 +12,10 @@ BarCapsule {
     respondToHover: false
 
     RowLayout {
-        id: statsRow
         anchors.centerIn: parent
         spacing: 10
 
         Item {
-            id: cpuStat
             Layout.preferredWidth: root.statsSlotWidth
             Layout.preferredHeight: cpuStatContent.implicitHeight
 
@@ -52,7 +50,6 @@ BarCapsule {
         Rectangle { Layout.preferredWidth: 1; Layout.preferredHeight: 16; color: Theme.outline }
 
         Item {
-            id: memoryStat
             Layout.preferredWidth: root.statsSlotWidth
             Layout.preferredHeight: memoryStatContent.implicitHeight
 
@@ -87,7 +84,6 @@ BarCapsule {
         Rectangle { Layout.preferredWidth: 1; Layout.preferredHeight: 16; color: Theme.outline }
 
         Item {
-            id: tempStat
             Layout.preferredWidth: root.statsSlotWidth
             Layout.preferredHeight: tempStatContent.implicitHeight
 

@@ -36,9 +36,11 @@ PanelWindow {
 
     Rectangle {
         id: osdCard
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 10
+        anchors {
+            horizontalCenter: parent.horizontalCenter
+            bottom: parent.bottom
+            bottomMargin: 10
+        }
         width: 260
         height: 64
         // Same card idiom as NotificationCard, so share its radius token rather

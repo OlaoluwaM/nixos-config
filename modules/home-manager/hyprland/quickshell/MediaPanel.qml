@@ -95,9 +95,11 @@ ColumnLayout {
                     visible: panel.status.mediaSource.length > 0
                     text: panel.status.mediaSource.toUpperCase()
                     color: Theme.textDim
-                    font.pixelSize: 10
-                    font.weight: Font.DemiBold
-                    font.letterSpacing: 1
+                    font {
+                        pixelSize: 10
+                        weight: Font.DemiBold
+                        letterSpacing: 1
+                    }
                     elide: Text.ElideRight
                 }
 

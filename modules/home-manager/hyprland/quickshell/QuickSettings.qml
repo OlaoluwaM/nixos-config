@@ -12,12 +12,12 @@ ColumnLayout {
     required property StatusController status
     required property NotificationService notifications
 
-    property int batteryPercent: status.batteryPercent
+    readonly property int batteryPercent: status.batteryPercent
     property bool showPowerMenu: false
     readonly property color batteryStateColor: quickSettings.batteryColor(quickSettings.status.batteryVisualState)
     readonly property string currentPowerProfile: status.powerProfile
 
-    property string batteryStatusLabel: status.batteryStatusLabel
+    readonly property string batteryStatusLabel: status.batteryStatusLabel
     spacing: 18
 
     function batteryColor(state) {
@@ -212,7 +212,7 @@ ColumnLayout {
                 id: powerBtn
                 required property var modelData
 
-                property bool isDanger: modelData.action === "poweroff"
+                readonly property bool isDanger: modelData.action === "poweroff"
 
                 accessibleName: modelData.label
                 bordered: true
