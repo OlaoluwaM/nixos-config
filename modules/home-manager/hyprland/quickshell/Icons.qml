@@ -62,6 +62,7 @@ Singleton {
         leaf:             '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>',
         logout:           '<path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>'
     })
+    readonly property var sourceCache: ({})
 
     // Pick the volume glyph for a given level. muted or 0 -> muted, then a
     // single-wave (mid) below 50, double-wave (high) at or above it.
@@ -83,10 +84,18 @@ Singleton {
 
     // Build a data-URI SVG for the given icon name and stroke color.
     function iconSource(name, color) {
-        let body = paths[name] || "";
-        let svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="'
-            + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+        const colorString = String(color);
+        const cacheKey = name + "|" + colorString;
+        const cachedSource = root.sourceCache[cacheKey];
+        if (cachedSource !== undefined)
+            return cachedSource;
+
+        const body = root.paths[name] || "";
+        const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="'
+            + colorString + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
             + body + '</svg>';
-        return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+        const source = "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+        root.sourceCache[cacheKey] = source;
+        return source;
     }
 }

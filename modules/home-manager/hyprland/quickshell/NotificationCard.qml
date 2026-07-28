@@ -54,9 +54,7 @@ Rectangle {
     }
 
     MouseArea {
-        id: cardMouse
         anchors.fill: parent
-        hoverEnabled: true
         onClicked: {
             if (root.expandable) {
                 root.cardClicked();
