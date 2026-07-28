@@ -10,19 +10,19 @@ Slider {
 
     property color accentColor: Theme.primary
 
-    // Live value to track when the user isn't dragging. Bound through a Binding
-    // (not `value:`) below, because Qt's Slider writes `value` imperatively on
-    // drag — a plain `value:` binding would be destroyed on first drag, freezing
-    // the slider against later media/brightness-key changes.
+    // Live value to track when the user isn't dragging. Synchronize explicitly
+    // because Qt's Slider writes `value` imperatively on drag — a plain `value:`
+    // binding would be destroyed on first drag, freezing the slider against
+    // later media/brightness-key changes.
     property real externalValue: 0
 
-    Binding {
-        target: root
-        property: "value"
-        value: root.externalValue
-        when: !root.pressed
-        restoreMode: Binding.RestoreBindingOrValue
+    function syncExternalValue() {
+        if (!root.pressed)
+            root.value = root.externalValue;
     }
+
+    onExternalValueChanged: root.syncExternalValue()
+    Component.onCompleted: root.syncExternalValue()
 
     background: Rectangle {
         x: root.leftPadding

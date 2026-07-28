@@ -6,6 +6,8 @@ import Quickshell.Hyprland
 Rectangle {
     id: root
 
+    readonly property var sortedWorkspaces: [...Hyprland.workspaces.values].sort((a, b) => a.id - b.id)
+
     width: Math.max(36, workspaceRow.implicitWidth + 16)
     height: Theme.capsuleHeight
     radius: Theme.capsuleRadius
@@ -31,13 +33,13 @@ Rectangle {
             id: wsRepeater
             // Sorted by id so the dots always read left-to-right numerically —
             // Hyprland.workspaces is in creation order, not necessarily sorted.
-            model: [...Hyprland.workspaces.values].sort((a, b) => a.id - b.id)
+            model: root.sortedWorkspaces
 
             delegate: Item {
                 id: wsDelegate
                 required property var modelData
 
-                property bool isActive: Hyprland.focusedMonitor !== null
+                readonly property bool isActive: Hyprland.focusedMonitor !== null
                     && Hyprland.focusedMonitor.activeWorkspace !== null
                     && wsDelegate.modelData.id === Hyprland.focusedMonitor.activeWorkspace.id
 
@@ -82,10 +84,9 @@ Rectangle {
         // parking it on the first dot.
         readonly property int activeIndex: {
             if (!Hyprland.focusedMonitor || !Hyprland.focusedMonitor.activeWorkspace) return -1;
-            let activeId = Hyprland.focusedMonitor.activeWorkspace.id;
-            for (let i = 0; i < wsRepeater.count; i++) {
-                let item = wsRepeater.itemAt(i);
-                if (item && item.modelData.id === activeId) return i;
+            const activeId = Hyprland.focusedMonitor.activeWorkspace.id;
+            for (let i = 0; i < root.sortedWorkspaces.length; i++) {
+                if (root.sortedWorkspaces[i].id === activeId) return i;
             }
             return -1;
         }

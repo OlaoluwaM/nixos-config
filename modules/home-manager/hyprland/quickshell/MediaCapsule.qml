@@ -22,7 +22,6 @@ BarCapsule {
         // Leading visual: a spinning vinyl record for music; a static rounded
         // thumbnail (or glyph) for everything else — video, podcasts, browsers.
         Item {
-            id: mediaThumb
             width: 30
             height: 30
             anchors.verticalCenter: parent.verticalCenter
@@ -203,7 +202,6 @@ BarCapsule {
 
             Column {
                 anchors.fill: parent
-                anchors.verticalCenter: parent.verticalCenter
                 spacing: 1
 
                 MarqueeText {

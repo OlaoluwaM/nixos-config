@@ -101,7 +101,6 @@ ColumnLayout {
         clip: true
 
         Flickable {
-            id: trayGridView
             anchors.fill: parent
             opacity: trayPanel.gridOpacity
             visible: opacity > 0
@@ -170,9 +169,11 @@ ColumnLayout {
 
                         HoverTooltip {
                             active: trayItemMouse.containsMouse
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.bottom: parent.top
-                            anchors.bottomMargin: 6
+                            anchors {
+                                horizontalCenter: parent.horizontalCenter
+                                bottom: parent.top
+                                bottomMargin: 6
+                            }
                             text: trayDelegate.modelData.tooltipTitle || trayDelegate.modelData.title || trayDelegate.modelData.id || qsTr("App")
                         }
                     }
@@ -222,9 +223,9 @@ ColumnLayout {
                                 spacing: 10
 
                                 Image {
-                                    visible: menuEntry.modelData.icon !== ""
+                                    visible: status === Image.Ready
                                     source: menuEntry.modelData.icon
-                                    Layout.preferredWidth: 16
+                                    Layout.preferredWidth: visible ? 16 : 0
                                     Layout.preferredHeight: 16
                                     sourceSize.width: 16
                                     sourceSize.height: 16
@@ -262,7 +263,9 @@ ColumnLayout {
 
                         Rectangle {
                             visible: menuEntry.modelData.isSeparator
-                            anchors.verticalCenter: parent.verticalCenter
+                            anchors {
+                                verticalCenter: parent.verticalCenter
+                            }
                             width: parent.width
                             height: 1
                             color: Theme.outline

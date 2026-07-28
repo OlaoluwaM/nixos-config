@@ -12,7 +12,12 @@ Scope {
     // A user pick (by dbusName) wins while that player still exists; otherwise
     // we fall back to auto-selecting the most relevant player.
     property string selectedPlayerId: ""
+    property int positionRefreshTick: 0
     readonly property var mediaPlayer: root.pickMediaPlayer(root.mediaPlayers, root.selectedPlayerId)
+    readonly property real livePosition: {
+        root.positionRefreshTick;
+        return root.mediaPlayer !== null ? root.mediaPlayer.position : 0;
+    }
 
     readonly property string mediaStatus: root.mediaPlaybackStatus(root.mediaPlayer)
     readonly property string mediaSource: root.mediaPlayer !== null ? root.mediaPlayer.identity : ""
@@ -23,13 +28,13 @@ Scope {
         : qsTr("No media")
     readonly property string mediaAlbumArt: root.mediaPlayer !== null ? root.mediaPlayer.trackArtUrl : ""
     readonly property string mediaPosition: root.mediaPlayer !== null
-        ? root.formatDuration(root.mediaPlayer.position)
+        ? root.formatDuration(root.livePosition)
         : "0:00"
     readonly property string mediaLength: root.mediaPlayer !== null
         ? root.formatDuration(root.mediaPlayer.length)
         : "0:00"
     readonly property real mediaProgress: (root.mediaPlayer !== null && root.mediaPlayer.length > 0)
-        ? Math.max(0, Math.min(1, root.mediaPlayer.position / root.mediaPlayer.length))
+        ? Math.max(0, Math.min(1, root.livePosition / root.mediaPlayer.length))
         : 0
     // Whether the player advertises a track length. Some players (notably
     // G4Music / "Gapless") publish mpris:length as 0 — i.e. no duration — so the
@@ -87,17 +92,13 @@ Scope {
     }
 
     // MPRIS reports position on seek, not continuously, so a playing track's
-    // position would otherwise look frozen. Re-emit positionChanged once a second
-    // while playing to drive the progress bar and timestamp forward; the value
-    // itself is read live from the player, this only nudges bindings to refresh.
+    // position would otherwise look frozen. Advance local refresh state once a
+    // second so livePosition re-reads the backend without fabricating an MPRIS
+    // positionChanged signal.
     Timer {
         interval: 1000
         repeat: true
         running: root.mediaStatus === "Playing" && root.mediaPlayer !== null
-        onTriggered: {
-            if (root.mediaPlayer !== null) {
-                root.mediaPlayer.positionChanged();
-            }
-        }
+        onTriggered: root.positionRefreshTick++
     }
 }
