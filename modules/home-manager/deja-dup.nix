@@ -48,8 +48,7 @@ in
         # the XDG layout (sys-bak, flatpak's ~/.var, agent CLIs' dotdirs).
         "include-list" = [
           "${userDirs.download}/rpms"
-          "${userDirs.pictures}/memorables"
-          "${userDirs.pictures}/useful-images"
+          "${userDirs.pictures}"
           "${dataHome}/fonts"
           "${dataHome}/zoxide" # _ZO_DATA_DIR (see dotfiles.nix)
           "${home}/sys-bak"
@@ -67,7 +66,6 @@ in
           "${home}/.claude"
           "${home}/.codex"
           configHome
-          "${userDirs.pictures}/wallpapers"
           "${userDirs.desktop}/${config.local.fsLayout.devDirname}/archive"
         ];
         "exclude-list" = [
