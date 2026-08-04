@@ -72,10 +72,10 @@ let
   # Used as a dconf.settings attr key, where Home Manager expects the same path without edge slashes.
   mkCustomKeybindingKey = index: "${customKeybindingSchema}/custom${toString index}";
   customKeybindings =
-    map mkCustomKeybindingPath (lib.range 0 5)
+    map mkCustomKeybindingPath (lib.range 0 6)
     ++ lib.optionals enableAsusRogKeybindings [
-      (mkCustomKeybindingPath 6)
       (mkCustomKeybindingPath 7)
+      (mkCustomKeybindingPath 8)
     ];
   favoriteApps = [
     "firefox.desktop"
@@ -432,9 +432,9 @@ in
       # Keybindings
       "org/gnome/shell/keybindings" = {
         focus-active-notification = emptyStringArray;
-        screenshot = [ "<Control>F6" ];
-        screenshot-window = [ "<Shift><Control>F6" ];
-        show-screen-recording-ui = [ "<Shift>F6" ];
+        screenshot = [ "<Shift>F6" ];
+        screenshot-window = [ "<Control>F6" ];
+        show-screen-recording-ui = [ "<Shift><Super>r" ];
         show-screenshot-ui = [ "F6" ];
         toggle-message-tray = [ "<Super>v" ];
         toggle-quick-settings = [ "<Super>q" ];
@@ -450,8 +450,8 @@ in
         move-to-workspace-last = [ "<Shift><Alt>Right" ];
         move-to-workspace-left = [ "<Shift><Super>Left" ];
         move-to-workspace-right = [ "<Shift><Super>Right" ];
-        toggle-fullscreen = [ "<Super>g" ];
-        toggle-maximized = [ "<Super>f" ];
+        toggle-fullscreen = [ "<Super>f" ];
+        toggle-maximized = emptyStringArray;
         unmaximize = [
           "<Super>Down"
           "<Alt>F5"
@@ -509,13 +509,19 @@ in
         name = "Discord";
       };
 
-      "${mkCustomKeybindingKey 6}" = lib.mkIf enableAsusRogKeybindings {
+      "${mkCustomKeybindingKey 6}" = {
+        binding = "<Shift><Super>m";
+        command = "missioncenter";
+        name = "Mission Center";
+      };
+
+      "${mkCustomKeybindingKey 7}" = lib.mkIf enableAsusRogKeybindings {
         binding = "Launch1";
         command = "rog-control-center";
         name = "Rog Control Center";
       };
 
-      "${mkCustomKeybindingKey 7}" = lib.mkIf enableAsusRogKeybindings {
+      "${mkCustomKeybindingKey 8}" = lib.mkIf enableAsusRogKeybindings {
         binding = "F5";
         command = "asusctl profile -n";
         name = "Switch Power profile";

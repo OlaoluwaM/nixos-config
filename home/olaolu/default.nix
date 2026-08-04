@@ -128,6 +128,7 @@ in
     pgcli
     protobuf
     proton-vpn
+    protonmail-desktop
     powertop
 
     racket

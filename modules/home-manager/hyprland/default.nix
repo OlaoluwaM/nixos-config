@@ -1,5 +1,6 @@
 {
   config,
+  hostConfig,
   lib,
   pkgs,
   unstable,
@@ -28,6 +29,7 @@ let
   theme = config.local.theme.colors;
   stripHash = s: lib.removePrefix "#" s;
   hyprlandSessionTarget = "hyprland-session.target";
+  enableAsusRogKeybindings = hostConfig.enableAsusRogKeybindings or false;
   lua = lib.generators.mkLuaInline;
   luaString = builtins.toJSON;
   mod = "SUPER";
@@ -387,9 +389,15 @@ in
         # Plain binds run once when the key is pressed.
         bind = [
           (mkBind "${mod} + T" (execDispatcher terminal))
+          (mkBind "${mod} + W" (execDispatcher (lib.getExe pkgs.firefox)))
+          (mkBind "${mod} + O" (execDispatcher (lib.getExe unstable.obsidian)))
+          (mkBind "CTRL + ALT + T" (execDispatcher (lib.getExe' pkgs.ticktick "ticktick")))
+          (mkBind "${mod} + S" (execDispatcher (lib.getExe pkgs.slack)))
+          (mkBind "ALT + S" (execDispatcher (lib.getExe pkgs.spotify)))
+          (mkBind "${mod} + D" (execDispatcher (lib.getExe' unstable.discord "Discord")))
 
           (mkBind "${mod} + Space" (execDispatcher "${vicinaeCommand} open"))
-          (mkBind "${mod} + V" (
+          (mkBind "ALT + V" (
             execDispatcher "${vicinaeCommand} 'vicinae://launch/clipboard/history?toggle=true'"
           ))
 
@@ -415,11 +423,12 @@ in
           # the named shell actions.
           (mkBind "${mod} + Q" "hl.dsp.global(\"quickshell:quickSettings\")")
 
-          (mkBind "${mod} + E" (execDispatcher "${pkgs.nautilus}/bin/nautilus"))
-          (mkBind "${mod} + N" (execDispatcher "${commands.airctl}/bin/airctl"))
+          (mkBind "${mod} + N" (execDispatcher "${pkgs.nautilus}/bin/nautilus"))
+          (mkBind "${mod} + ALT + W" (execDispatcher "${commands.airctl}/bin/airctl"))
           (mkBind "${mod} + B" (execDispatcher "${unstable.overskride}/bin/overskride"))
 
-          (mkBind "${mod} + M" (execDispatcher "${pkgs.mission-center}/bin/missioncenter"))
+          (mkBind "${mod} + M" (execDispatcher (lib.getExe pkgs.protonmail-desktop)))
+          (mkBind "${mod} + SHIFT + M" (execDispatcher "${pkgs.mission-center}/bin/missioncenter"))
 
           (mkBind "${mod} + Escape" (execDispatcher "${unstable.hyprshutdown}/bin/hyprshutdown"))
           (mkBind "XF86PowerOff" (execDispatcher "${unstable.hyprshutdown}/bin/hyprshutdown"))
@@ -430,6 +439,9 @@ in
           (mkBind "ALT + F4" "hl.dsp.window.close()")
 
           (mkBind "${mod} + F" "hl.dsp.window.fullscreen()")
+          (mkBind "${mod} + Up" "hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"set\" })")
+          (mkBind "${mod} + Down" "hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"unset\" })")
+          (mkBind "ALT + F5" "hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"unset\" })")
           (mkBind "${mod} + SHIFT + V" "hl.dsp.window.float()")
 
           (mkBind "${mod} + 1" "hl.dsp.focus({ workspace = 1 })")
@@ -476,6 +488,10 @@ in
           # Super+left-drag moves a window and Super+right-drag resizes one.
           (mkBindWithFlags "${mod} + mouse:272" "hl.dsp.window.drag()" { mouse = true; })
           (mkBindWithFlags "${mod} + mouse:273" "hl.dsp.window.resize()" { mouse = true; })
+        ]
+        ++ lib.optionals enableAsusRogKeybindings [
+          (mkBind "Launch1" (execDispatcher (lib.getExe' unstable.asusctl "rog-control-center")))
+          (mkBind "F5" (execDispatcher "${lib.getExe' unstable.asusctl "asusctl"} profile -n"))
         ];
       };
     };

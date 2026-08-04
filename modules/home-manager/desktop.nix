@@ -127,6 +127,10 @@ in
             # slack:// deep links (the nixpkgs slack package ships slack.desktop).
             "x-scheme-handler/slack" = "slack.desktop";
 
+            # Keep GNOME's native email launcher and mailto links deterministic
+            # across desktop profiles.
+            "x-scheme-handler/mailto" = "proton-mail.desktop";
+
             # claude-cli:// OAuth callbacks. The claude-code package ships no
             # desktop file — the CLI writes claude-code-url-handler.desktop
             # into ~/.local/share/applications at runtime. It can no longer
