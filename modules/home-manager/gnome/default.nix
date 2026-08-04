@@ -117,8 +117,6 @@ in
       gnome-keyring
       gnome-sound-recorder
 
-      kooha
-
       libappindicator-gtk3
       libgda5
 
@@ -178,13 +176,6 @@ in
 
     dconf.settings = {
       # Appearance
-
-      # TODO: Enable once you've install NixOS proper and update the uris
-      # "org/gnome/desktop/background" = {
-      #   picture-options = "zoom";
-      #   picture-uri = "file:///home/olaolu/.config/background";
-      #   picture-uri-dark = "file:///home/olaolu/.config/background";
-      # };
 
       "org/gnome/desktop/interface" = {
         enable-animations = true;
