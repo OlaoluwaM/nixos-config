@@ -2,9 +2,7 @@
 # Use this to configure your home environment (it replaces ~/.config/nixpkgs/home.nix)
 # Based off: https://github.com/Misterio77/nix-starter-configs/blob/main/minimal/home-manager/home.nix
 {
-  inputs,
   hostConfig,
-  lib,
   config,
   pkgs,
   unstable,

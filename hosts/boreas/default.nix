@@ -4,7 +4,6 @@
 # Host: Asus ROG Zephyrus M16 (2023)
 # TODO: Update relevant configuration once we have a bare metal installation of nixos
 {
-  inputs,
   lib,
   config,
   unstable,
