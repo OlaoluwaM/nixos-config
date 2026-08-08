@@ -17,6 +17,6 @@ BarCapsule {
     }
 
     TapHandler {
-        onTapped: root.popups.toggle("quickSettings")
+        onTapped: root.popups.toggleAt("quickSettings", root.mapToItem(null, root.width / 2, 0).x)
     }
 }

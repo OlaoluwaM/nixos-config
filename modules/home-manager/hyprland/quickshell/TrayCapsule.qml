@@ -18,6 +18,6 @@ BarCapsule {
     }
 
     TapHandler {
-        onTapped: root.popups.toggle("tray")
+        onTapped: root.popups.toggleAt("tray", root.mapToItem(null, root.width / 2, 0).x)
     }
 }

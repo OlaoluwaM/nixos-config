@@ -34,6 +34,6 @@ BarCapsule {
     }
 
     TapHandler {
-        onTapped: root.popups.toggle("notifications")
+        onTapped: root.popups.toggleAt("notifications", root.mapToItem(null, root.width / 2, 0).x)
     }
 }

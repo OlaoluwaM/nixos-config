@@ -9,7 +9,7 @@ ColumnLayout {
     property bool heightAnimationsReady: false
     property bool _tick: false
 
-    spacing: 16
+    spacing: Theme.popoverSectionGap
 
     Timer {
         interval: 150
@@ -79,7 +79,7 @@ ColumnLayout {
 
         ColumnLayout {
             anchors.centerIn: parent
-            spacing: 12
+            spacing: Theme.popoverContentGap
 
             ShellIcon {
                 name: "notifications"
@@ -109,7 +109,7 @@ ColumnLayout {
         Column {
             id: notifColumn
             width: notifFlickable.width
-            spacing: 12
+            spacing: Theme.popoverContentGap
 
             Repeater {
                 model: root.notifications.historyModel
@@ -119,11 +119,11 @@ ColumnLayout {
                     required property real timestamp
 
                     width: notifColumn.width
-                    radius: Theme.capsuleRadius
+                    radius: Theme.cardRadius
                     expandable: true
                     heightAnimationEnabled: root.heightAnimationsReady
                     backgroundColor: Theme.surfaceVariant
-                    dismissHoverColor: Theme.base
+                    dismissHoverColor: Theme.surfaceHover
                     timeText: {
                         void(root._tick);
                         return qsTr("· %1").arg(root.timeAgo(notifItem.timestamp));

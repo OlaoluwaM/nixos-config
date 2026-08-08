@@ -56,6 +56,28 @@ Singleton {
     readonly property int cardRadius:           14
     readonly property int trackRadius:          3   // thin slider / progress bars
 
+    // ── Popover geometry and motion ────────────────────────────────────
+    readonly property int popoverScreenInset:   12
+    readonly property int popoverGap:           8
+    readonly property int popoverFrameRadius:   16
+    readonly property int popoverPadding:       24
+    readonly property int popoverCompactPadding: 20
+    readonly property int popoverContentGap:    12
+    readonly property int popoverSectionGap:    16
+    readonly property int popoverCompactWidth:  360
+    readonly property int popoverStandardWidth: 460
+    readonly property int popoverWideWidth:     700
+    readonly property int popoverMotionDistanceOpen: 6
+    readonly property int popoverMotionDistanceClose: 4
+    readonly property int popoverMotionDuration: 150
+    // A 6px blur offset 6px down has no top reach and a 12px bottom reach.
+    readonly property int popoverShadowBlur: 6
+    readonly property int popoverShadowOffsetY: 6
+    readonly property int popoverShadowBottomExtent: 12
+    readonly property int popoverBottomClearance: popoverShadowBottomExtent
+        + Math.max(popoverMotionDistanceOpen, popoverMotionDistanceClose)
+    readonly property color popoverShadowColor: Qt.rgba(scrim.r, scrim.g, scrim.b, 0.34)
+
     // ── Bar geometry and surfaces ───────────────────────────────────────
     // These tokens belong to the top bar only. Popovers retain the generic
     // capsule geometry above; shell.qml and Popovers.qml share the position

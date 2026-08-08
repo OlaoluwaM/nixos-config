@@ -51,6 +51,6 @@ BarCapsule {
     }
 
     TapHandler {
-        onTapped: root.popups.toggle("calendar")
+        onTapped: root.popups.toggleAt("calendar", root.mapToItem(null, root.width / 2, 0).x)
     }
 }

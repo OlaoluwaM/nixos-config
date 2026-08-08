@@ -8,7 +8,7 @@ import Quickshell.Services.SystemTray
 ColumnLayout {
     id: trayPanel
     required property PopupController popups
-    spacing: 16
+    spacing: Theme.popoverSectionGap
 
     property var activeMenuSource: null
     property real gridOpacity: 1
@@ -67,7 +67,7 @@ ColumnLayout {
     RowLayout {
         id: headerRow
         Layout.fillWidth: true
-        spacing: 10
+        spacing: Theme.popoverContentGap
 
         IconButton {
             visible: trayPanel.activeMenuSource !== null
