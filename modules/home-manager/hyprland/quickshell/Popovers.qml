@@ -241,11 +241,10 @@ PanelWindow {
                 if (root.popups.activePopup === "") {
                     root.popups.trayMenuContentHeight = 0;
                     root.pendingPopup = "";
-                    openAnim.stop();
                     switchOutAnim.stop();
                     switchInAnim.stop();
                     popoverCard.cardShown = true;
-                    closeAnim.restart();
+                    closeAnim.start();
                     return;
                 }
 
