@@ -490,7 +490,7 @@ in
           (mkBindWithFlags "${mod} + mouse:273" "hl.dsp.window.resize()" { mouse = true; })
         ]
         ++ lib.optionals enableAsusRogKeybindings [
-          (mkBind "Launch1" (execDispatcher (lib.getExe' unstable.asusctl "rog-control-center")))
+          (mkBind "XF86Launch1" (execDispatcher (lib.getExe' unstable.asusctl "rog-control-center")))
           (mkBind "F5" (execDispatcher "${lib.getExe' unstable.asusctl "asusctl"} profile -n"))
         ];
       };
