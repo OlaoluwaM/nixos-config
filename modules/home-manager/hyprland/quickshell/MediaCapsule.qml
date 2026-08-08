@@ -10,14 +10,14 @@ BarCapsule {
     required property StatusController status
 
     visible: root.status.mediaActive
-    width: root.status.mediaActive ? 280 : 0
+    width: root.status.mediaActive ? 230 : 0
     active: root.popups.activePopup === "media"
     clipped: true
 
     Row {
         anchors.fill: parent
-        anchors.margins: 8
-        spacing: 8
+        anchors.margins: 3
+        spacing: 6
 
         // Leading visual: a spinning vinyl record for music; a static rounded
         // thumbnail (or glyph) for everything else — video, podcasts, browsers.
@@ -197,7 +197,7 @@ BarCapsule {
         }
 
         Item {
-            width: 120
+            width: 82
             height: 30
 
             Column {
@@ -208,8 +208,8 @@ BarCapsule {
                     width: parent.width
                     height: implicitHeight
                     text: root.status.mediaDisplayTitle
-                    color: Theme.capsuleTextColor(root.popups.activePopup === "media", root.hovered)
-                    font.pixelSize: Theme.fontCaption
+                    color: Theme.barControlTextColor(root.active, root.hovered, false)
+                    font.pixelSize: Theme.barFontBody
                     font.weight: Font.DemiBold
                 }
 
@@ -220,8 +220,8 @@ BarCapsule {
                     text: root.status.mediaHasLength
                         ? root.status.mediaPosition + " / " + root.status.mediaLength
                         : root.status.mediaPosition
-                    color: Theme.capsuleTextColor(root.popups.activePopup === "media", root.hovered)
-                    font.pixelSize: Theme.fontSmall
+                    color: Theme.barControlTextColor(root.active, root.hovered, false)
+                    font.pixelSize: Theme.barFontCaption
                     elide: Text.ElideRight
                     maximumLineCount: 1
                     textFormat: Text.PlainText
@@ -238,9 +238,9 @@ BarCapsule {
         // the icon brightens. A filled hover box here would read as a panel
         // inside the capsule, which looked busy against the popup's flat icons.
         Row {
-            width: 98
+            width: 96
             height: 30
-            spacing: 4
+            spacing: 3
 
             IconButton {
                 accessibleName: qsTr("Previous")
@@ -248,9 +248,9 @@ BarCapsule {
                 width: implicitWidth
                 height: implicitHeight
                 iconName: "previous"
-                iconSize: 15
+                iconSize: Theme.barIconSize
                 iconColor: hovered ? Theme.text
-                    : Theme.capsuleTextColor(root.popups.activePopup === "media", root.hovered)
+                    : Theme.barControlTextColor(root.active, root.hovered, false)
                 normalColor: "transparent"
                 hoverColor: "transparent"
                 onClicked: root.mediaActions.perform("previous")
@@ -262,9 +262,9 @@ BarCapsule {
                 width: implicitWidth
                 height: implicitHeight
                 iconName: root.status.mediaStatus === "Playing" ? "pause" : "play"
-                iconSize: 15
+                iconSize: Theme.barIconSize
                 iconColor: hovered ? Theme.text
-                    : Theme.capsuleTextColor(root.popups.activePopup === "media", root.hovered)
+                    : Theme.barControlTextColor(root.active, root.hovered, false)
                 normalColor: "transparent"
                 hoverColor: "transparent"
                 onClicked: root.mediaActions.perform("play-pause")
@@ -276,9 +276,9 @@ BarCapsule {
                 width: implicitWidth
                 height: implicitHeight
                 iconName: "next"
-                iconSize: 15
+                iconSize: Theme.barIconSize
                 iconColor: hovered ? Theme.text
-                    : Theme.capsuleTextColor(root.popups.activePopup === "media", root.hovered)
+                    : Theme.barControlTextColor(root.active, root.hovered, false)
                 normalColor: "transparent"
                 hoverColor: "transparent"
                 onClicked: root.mediaActions.perform("next")

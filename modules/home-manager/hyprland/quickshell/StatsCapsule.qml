@@ -6,14 +6,14 @@ import QtQuick.Layouts
 BarCapsule {
     id: root
     required property StatusController status
-    readonly property int statsSlotWidth: 54
+    readonly property int statsSlotWidth: 46
 
-    width: 250
+    width: 188
     respondToHover: false
 
     RowLayout {
         anchors.centerIn: parent
-        spacing: 10
+        spacing: 6
 
         Item {
             Layout.preferredWidth: root.statsSlotWidth
@@ -22,13 +22,13 @@ BarCapsule {
             RowLayout {
                 id: cpuStatContent
                 anchors.centerIn: parent
-                spacing: 5
+                spacing: 4
 
-                ShellIcon { name: "cpu"; iconColor: Theme.metricCpu; implicitSize: 16 }
+                ShellIcon { name: "cpu"; iconColor: Theme.metricCpu; implicitSize: Theme.barIconSize }
                 StyledText {
                     text: root.status.cpuPercent + "%"
                     color: Theme.metricCpu
-                    font.pixelSize: Theme.fontBody
+                    font.pixelSize: Theme.barFontBody
                 }
             }
 
@@ -56,13 +56,13 @@ BarCapsule {
             RowLayout {
                 id: memoryStatContent
                 anchors.centerIn: parent
-                spacing: 5
+                spacing: 4
 
-                ShellIcon { name: "memory"; iconColor: Theme.metricMemory; implicitSize: 16 }
+                ShellIcon { name: "memory"; iconColor: Theme.metricMemory; implicitSize: Theme.barIconSize }
                 StyledText {
                     text: root.status.memPercent + "%"
                     color: Theme.metricMemory
-                    font.pixelSize: Theme.fontBody
+                    font.pixelSize: Theme.barFontBody
                 }
             }
 
@@ -90,14 +90,14 @@ BarCapsule {
             RowLayout {
                 id: tempStatContent
                 anchors.centerIn: parent
-                spacing: 5
+                spacing: 4
 
-                ShellIcon { name: "temp"; iconColor: Theme.metricTemperature; implicitSize: 16 }
+                ShellIcon { name: "temp"; iconColor: Theme.metricTemperature; implicitSize: Theme.barIconSize }
                 StyledText {
                     // tempC is null on machines without a CPU sensor (e.g. VMs).
                     text: root.status.tempC !== null ? root.status.tempC + "°C" : qsTr("N/A")
                     color: Theme.metricTemperature
-                    font.pixelSize: Theme.fontBody
+                    font.pixelSize: Theme.barFontBody
                 }
             }
 

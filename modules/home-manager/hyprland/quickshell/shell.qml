@@ -190,7 +190,12 @@ Scope {
         mask: Region { item: bar }
 
         // To modify the topbar margins against the screen edge, change the values here
-        margins { top: Theme.barTopMargin; left: 8; right: 8; bottom: 0 }
+        margins {
+            top: Theme.barTopMargin
+            left: Theme.barOuterMargin
+            right: Theme.barOuterMargin
+            bottom: 0
+        }
         anchors { top: true; left: true; right: true }
 
         Bar {

@@ -5,6 +5,7 @@ singleton GeneratedCommands GeneratedCommands.qml
 ShellIcon 1.0 ShellIcon.qml
 MarqueeText 1.0 MarqueeText.qml
 BarCapsule 1.0 BarCapsule.qml
+BarGroup 1.0 BarGroup.qml
 AirplaneModeCapsule 1.0 AirplaneModeCapsule.qml
 BluetoothCapsule 1.0 BluetoothCapsule.qml
 CaffeineCapsule 1.0 CaffeineCapsule.qml

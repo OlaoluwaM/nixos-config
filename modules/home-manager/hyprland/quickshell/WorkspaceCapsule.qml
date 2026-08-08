@@ -8,12 +8,10 @@ Rectangle {
 
     readonly property var sortedWorkspaces: [...Hyprland.workspaces.values].sort((a, b) => a.id - b.id)
 
-    width: Math.max(36, workspaceRow.implicitWidth + 16)
-    height: Theme.capsuleHeight
-    radius: Theme.capsuleRadius
-    color: Theme.surfaceVariant
-    border.color: Theme.outline
-    border.width: 1
+    width: Math.max(Theme.barControlHeight, workspaceRow.implicitWidth + 12)
+    height: Theme.barControlHeight
+    radius: Theme.barControlRadius
+    color: Theme.barWidgetColor
     clip: true
 
     Behavior on width {
@@ -27,7 +25,7 @@ Rectangle {
     Row {
         id: workspaceRow
         anchors.centerIn: parent
-        spacing: 6
+        spacing: 4
 
         Repeater {
             id: wsRepeater

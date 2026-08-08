@@ -7,15 +7,16 @@ BarCapsule {
     required property PopupController popups
     required property NotificationService notifications
 
-    width: Theme.capsuleHeight
+    width: Theme.barControlHeight
     active: root.popups.activePopup === "notifications"
+    urgent: root.notifications.hasCriticalNotifications
 
     ShellIcon {
         id: notifBellIcon
         anchors.centerIn: parent
         name: root.notifications.doNotDisturb ? "notificationsOff" : "notifications"
-        iconColor: Theme.capsuleTextColor(root.popups.activePopup === "notifications", root.hovered)
-        implicitSize: 15
+        iconColor: Theme.barControlTextColor(root.active, root.hovered, root.urgent)
+        implicitSize: Theme.barIconSize
     }
 
     Rectangle {
@@ -23,7 +24,7 @@ BarCapsule {
         width: 7
         height: 7
         radius: 3.5
-        color: Theme.error
+        color: root.urgent ? Theme.error : Theme.primary
         anchors {
             left: notifBellIcon.right
             top: notifBellIcon.top

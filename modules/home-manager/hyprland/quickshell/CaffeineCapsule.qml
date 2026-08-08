@@ -8,17 +8,16 @@ BarCapsule {
     required property CaffeineActions caffeineActions
     required property StatusController status
 
-    width: Theme.capsuleHeight
-    color: root.status.caffeineManual ? Theme.primary : Theme.capsuleColor(false, root.hovered)
-    border.color: root.status.caffeineManual ? Theme.primary : Theme.capsuleBorderColor(false, root.hovered)
+    width: Theme.barControlHeight
+    active: root.status.caffeineManual
 
     ShellIcon {
         anchors.centerIn: parent
         // Swap to the slashed glyph when caffeine is off, like the network/bluetooth
         // capsules. The active background colour still reinforces the on state.
         name: root.status.caffeineManual ? "coffee" : "coffeeOff"
-        iconColor: root.status.caffeineManual ? Theme.primaryForeground : Theme.capsuleTextColor(false, root.hovered)
-        implicitSize: 16
+        iconColor: Theme.barControlTextColor(root.active, root.hovered, false)
+        implicitSize: Theme.barIconSize
     }
 
     TapHandler {

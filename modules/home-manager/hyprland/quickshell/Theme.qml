@@ -56,13 +56,31 @@ Singleton {
     readonly property int cardRadius:           14
     readonly property int trackRadius:          3   // thin slider / progress bars
 
-    // ── Bar geometry ────────────────────────────────────────────────────
-    // Shared between shell.qml (which draws the bar window) and Popovers.qml
-    // (which positions popup cards below it), so the two can't drift apart.
-    readonly property int barTopMargin:      18   // gap between screen edge and bar
-    readonly property int barHeight:         62   // the visible bar strip
-    readonly property int barExclusiveZone:  70   // space reserved from tiled windows
-    readonly property int barWindowHeight:   96   // taller than the bar so tooltips can draw below it
+    // ── Bar geometry and surfaces ───────────────────────────────────────
+    // These tokens belong to the top bar only. Popovers retain the generic
+    // capsule geometry above; shell.qml and Popovers.qml share the position
+    // tokens so the popup edge continues to track the rail.
+    readonly property int barTopMargin:       8
+    readonly property int barOuterMargin:     8
+    readonly property int barHeight:          48
+    readonly property int barExclusiveZone:   56
+    readonly property int barWindowHeight:    82
+    readonly property int barPadding:         6
+    readonly property int barGroupPadding:    4
+    readonly property int barGroupGap:        4
+    readonly property int barSectionGap:      6
+    readonly property int barControlHeight:   36
+    readonly property int barControlRadius:   9
+    readonly property int barRailRadius:      14
+    readonly property int barIconSize:        15
+    readonly property int barLabelMaxWidth:   88
+    readonly property int barFontBody:        12
+    readonly property int barFontCaption:     11
+
+    readonly property color barRailColor: Qt.tint(base, Qt.rgba(surfaceVariant.r, surfaceVariant.g, surfaceVariant.b, 0.42))
+    readonly property color barWidgetColor: Qt.tint(surfaceVariant, Qt.rgba(base.r, base.g, base.b, 0.22))
+    readonly property color barAccentGradientStart: Qt.tint(barWidgetColor, Qt.rgba(primary.r, primary.g, primary.b, 0.24))
+    readonly property color barAccentGradientEnd: Qt.tint(barWidgetColor, Qt.rgba(secondary.r, secondary.g, secondary.b, 0.24))
 
     // ── Animation durations (ms) ────────────────────────────────────────
     readonly property int animFast:       150
@@ -86,9 +104,25 @@ Singleton {
     readonly property real springOvershoot: 1.4
 
     // ── Capsule state helpers ───────────────────────────────────────────
+    function barControlColor(active, hovered, urgent) {
+        if (active)
+            return Qt.tint(barWidgetColor, Qt.rgba(primary.r, primary.g, primary.b, hovered ? 0.30 : 0.22));
+        if (urgent)
+            return Qt.tint(barWidgetColor, Qt.rgba(error.r, error.g, error.b, hovered ? 0.26 : 0.18));
+        return hovered ? surfaceHover : barWidgetColor;
+    }
+
+    function barControlTextColor(active, hovered, urgent) {
+        if (active)
+            return primary;
+        if (urgent)
+            return error;
+        return hovered ? text : textSecondary;
+    }
+
     // Uniform (active, hovered) signature; each responds to the state it needs:
-    // fill washes with the accent when active, brightens on hover, border/text
-    // shift to the accent when active.
+    // fill washes with the accent when active, brightens on hover, and text
+    // shifts to the accent when active.
     function capsuleColor(active, hovered) {
         // Active = a popover is open, or a radio/link is live. We wash the base
         // surface with a low-alpha primary tint rather than the solid-primary
@@ -102,10 +136,6 @@ Singleton {
         return hovered ? surfaceHover : surfaceVariant;
     }
 
-    function capsuleBorderColor(active, hovered) {
-        return active ? primary : outline;
-    }
-
     function capsuleTextColor(active, hovered) {
         return active ? primary : text;
     }
@@ -115,8 +145,7 @@ Singleton {
     // fill of the momentary toggles. The stops tint the surface (rather than
     // using the raw accents) so the wash stays in-palette and gentle; opaque so
     // it composites over the capsule surface, not the transparent bar window.
-    // Border and text for these capsules stay on the standard accent helpers
-    // (capsuleBorderColor / capsuleTextColor with active = true).
+    // Text for these capsules stays on the standard accent helper.
     function capsuleGradient() {
         return {
             start: Qt.tint(surfaceVariant, Qt.rgba(primary.r, primary.g, primary.b, 0.22)),

@@ -6,14 +6,14 @@ BarCapsule {
     id: root
     required property PopupController popups
 
-    width: Theme.capsuleHeight
+    width: Theme.barControlHeight
     active: root.popups.activePopup === "quickSettings"
 
     ShellIcon {
         anchors.centerIn: parent
         name: "settings"
-        iconColor: Theme.capsuleTextColor(root.popups.activePopup === "quickSettings", root.hovered)
-        implicitSize: 17
+        iconColor: Theme.barControlTextColor(root.active, root.hovered, false)
+        implicitSize: Theme.barIconSize
     }
 
     TapHandler {

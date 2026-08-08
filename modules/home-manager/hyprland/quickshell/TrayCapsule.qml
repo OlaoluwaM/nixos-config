@@ -7,14 +7,14 @@ BarCapsule {
     required property PopupController popups
 
     visible: root.popups.trayItemCount > 0
-    width: root.popups.trayItemCount > 0 ? Theme.capsuleHeight : 0
+    width: root.popups.trayItemCount > 0 ? Theme.barControlHeight : 0
     active: root.popups.activePopup === "tray"
 
     ShellIcon {
         anchors.centerIn: parent
         name: "tray"
-        iconColor: Theme.capsuleTextColor(root.popups.activePopup === "tray", root.hovered)
-        implicitSize: 16
+        iconColor: Theme.barControlTextColor(root.active, root.hovered, false)
+        implicitSize: Theme.barIconSize
     }
 
     TapHandler {

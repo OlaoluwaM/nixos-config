@@ -14,6 +14,14 @@ Scope {
 
     readonly property int maxHistory: 20
     readonly property int popupDuration: 5500
+    readonly property bool hasCriticalNotifications: {
+        notificationHistory.count;
+        for (let i = 0; i < notificationHistory.count; i++) {
+            if (notificationHistory.get(i).urgency === 2)
+                return true;
+        }
+        return false;
+    }
     property alias historyModel: notificationHistory
     property alias popupModel: notificationPopups
 

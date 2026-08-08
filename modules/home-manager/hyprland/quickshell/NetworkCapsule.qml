@@ -14,14 +14,19 @@ BarCapsule {
     id: root
     required property ConnectivityActions connectivityActions
     required property StatusController status
+    property bool showLabel: true
 
     // Display intent: show a live connection only when a link is up AND the
     // radios are not killed. airplaneMode stays separate below to drive dimming.
     readonly property bool connected: !root.status.airplaneMode && root.status.networkOnline
     readonly property bool ethernet: root.status.networkType === "ethernet"
     readonly property bool hasLabel: root.connected
+    readonly property bool labelVisible: root.hasLabel && root.showLabel
     // VPN is only shown while there is also a live link for it to ride on.
     readonly property bool vpnActive: root.connected && root.status.vpnOn
+    readonly property real expandedWidth: !root.hasLabel ? Theme.barControlHeight
+        : Theme.barIconSize + 6 + Math.min(networkLabel.implicitWidth, Theme.barLabelMaxWidth)
+            + (root.vpnActive ? 6 + 12 : 0) + 24
 
     // A live link lights the capsule up: feed `connected` into the frame's
     // `active` and opt into the primary→secondary accent gradient, mirroring
@@ -29,7 +34,7 @@ BarCapsule {
     active: root.connected
     accentGradient: true
 
-    width: root.hasLabel ? netContent.implicitWidth + 36 : Theme.capsuleHeight
+    width: root.labelVisible ? netContent.implicitWidth + 24 : Theme.barControlHeight
     opacity: root.status.airplaneMode ? 0.35 : 1.0
 
     Behavior on opacity { OpacityAnimator { duration: Theme.animNormal; easing.type: Theme.easingType; easing.bezierCurve: Theme.easingCurve } }
@@ -37,26 +42,27 @@ BarCapsule {
     RowLayout {
         id: netContent
         anchors.centerIn: parent
-        spacing: 10
+        spacing: 6
 
         ShellIcon {
             name: !root.connected ? "networkOff" : (root.ethernet ? "ethernet" : "network")
-            iconColor: Theme.capsuleTextColor(root.active, root.hovered)
-            implicitSize: 15
+            iconColor: Theme.barControlTextColor(root.active, root.hovered, false)
+            implicitSize: Theme.barIconSize
             Layout.alignment: Qt.AlignVCenter
         }
 
         MarqueeText {
-            visible: root.hasLabel
+            id: networkLabel
+            visible: root.labelVisible
             // Ethernet connection names ("Wired connection 1") aren't meaningful,
             // so show a plain label; Wi-Fi keeps its connection/SSID name.
             text: root.ethernet ? qsTr("Ethernet") : root.status.networkName
-            color: Theme.capsuleTextColor(root.active, root.hovered)
-            font.pixelSize: Theme.fontBody
+            color: Theme.barControlTextColor(root.active, root.hovered, false)
+            font.pixelSize: Theme.barFontBody
             font.weight: Font.DemiBold
             Layout.alignment: Qt.AlignVCenter
-            Layout.maximumWidth: 120
-            Layout.preferredWidth: Math.min(implicitWidth, 120)
+            Layout.maximumWidth: Theme.barLabelMaxWidth
+            Layout.preferredWidth: Math.min(implicitWidth, Theme.barLabelMaxWidth)
             Layout.preferredHeight: implicitHeight
         }
 
@@ -65,7 +71,7 @@ BarCapsule {
         ShellIcon {
             visible: root.vpnActive
             name: "vpn"
-            iconColor: Theme.capsuleTextColor(root.active, root.hovered)
+            iconColor: Theme.barControlTextColor(root.active, root.hovered, false)
             implicitSize: 12
             Layout.alignment: Qt.AlignVCenter
         }
