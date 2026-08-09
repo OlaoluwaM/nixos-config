@@ -36,13 +36,14 @@ in
         general = {
           # Hide the mouse cursor while locked.
           hide_cursor = true;
+          immediate_render = true;
         };
 
         background = [
           {
-            # Waypaper updates this symlink after a wallpaper is selected.
-            # hyprlock uses the symlink as the lock-screen background.
-            path = "${config.xdg.cacheHome}/hypr-shell/lock-wallpaper";
+            # Capture the unlocked desktop at lock time. The solid color below
+            # is the loading frame while immediate rendering acquires the lock.
+            path = "screenshot";
 
             # Blur makes the wallpaper less visually noisy behind the password
             # field. Higher values are stronger but may be heavier to render.

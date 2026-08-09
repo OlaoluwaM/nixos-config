@@ -97,7 +97,8 @@ shebang and its own `set -euo pipefail`.
 
 Once launched, the session shape is a standalone Hyprland desktop with a custom
 Quickshell top bar, Vicinae launcher, native notification handling, a system
-tray, hyprlock, hypridle, Waypaper/awww wallpapers, and a small set of helper scripts.
+tray, hyprlock, hypridle, wallpapers (Caffyne owns this by default; Waypaper/awww
+under the Quickshell rollback backend), and a small set of helper scripts.
 
 ## Top Bar
 
@@ -154,34 +155,40 @@ straight through systemd instead of exiting Hyprland.
 
 ## Wallpapers
 
-Wallpapers come from the directory referenced by `$WALLPAPERS_DIR`. The dotfiles module currently sets that to `~/Pictures/wallpapers`.
+The wallpaper picker depends on `local.hyprland.shell.backend`:
 
-Waypaper is the wallpaper picker. `awww` is the Wayland daemon that actually
-draws the selected wallpaper on screen.
+- **Caffyne (default backend).** Caffyne owns wallpaper selection. Its own
+  Dash "Wallpapers" page (`Super+Shift+W`) is the picker, and
+  `caffyne-awww.service` is the daemon that actually draws the selection.
+  The picker reads `$WALLPAPERS_DIR`, exported into every Hyprland-session
+  systemd user unit via `systemd.user.sessionVariables` in `default.nix`, so
+  it can show more than the bundled Nix-store wallpapers; it falls back to
+  that bundled, read-only directory if the variable is unset or does not
+  point at a real directory.
+- **Quickshell (rollback backend).** Waypaper is the wallpaper picker and
+  `awww` is the Wayland daemon that draws the selection, via
+  `hypr-shell-awww.service` and `hypr-shell-waypaper-restore.service`.
 
-Home Manager writes `~/.config/waypaper/config.ini` so Waypaper starts with the
-right wallpaper folder and the `awww` backend. Waypaper stores the selected
-wallpaper in its own state file, which keeps the Nix-written config from needing
-to be edited by the app.
+Wallpapers come from the directory referenced by `$WALLPAPERS_DIR`. The
+dotfiles module currently sets that to `~/Pictures/wallpapers`.
 
-Waypaper's `color` setting uses `local.theme.colors.lockBackground`. That color
-is the fallback behind the wallpaper; with `fill = Fill`, it is mostly visible
-only if the wallpaper does not cover an output or restore has not applied an
-image yet.
+Under the Quickshell backend, Home Manager writes `~/.config/waypaper/config.ini`
+so Waypaper starts with the right wallpaper folder and the `awww` backend.
+Waypaper stores the selected wallpaper in its own state file, which keeps the
+Nix-written config from needing to be edited by the app. Waypaper's `color`
+setting uses `local.theme.colors.lockBackground`. That color is the fallback
+behind the wallpaper; with `fill = Fill`, it is mostly visible only if the
+wallpaper does not cover an output or restore has not applied an image yet.
 
-When a wallpaper is selected, Waypaper runs a small post-command that updates:
+Neither backend feeds a wallpaper into the lock screen anymore. hyprlock's
+background is `path = "screenshot"` (see `hyprlock.nix`) — a live capture of
+the unlocked desktop taken at lock time, independent of whichever wallpaper is
+active. The earlier `wallpaperLockHook`/Waypaper `post_command` mechanism,
+which copied the selected wallpaper to
+`$XDG_CACHE_HOME/hypr-shell/lock-wallpaper` for hyprlock to read, has been
+removed; Waypaper no longer runs a `post_command`.
 
-```text
-$XDG_CACHE_HOME/hypr-shell/lock-wallpaper
-```
-
-Hyprlock reads that symlink for the lock-screen background.
-
-Waypaper escapes the `$wallpaper` value before running `post_command`, so the
-config passes `$wallpaper` unquoted. That looks odd, but it is what keeps paths
-with spaces working.
-
-Useful commands:
+Useful commands (Quickshell backend only):
 
 ```sh
 waypaper
@@ -189,10 +196,11 @@ waypaper --random
 waypaper --restore
 ```
 
-`Super+Shift+W` opens Waypaper. Waypaper is also exposed as a normal desktop
-entry named `Waypaper`, so Vicinae can open it from app search. `waypaper
---random` is useful manually, but there is no random-wallpaper keybind in the
-current profile.
+`Super+Shift+W` opens the active backend's picker (Caffyne's Dash Wallpapers
+page, or the Waypaper app under Quickshell). Under Quickshell, Waypaper is
+also exposed as a normal desktop entry named `Waypaper`, so Vicinae can open
+it from app search; `waypaper --random` is useful manually, but there is no
+random-wallpaper keybind in the current profile.
 
 ## Screenshots
 
@@ -254,7 +262,10 @@ Display-off-on-idle is present as a commented `hypridle` listener because VM
 displays can fail to wake cleanly after DPMS off. Re-enable it on bare metal if
 that behavior is wanted.
 
-`hyprlock` uses the current wallpaper symlink as its background, with blur, a centered password field, and time/date labels. NixOS defines `security.pam.services.hyprlock = { };` so hyprlock can authenticate.
+`hyprlock`'s background is a live screenshot of the unlocked desktop taken at
+lock time (`path = "screenshot"` in `hyprlock.nix`), not the current wallpaper,
+with blur, a centered password field, and time/date labels. NixOS defines
+`security.pam.services.hyprlock = { };` so hyprlock can authenticate.
 
 ## Power Profiles
 
@@ -388,7 +399,7 @@ The Quickshell docs still call out caveats: the language server does not provide
 
 These are intentionally not part of this baseline:
 
-- `hyprpaper`: replaced by Waypaper with `awww`.
+- `hyprpaper`: replaced by `awww` -- Caffyne's own picker by default, or Waypaper under the Quickshell rollback backend.
 - `swaync`, `dunst`, `mako`, `fnott`: replaced by Quickshell-native notifications.
 - Waybar, AGS, Eww, HyprPanel, Noctalia, ashell: replaced by this small Quickshell shell.
 - Wofi, Rofi, Fuzzel, Walker, Anyrun, Hyprlauncher: replaced by Vicinae.

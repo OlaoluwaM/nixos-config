@@ -56,15 +56,6 @@ let
     '';
   };
 
-  caffeineScript = pkgs.writeShellApplication {
-    name = "hypr-shell-caffeine";
-    runtimeInputs = [
-      pkgs.coreutils
-      pkgs.systemd
-    ];
-    text = builtins.readFile ./scripts/hypr-shell-caffeine.sh;
-  };
-
   # This script provides command-backed status data. Native Quickshell services
   # provide audio, media, and battery state directly inside QML.
   statusScript = pkgs.writeShellApplication {
@@ -77,7 +68,7 @@ let
       iproute2
       jq
       networkmanager
-      caffeineScript
+      commands.caffeineScript
       # The active power profile is read via `hypr-shell-power-profile status`
       # (powerProfileScript), which carries its own power-profiles-daemon/asusctl
       # inputs, so the daemon CLI is not needed directly here. The script reads
@@ -188,7 +179,7 @@ let
     "${unstable.hyprshutdown}/bin/hyprshutdown -t 'Shutting down...' --post-cmd '${pkgs.systemd}/bin/systemctl poweroff'"
     "${unstable.hyprshutdown}/bin/hyprshutdown -t 'Restarting...' --post-cmd '${pkgs.systemd}/bin/systemctl reboot'"
     "${powerProfileScript}/bin/hypr-shell-power-profile"
-    "${caffeineScript}/bin/hypr-shell-caffeine"
+    "${commands.caffeineScript}/bin/hypr-shell-caffeine"
     "${pkgs.brightnessctl}/bin/brightnessctl"
     "${pkgs.systemd}/bin/loginctl lock-session"
     "${pkgs.systemd}/bin/systemctl suspend"
@@ -210,12 +201,11 @@ let
   '';
 in
 {
-  config = lib.mkIf cfg.enable {
+  config = lib.mkIf (cfg.enable && cfg.shell.backend == "quickshell") {
     # Quickshell-specific packages and generated helper scripts. Hyprland
     # compositor/session utilities live in default.nix.
     home.packages = with pkgs; [
       lm_sensors
-      caffeineScript
       quickshell
 
       powerProfileScript
@@ -246,14 +236,15 @@ in
 
     # User-level systemd services for the Quickshell UI. These run as your user,
     # not as root. Home Manager's Hyprland module starts hyprland-session.target.
-    # Quickshell starts with that target; the caffeine inhibitor starts on
-    # demand and stops automatically when the Hyprland session target stops.
+    # Quickshell starts with that target. Shared session helpers live in
+    # default.nix.
     systemd.user.services = {
       hypr-shell-quickshell = {
         Unit = {
           Description = "Minimal Hyprland Quickshell";
           After = [ hyprlandSessionTarget ];
           PartOf = [ hyprlandSessionTarget ];
+          Conflicts = [ "caffyne-shell.service" ];
         };
 
         Install.WantedBy = [ hyprlandSessionTarget ];
@@ -263,17 +254,6 @@ in
           # part tells Quickshell to read ~/.config/quickshell/hyprland/shell.qml.
           ExecStart = "${pkgs.quickshell}/bin/quickshell --config hyprland";
           Restart = "on-failure";
-        };
-      };
-
-      hypr-shell-caffeine = {
-        Unit = {
-          Description = "Manual Hypr Shell idle inhibitor";
-          PartOf = [ hyprlandSessionTarget ];
-        };
-
-        Service = {
-          ExecStart = "${pkgs.systemd}/bin/systemd-inhibit --what=idle --who=HyprShell --why=Manual-caffeine-mode --mode=block ${pkgs.coreutils}/bin/sleep infinity";
         };
       };
     };
