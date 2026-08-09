@@ -174,7 +174,11 @@ fi
 
 # ── Brightness ─────────────────────────────────────────────────────────────
 # Read raw + max from sysfs and compute percent ourselves (brightnessctl's
-# percent is rounded). First backlight device wins. VMs have no backlight -> null.
+# percent is rounded). First *usable* backlight device wins: a device that
+# exposes the files but reports an unreadable or zero max_brightness (some
+# ddcci/vendor entries do) is skipped rather than ending the search, so a
+# degenerate first entry cannot hide a real panel backlight behind it.
+# VMs have no backlight -> null.
 bright_raw=null
 bright_max=null
 bright_pct=null
@@ -186,8 +190,8 @@ for backlight in /sys/class/backlight/*; do
 		bright_raw="$r"
 		bright_max="$m"
 		bright_pct=$(((100 * r + m / 2) / m))
+		break
 	fi
-	break
 done
 
 # ── Network (NetworkManager) ────────────────────────────────────────────────
@@ -233,18 +237,33 @@ if have nmcli; then
 	if [ -n "$def_dev" ]; then
 		net_online=true
 		p_device="$def_dev"
-		p_type="$(nmcli -g GENERAL.TYPE device show "$def_dev" 2>/dev/null || true)"
-		p_name="$(nmcli -g GENERAL.CONNECTION device show "$def_dev" 2>/dev/null || true)"
-		# GENERAL.STATE reads like "100 (connected)"; keep the leading code.
-		p_state_raw="$(nmcli -g GENERAL.STATE device show "$def_dev" 2>/dev/null || true)"
-		p_state_num="${p_state_raw%% *}"
-		[ -n "$p_state_num" ] && p_state="$p_state_num"
-		p_metered="$(nmcli -g GENERAL.METERED device show "$def_dev" 2>/dev/null || true)"
-		p_ip4="$(nmcli -g IP4.ADDRESS device show "$def_dev" 2>/dev/null || true)"
-		p_gateway="$(nmcli -g IP4.GATEWAY device show "$def_dev" 2>/dev/null || true)"
-		# IP6.ADDRESS is an array field: -g backslash-escapes ':' and joins with
-		# " | ". Strip the escaping; the UI can split on " | ".
-		p_ip6="$(nmcli -g IP6.ADDRESS device show "$def_dev" 2>/dev/null | sed 's/\\//g' || true)"
+		# One `device show` supplies every field below. This block runs on the
+		# bar's poll cadence and each nmcli invocation is a process spawn plus
+		# a D-Bus round trip to NetworkManager, so per-field calls (seven per
+		# poll here before) are a real battery cost for data one call returns.
+		# `device show --escape no` emits one KEY:value line per field with
+		# raw values, so splitting at the first colon is exact even for IPv6:
+		# the key never contains a colon and the untouched remainder is the
+		# value. Array fields repeat as
+		# KEY[1], KEY[2], ... and are re-joined with " | " to preserve this
+		# script's output contract (the UI splits on " | ").
+		while IFS= read -r line; do
+			key="${line%%:*}"
+			val="${line#*:}"
+			case "$key" in
+			GENERAL.TYPE) p_type="$val" ;;
+			GENERAL.CONNECTION) p_name="$val" ;;
+			GENERAL.STATE)
+				# GENERAL.STATE reads like "100 (connected)"; keep the leading code.
+				p_state_num="${val%% *}"
+				[ -n "$p_state_num" ] && p_state="$p_state_num"
+				;;
+			GENERAL.METERED) p_metered="$val" ;;
+			IP4.ADDRESS*) p_ip4="${p_ip4:+$p_ip4 | }$val" ;;
+			IP4.GATEWAY) p_gateway="$val" ;;
+			IP6.ADDRESS*) p_ip6="${p_ip6:+$p_ip6 | }$val" ;;
+			esac
+		done < <(nmcli --escape no -t -f GENERAL.TYPE,GENERAL.CONNECTION,GENERAL.STATE,GENERAL.METERED,IP4.ADDRESS,IP4.GATEWAY,IP6.ADDRESS device show "$def_dev" 2>/dev/null || true)
 	fi
 
 	# Active Wi-Fi AP (the row whose IN-USE column is "*").
@@ -273,22 +292,27 @@ vpn_on=false
 vpn_name=""
 vpn_type=""
 if have nmcli; then
-	# Iterate active connections by name (-g yields clean, unescaped values) and
-	# match the first VPN/WireGuard/tunnel by its connection.type. Avoids the
-	# colon-escaping pitfall of splitting a multi-field terse row when a
-	# connection name contains a colon.
-	while IFS= read -r conn; do
-		[ -n "$conn" ] || continue
-		c_type="$(nmcli -g connection.type connection show "$conn" 2>/dev/null || true)"
+	# One NAME:TYPE row per active connection replaces the per-connection
+	# `connection show` this section used to fork (one nmcli + D-Bus round
+	# trip per active connection, on the bar's poll cadence, with docker and
+	# libvirt bridges inflating the count). The colon-escaping pitfall of
+	# multi-field terse rows is handled instead of avoided: TYPE never
+	# contains a colon, so the last colon in the row is always the field
+	# separator, and the escapes nmcli puts in the NAME half are undone.
+	while IFS= read -r row; do
+		[ -n "$row" ] || continue
+		c_type="${row##*:}"
 		case "$c_type" in
 		*vpn* | *wireguard* | *tun*)
 			vpn_on=true
-			vpn_name="$conn"
+			vpn_name="${row%:*}"
+			vpn_name="${vpn_name//\\:/:}"
+			vpn_name="${vpn_name//\\\\/\\}"
 			vpn_type="$c_type"
 			break
 			;;
 		esac
-	done < <(nmcli -g NAME connection show --active 2>/dev/null || true)
+	done < <(nmcli -t -f NAME,TYPE connection show --active 2>/dev/null || true)
 fi
 if [ "$vpn_on" = false ] && have wg; then
 	wg_if="$(wg show interfaces 2>/dev/null | awk '{ print $1; exit }' || true)"
