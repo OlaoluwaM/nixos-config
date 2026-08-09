@@ -964,6 +964,13 @@ in
               # owns the durable layout. `Dash` remains a valid widget for an
               # explicit opt-in while this default stays fully declarative.
               left = [
+                # Keep workspace navigation at the bar's outer edge. The dots
+                # variant shows workspace state without reintroducing the app
+                # icons deliberately removed from this layout.
+                {
+                  widget = "Workspaces";
+                  variant = "dots";
+                }
                 {
                   widget = "Processes";
                   variant = "scale";
