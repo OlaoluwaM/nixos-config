@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  unstable,
   ...
 }:
 
@@ -22,6 +23,13 @@ in
     # Source: https://wiki.hypr.land/Hypr-Ecosystem/hypridle/
     services.hypridle = {
       enable = true;
+
+      # NixOS 26.05 still packages hypridle 0.1.7. Use 0.1.8 from the
+      # repository's existing unstable package set because upstream 0.1.8
+      # fixes D-Bus inhibitor cookie/count accounting when one owner exits
+      # while holding multiple cookies. Keeping D-Bus inhibition enabled then
+      # remains safe without carrying a local downstream source patch.
+      package = unstable.hypridle;
 
       settings = {
         general = {
