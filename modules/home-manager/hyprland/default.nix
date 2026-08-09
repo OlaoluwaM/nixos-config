@@ -1,6 +1,7 @@
 {
   config,
   hostConfig,
+  inputs,
   lib,
   pkgs,
   unstable,
@@ -64,6 +65,13 @@ let
   wallpapersDir =
     config.home.sessionVariables.WALLPAPERS_DIR or "${config.xdg.userDirs.pictures}/wallpapers";
 
+  # Keep the built-in default at a stable path outside Caffyne's own config
+  # directory. Both shell backends use the same hyprlock module, so the lock
+  # screen must not depend on the Caffyne backend being active before its
+  # background exists.
+  defaultWallpaperConfigPath = "hypr/wallpapers/default.jpg";
+  defaultWallpaper = "${config.xdg.configHome}/${defaultWallpaperConfigPath}";
+
   # Screenshot script wraps grim/slurp/satty into one command with modes for
   # area, full-screen, and active-window screenshots.
   screenshotScript = pkgs.writeShellApplication {
@@ -107,6 +115,24 @@ in
 {
   # Import the focused modules that make up the riced Hyprland session.
   imports = [
+    # This setting began as a Caffyne-only preference. It now belongs to the
+    # whole Hyprland session because hyprlock uses the same durable wallpaper.
+    # Keep the rename so an older host override continues to evaluate while a
+    # maintainer migrates it to local.hyprland.wallpaper.
+    (lib.mkRenamedOptionModule
+      [
+        "local"
+        "hyprland"
+        "shell"
+        "caffyne"
+        "wallpaper"
+      ]
+      [
+        "local"
+        "hyprland"
+        "wallpaper"
+      ]
+    )
     ./caffyne.nix
     ./hypridle.nix
     ./hyprlock.nix
@@ -129,6 +155,16 @@ in
         Desktop shell backend for the Hyprland session. The backends are
         mutually exclusive so only one bar, notification server, OSD, and
         wallpaper integration runs at a time. Idle and lock services are shared.
+      '';
+    };
+
+    wallpaper = lib.mkOption {
+      type = lib.types.str;
+      default = defaultWallpaper;
+      description = ''
+        Stable wallpaper path shared by the desktop shell and hyprlock. Prefer
+        a Home Manager path over a versioned Nix store path so applications can
+        persist the value without retaining an obsolete store generation.
       '';
     };
 
@@ -697,29 +733,38 @@ in
       };
     };
 
-    # Waypaper is the wallpaper picker. awww is the background daemon that
-    # actually draws the wallpaper on the Wayland outputs.
-    xdg.configFile = lib.mkIf useQuickshell {
-      "waypaper/config.ini".text = ''
-        [Settings]
-        language = en
-        folder = ${wallpapersDir}
-        backend = awww
-        monitors = All
-        fill = Fill
-        sort = name
-        color = ${theme.lockBackground}
-        subfolders = False
-        all_subfolders = False
-        show_hidden = False
-        show_gifs_only = False
-        show_path_in_tooltip = True
-        number_of_columns = 3
-        use_xdg_state = True
-        zen_mode = False
+    xdg.configFile = lib.mkMerge [
+      {
+        # Provision a default image even in a clean VM and even when
+        # Quickshell is selected. The public option points at this stable link
+        # by default; users can override it with another durable path without
+        # changing the modules that consume the wallpaper.
+        ${defaultWallpaperConfigPath}.source = "${inputs.caffyne}/wallpapers/wall14.jpg";
+      }
+      (lib.mkIf useQuickshell {
+        # Waypaper is the wallpaper picker. awww is the background daemon that
+        # actually draws the wallpaper on the Wayland outputs.
+        "waypaper/config.ini".text = ''
+          [Settings]
+          language = en
+          folder = ${wallpapersDir}
+          backend = awww
+          monitors = All
+          fill = Fill
+          sort = name
+          color = ${theme.lockBackground}
+          subfolders = False
+          all_subfolders = False
+          show_hidden = False
+          show_gifs_only = False
+          show_path_in_tooltip = True
+          number_of_columns = 3
+          use_xdg_state = True
+          zen_mode = False
 
-      '';
-    };
+        '';
+      })
+    ];
 
     # udiskie watches removable drives. automount=true means USB drives can show
     # up automatically without manually running mount commands.

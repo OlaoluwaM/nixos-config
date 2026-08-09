@@ -412,7 +412,10 @@ let
       font_monospace_style = caffyneCfg.theme.monospaceFont;
     };
     world_clocks.clocks = caffyneCfg.worldClocks;
-    wallpaper.path = caffyneCfg.wallpaper;
+    # Wallpaper ownership is shared with hyprlock at the parent Hyprland
+    # profile. Caffyne still receives the path in its native JSON schema, but
+    # it is no longer the source of truth for the durable value.
+    wallpaper.path = cfg.wallpaper;
     templates.enabled = caffyneCfg.enabledTemplates;
     desktop_applets.applets = map (entry: {
       inherit (entry) key slot;
@@ -471,8 +474,8 @@ let
       message = "The declarative Caffyne avatar path must not be empty.";
     }
     {
-      assertion = caffyneCfg.wallpaper != "";
-      message = "The declarative Caffyne wallpaper path must not be empty.";
+      assertion = cfg.wallpaper != "";
+      message = "The declarative Hyprland wallpaper path must not be empty.";
     }
     {
       assertion = unique caffyneCfg.enabledTemplates;
@@ -1058,15 +1061,6 @@ in
         "Europe/Paris"
       ];
       description = "Up to two IANA time-zone identifiers shown by Caffyne.";
-    };
-
-    wallpaper = lib.mkOption {
-      type = types.str;
-      default = "${caffyneConfigRoot}/wallpapers/wall14.jpg";
-      description = ''
-        Stable wallpaper path stored by Caffyne. Prefer a Home Manager path
-        over a versioned Nix store path.
-      '';
     };
 
     enabledTemplates = lib.mkOption {
