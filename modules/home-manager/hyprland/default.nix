@@ -815,6 +815,11 @@ in
       hypr-shell-awww = {
         Unit = {
           Description = "Wayland wallpaper daemon";
+          # Same ordering fix as caffyne-awww in caffyne.nix: without this,
+          # sd-switch/systemd is free to start awww before the Hyprland
+          # session target is up, where it fails against no compositor and
+          # burns through its restart budget.
+          After = [ hyprlandSessionTarget ];
           PartOf = [ hyprlandSessionTarget ];
         };
 
