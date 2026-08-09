@@ -1,5 +1,5 @@
 diff --git a/services/network.py b/services/network.py
-index ea918be..83027b7 100644
+index ea918be..364dcb6 100644
 --- a/services/network.py
 +++ b/services/network.py
 @@ -1,9 +1,10 @@
@@ -14,7 +14,7 @@ index ea918be..83027b7 100644
  from loguru import logger
  
  try:
-@@ -247,6 +248,107 @@ class Ethernet(Service):
+@@ -247,6 +248,124 @@ class Ethernet(Service):
          self.notify(pn)
          self.emit("changed")
  
@@ -56,8 +56,13 @@ index ea918be..83027b7 100644
 +            reason_str = NM.DeviceStateReason(reason).value_nick
 +            message = "Wrong password" if state == NM.DeviceState.NEED_AUTH or "secret" in reason_str or "auth" in reason_str else f"Failed ({reason_str})"
 +            self._terminal = (False, message)
-+        if self._terminal and self._process and self._process.poll() is not None:
-+            self._complete(*self._terminal)
++        # This handler only records; completion belongs to _poll_child (or
++        # cancel/timeout). Signals are dispatched from the same main loop but
++        # are not ordered against the child's exit, so completing here would
++        # let a queued intermediate failure (the DISCONNECTED hop emitted
++        # while switching networks) end a request whose nmcli has already
++        # exited 0. The poll tick that owns completion is at most 100 ms
++        # behind the exit and decides from the exit code instead.
 +
 +    def _poll_child(self):
 +        if self._completed:
@@ -66,12 +71,24 @@ index ea918be..83027b7 100644
 +        if returncode is None:
 +            return True
 +        self._poll_source = None
++        # The exit code is authoritative once the child is gone. nmcli only
++        # exits 0 after NetworkManager reports the activation finished, so a
++        # stored failure at that point is a stale intermediate transition
++        # (e.g. the DISCONNECTED hop NM emits when switching networks) whose
++        # ACTIVATED follow-up lost the race with the child's exit. The
++        # stored tuple is kept only to give non-zero exits a more precise
++        # message ("Wrong password") than the generic fallback. Every branch
++        # completes: returning without completing here would orphan the
++        # request until the 30 s timeout, since this poll source never
++        # re-arms after the child has exited.
 +        if self._cancelled:
 +            self._complete(False, "Cancelled")
-+        elif returncode != 0 and (not self._terminal or self._terminal[0]):
-+            self._complete(False, "NetworkManager connection failed")
-+        elif self._terminal:
++        elif returncode == 0:
++            self._complete(True, "Connected")
++        elif self._terminal and not self._terminal[0]:
 +            self._complete(*self._terminal)
++        else:
++            self._complete(False, "NetworkManager connection failed")
 +        return False
 +
 +    def _stop_child(self):
@@ -122,7 +139,7 @@ index ea918be..83027b7 100644
  class NetworkClient(Service):
  
      @Signal
-@@ -263,6 +365,7 @@ class NetworkClient(Service):
+@@ -263,6 +382,7 @@ class NetworkClient(Service):
          self.wifi_device: Wifi | None = None
          self.wifi_devices: dict[str, Wifi] = {}
          self.ethernet_device: Ethernet | None = None
@@ -130,7 +147,7 @@ index ea918be..83027b7 100644
          super().__init__(**kwargs)
          NM.Client.new_async(
              cancellable=None,
-@@ -347,41 +450,24 @@ class NetworkClient(Service):
+@@ -347,41 +467,24 @@ class NetworkClient(Service):
      def connect_wifi_with_password(self, bssid: str, password: str, callback):
          if not self._client or not self.wifi_device:
              callback(False, "No wifi device")

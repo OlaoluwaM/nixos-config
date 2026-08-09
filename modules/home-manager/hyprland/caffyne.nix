@@ -29,12 +29,17 @@ let
   #
   # When updating the Caffyne pin, inspect UserOptions.save(), the built-in bar
   # widget variants, and the desktop applet model before changing this module.
-  # The schema check below catches serialized sections, but it cannot detect a
-  # renamed widget, variant, theme preset, or placement field.
+  # The schema check below catches serialized sections, and the widget-tables
+  # check catches renamed widgets, changed variant sets, incompatible-group
+  # pairs, and desktop applet names. Still unchecked: theme preset names and
+  # the desktop-canvas placement field semantics.
 
   # These values mirror the pinned bar implementation. Keeping them here makes
   # invalid layouts fail during Home Manager evaluation instead of at Caffyne
   # startup. Empty variant lists mean that the widget accepts no variant field.
+  # The mirror is enforced: caffyneWidgetTablesCheck below re-derives these
+  # tables from the patched source at build time and fails the package build
+  # on any drift, so a pin update cannot silently invalidate them.
   baseVariants = [
     "icon"
     "label"
@@ -129,7 +134,7 @@ let
       widgets = lib.mkOption {
         type = types.listOf plainBarEntryType;
         default = [ ];
-        description = "Non-nested widgets shown in the group.";
+        description = "Exactly two non-nested widgets shown in the group.";
       };
     };
   };
@@ -137,15 +142,19 @@ let
     barWidgetType
     barObjectEntryType
   ];
+  # The pinned Bar is horizontal-only: it hardcodes a non-vertical layout,
+  # derives its layer-shell anchors from top/bottom, and its settings UI only
+  # toggles between those two edges. Left and right would serialize fine but
+  # produce a broken surface, so they are not offered here.
+  barAlignmentType = types.enum [
+    "top"
+    "bottom"
+  ];
+
   barType = types.submodule {
     options = {
       alignment = lib.mkOption {
-        type = types.enum [
-          "top"
-          "bottom"
-          "left"
-          "right"
-        ];
+        type = barAlignmentType;
         default = "top";
         description = "Screen edge used by this Caffyne bar.";
       };
@@ -154,6 +163,13 @@ let
         default = true;
         description = "Whether this bar uses Caffyne's floating presentation.";
       };
+      # floatingApplets and roundedEdges are serialized-but-unread in the
+      # pinned revision: Caffyne writes both into every saved bar and its
+      # defaults set them, but no code path consumes either field yet. They
+      # stay here because they are part of the on-disk bar schema, so omitting
+      # them would make Nix-generated bars diverge from UI-saved ones. Their
+      # descriptions state the intended upstream meaning; neither has any
+      # visible effect until a future pin starts reading them.
       floatingApplets = lib.mkOption {
         type = types.bool;
         default = true;
@@ -198,12 +214,7 @@ let
         description = "Caffyne's numeric GDK monitor identifier.";
       };
       alignment = lib.mkOption {
-        type = types.enum [
-          "top"
-          "bottom"
-          "left"
-          "right"
-        ];
+        type = barAlignmentType;
         default = "top";
         description = "Default screen edge for bars created on this monitor.";
       };
@@ -278,7 +289,11 @@ let
     builtins.isString entry
     || (
       if isBarGroup entry then
-        entry.widget == null && entry.variant == null && entry.widgets != [ ]
+        # The pinned bar renders a group only when it contains exactly two
+        # widgets; its drag-and-drop editor can never create another size and
+        # startup silently drops any other. Require the same shape here so a
+        # bad group fails evaluation instead of vanishing from the bar.
+        entry.widget == null && entry.variant == null && builtins.length entry.widgets == 2
       else
         entry.type == null && entry.widget != null && entry.widgets == [ ]
     );
@@ -288,6 +303,17 @@ let
       variant = barEntryVariant entry;
     in
     variant == null || builtins.elem variant barWidgetVariants.${barEntryName entry};
+  # Two deliberate gaps in the group checks below, both softer invariants than
+  # the pair list and not worth failing evaluation over:
+  #
+  # - Upstream's drag-and-drop editor only forms groups from applet-capable
+  #   widgets (the ones with a popup), so a declared group containing Tray,
+  #   Workspaces, Focused, Dash, or Brightness is unrepresentable in the UI.
+  #   The pinned loader still renders such a group and its popup code filters
+  #   the non-applet member out, so this stays a documentation note.
+  # - Nothing prevents declaring the same widget twice on one monitor. The UI
+  #   treats widget presence per monitor as boolean (its applet page greys out
+  #   active entries), so duplicates load but leave that page mildly confused.
   invalidGroupPairs = [
     [
       "Settings"
@@ -418,7 +444,7 @@ let
     }
     {
       assertion = lib.all validBarEntryShape rawBarEntries;
-      message = "Each Caffyne bar object entry must declare either one widget or one non-empty group.";
+      message = "Each Caffyne bar object entry must declare either one widget or one group of exactly two widgets.";
     }
     {
       assertion = lib.all validBarVariant allBarEntries;
@@ -531,6 +557,203 @@ let
         )
   '';
 
+  # The Nix-side widget tables above, serialized for the build-time drift
+  # check. excludedBarWidgets lists widgets that exist upstream but that this
+  # module deliberately does not offer (see the bars option description), so
+  # the check can demand an exact match instead of a subset.
+  caffyneWidgetTables = pkgs.writeText "caffyne-widget-tables.json" (
+    builtins.toJSON {
+      inherit barWidgetVariants invalidGroupPairs desktopAppletNames;
+      excludedBarWidgets = [ "Dock" ];
+    }
+  );
+
+  # Companion to caffyneSchemaCheck: re-derives the bar widget names, their
+  # variant sets (following class inheritance for the shared
+  # BaseButton/StatButton/ProgressButton VARIANTS), the incompatible group
+  # pairs, and the desktop applet names from the *patched* source, then fails
+  # the build unless they match the Nix tables exactly. Runs in postPatch so
+  # it sees the tree the shell will actually run (e.g. Launcher already
+  # removed by the Vicinae patch). Limitation: plugins loaded at runtime via
+  # plugin_loader can still extend these tables; only the built-ins are
+  # checkable statically, and only built-ins are declarable from Nix anyway.
+  caffyneWidgetTablesCheck = pkgs.writeText "check-caffyne-widget-tables.py" ''
+    import ast
+    import json
+    import pathlib
+    import sys
+
+    src = pathlib.Path(sys.argv[1])
+    expected = json.loads(pathlib.Path(sys.argv[2]).read_text())
+
+    errors = []
+
+
+    def parse(path):
+        return ast.parse(path.read_text(), filename=str(path))
+
+
+    def assigned_value(node, name):
+        # Tables are declared both bare and annotated (`X = {}` and
+        # `X: dict[str, type] = {}`); accept either.
+        if isinstance(node, ast.Assign):
+            if any(isinstance(t, ast.Name) and t.id == name for t in node.targets):
+                return node.value
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            if node.target.id == name:
+                return node.value
+        return None
+
+
+    bar_tree = parse(src / "bar.py")
+    bar_widgets = None
+    incompatible = None
+    for node in bar_tree.body:
+        value = assigned_value(node, "BAR_WIDGETS")
+        if isinstance(value, ast.Dict):
+            bar_widgets = {}
+            for key, cls in zip(value.keys, value.values):
+                if isinstance(key, ast.Constant) and isinstance(cls, ast.Name):
+                    bar_widgets[key.value] = cls.id
+        value = assigned_value(node, "INCOMPATIBLE_GROUPS")
+        if isinstance(value, ast.Set):
+            incompatible = set()
+            for elt in value.elts:
+                if (
+                    isinstance(elt, ast.Call)
+                    and isinstance(elt.func, ast.Name)
+                    and elt.func.id == "frozenset"
+                    and elt.args
+                    and isinstance(elt.args[0], ast.Set)
+                ):
+                    incompatible.add(
+                        frozenset(
+                            c.value
+                            for c in elt.args[0].elts
+                            if isinstance(c, ast.Constant)
+                        )
+                    )
+
+    if bar_widgets is None:
+        raise SystemExit("could not locate BAR_WIDGETS in bar.py")
+    if incompatible is None:
+        raise SystemExit("could not locate INCOMPATIBLE_GROUPS in bar.py")
+
+    # class name -> declared VARIANTS (None when the class inherits them) and
+    # first base class, from every widget module. VARIANTS entries may be
+    # names of module-level string constants (base.py's VARIANT_*), so those
+    # are resolved per file.
+    class_variants = {}
+    class_base = {}
+    for path in sorted((src / "bar_widgets").glob("*.py")):
+        tree = parse(path)
+        consts = {}
+        for node in tree.body:
+            if (
+                isinstance(node, ast.Assign)
+                and len(node.targets) == 1
+                and isinstance(node.targets[0], ast.Name)
+                and isinstance(node.value, ast.Constant)
+                and isinstance(node.value.value, str)
+            ):
+                consts[node.targets[0].id] = node.value.value
+        for node in tree.body:
+            if not isinstance(node, ast.ClassDef):
+                continue
+            variants = None
+            for stmt in node.body:
+                value = assigned_value(stmt, "VARIANTS")
+                if isinstance(value, ast.List):
+                    variants = []
+                    for elt in value.elts:
+                        if isinstance(elt, ast.Constant):
+                            variants.append(elt.value)
+                        elif isinstance(elt, ast.Name) and elt.id in consts:
+                            variants.append(consts[elt.id])
+                        else:
+                            errors.append(
+                                f"unresolvable VARIANTS entry in {path.name} "
+                                f"class {node.name}"
+                            )
+            bases = [b.id for b in node.bases if isinstance(b, ast.Name)]
+            class_variants[node.name] = variants
+            class_base[node.name] = bases[0] if bases else None
+
+
+    def resolve_variants(class_name):
+        seen = set()
+        current = class_name
+        while current in class_variants and current not in seen:
+            seen.add(current)
+            if class_variants[current] is not None:
+                return class_variants[current]
+            current = class_base[current]
+        # Fell off into a class outside bar_widgets (Box, EventBox):
+        # no VARIANTS anywhere means the widget takes no variant field.
+        return []
+
+
+    excluded = set(expected["excludedBarWidgets"])
+    expected_variants = expected["barWidgetVariants"]
+
+    actual_names = set(bar_widgets)
+    expected_names = set(expected_variants) | excluded
+    if actual_names != expected_names:
+        errors.append(
+            "BAR_WIDGETS drifted: new upstream widgets "
+            f"{sorted(actual_names - expected_names)}, "
+            "gone from upstream "
+            f"{sorted(expected_names - actual_names)}"
+        )
+
+    for widget in sorted(expected_variants):
+        if widget not in bar_widgets:
+            continue  # covered by the name check above
+        actual = resolve_variants(bar_widgets[widget])
+        if set(actual) != set(expected_variants[widget]):
+            errors.append(
+                f"variants for {widget} drifted: pinned implementation has "
+                f"{sorted(actual)}, Nix table has "
+                f"{sorted(expected_variants[widget])}"
+            )
+
+    expected_pairs = {frozenset(pair) for pair in expected["invalidGroupPairs"]}
+    if incompatible != expected_pairs:
+        errors.append(
+            "INCOMPATIBLE_GROUPS drifted: upstream "
+            f"{sorted(sorted(p) for p in incompatible)}, Nix table "
+            f"{sorted(sorted(p) for p in expected_pairs)}"
+        )
+
+    applet_tree = parse(src / "desktop_applets" / "__init__.py")
+    applet_names = None
+    for node in applet_tree.body:
+        value = assigned_value(node, "DESKTOP_APPLET_WIDGETS")
+        if isinstance(value, ast.Dict):
+            applet_names = {
+                k.value for k in value.keys if isinstance(k, ast.Constant)
+            }
+    if applet_names is None:
+        raise SystemExit(
+            "could not locate DESKTOP_APPLET_WIDGETS in "
+            "desktop_applets/__init__.py"
+        )
+    if applet_names != set(expected["desktopAppletNames"]):
+        errors.append(
+            "desktop applets drifted: upstream "
+            f"{sorted(applet_names)}, Nix table "
+            f"{sorted(expected['desktopAppletNames'])}"
+        )
+
+    if errors:
+        raise SystemExit(
+            "Caffyne widget tables drifted from the pinned source:\n- "
+            + "\n- ".join(errors)
+            + "\nReconcile the tables in "
+            "modules/home-manager/hyprland/caffyne.nix before updating the pin."
+        )
+  '';
+
   upstreamCaffynePackage = inputs.caffyne.packages.${system}.default;
   caffynePackage = upstreamCaffynePackage.overrideAttrs (old: {
     # Patch order is part of the integration contract. Later patches assume the
@@ -562,6 +785,7 @@ let
     # the native auth path is actually gone, not just dead code.
     postPatch = (old.postPatch or "") + ''
       ${pkgs.python3}/bin/python ${caffyneSchemaCheck} user_options.py
+      ${pkgs.python3}/bin/python ${caffyneWidgetTablesCheck} . ${caffyneWidgetTables}
       rm -f lockscreen.py services/idle.py
     '';
   });
@@ -936,9 +1160,14 @@ in
 
       # `*` recursively merges objects while replacing arrays. The generated
       # durable values win; runtime-only and unknown top-level sections remain.
+      # desktop_canvas.placements needs an explicit assignment on top of that:
+      # it is an object keyed by monitor identifier, so the recursive merge
+      # would preserve runtime placements on any monitor this profile does not
+      # declare, letting canvas edits survive activation despite Nix owning
+      # the whole section.
       if ! ${pkgs.jq}/bin/jq \
         --slurpfile durable ${caffyneDurableConfigFile} \
-        '. * $durable[0]' \
+        '. * $durable[0] | .desktop_canvas.placements = $durable[0].desktop_canvas.placements' \
         "$runtime_config" > "$durable_config"; then
         ${pkgs.coreutils}/bin/rm -f \
           "$runtime_config" \
