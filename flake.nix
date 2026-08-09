@@ -49,8 +49,7 @@
           username = "olaolu";
           userFullName = "Olaoluwa Mustapha";
           nixosConfigPath = "/home/${username}/nixos-config";
-          # Change this to "hyprland" to swap from the full GNOME DE to the Hyprland WM.
-          desktopProfile = "gnome";
+          desktopProfile = "hyprland"; # Can be "hyprland" or "gnome"
           enableAsusRogKeybindings = true;
           dotfilesRelativePath = "dotfiles/boreas/nixos";
           devDirname = "dev";
