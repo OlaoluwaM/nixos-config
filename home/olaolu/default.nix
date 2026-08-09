@@ -196,6 +196,7 @@ in
 
     unstable.obsidian
     unstable.openai-whisper
+    unstable.opencode
 
     unstable.pavucontrol
     unstable.perl
