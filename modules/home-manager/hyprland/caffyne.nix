@@ -837,6 +837,26 @@ let
     pkgs.writeText "caffyne-fonts.css"
       fontCssByPreset.${caffyneCfg.theme.monospaceFont};
 
+  # Upstream's entry point consists entirely of @import statements. Reproduce
+  # it verbatim and append one local import so future visual changes can stay
+  # in a small downstream layer instead of patching or copying upstream CSS.
+  # Loading overrides last lets a selector with equal specificity win while
+  # preserving upstream defaults for everything we do not explicitly change.
+  caffyneStyleCss = pkgs.writeText "caffyne-style.css" ''
+    ${builtins.readFile "${caffyneSource}/style/style.css"}
+    @import "overrides.css";
+  '';
+  caffyneOverridesCss = pkgs.writeText "caffyne-overrides.css" ''
+    /*
+     * Declarative downstream overrides for Caffyne.
+     *
+     * Keep rules narrow and document why they differ from upstream. Prefer
+     * typed Nix options for durable settings and bar layout; use this file for
+     * presentation that Caffyne exposes only through GTK CSS. Recheck selector
+     * names whenever the pinned Caffyne revision changes.
+     */
+  '';
+
   # Fabric exposes the same Execute method used by fabric-cli over D-Bus. Keep
   # the local wrapper intentionally narrow so Hyprland keybindings can invoke
   # only the Caffyne actions owned by this profile.
@@ -883,14 +903,18 @@ let
     '';
   };
 
-  mutableStyleFiles = [
+  # These files cannot be linked directly from the pinned source. The first
+  # three remain writable because Caffyne updates them at runtime. style.css is
+  # generated above so it can import the Nix-owned override layer last.
+  nonStaticStyleFiles = [
     "borders.css"
     "colors.css"
     "fonts.css"
+    "style.css"
   ];
   styleDirectory = builtins.readDir "${caffyneSource}/style";
   staticStyleFiles = lib.filter (
-    name: styleDirectory.${name} == "regular" && !(builtins.elem name mutableStyleFiles)
+    name: styleDirectory.${name} == "regular" && !(builtins.elem name nonStaticStyleFiles)
   ) (builtins.attrNames styleDirectory);
   staticStyleConfig = builtins.listToAttrs (
     map (name: {
@@ -1109,8 +1133,12 @@ in
 
     # Caffyne writes colors, borders and font choices at runtime. Keep those
     # three files mutable while managing the rest of upstream's style tree as
-    # versioned links. Themes and bundled wallpapers are read-only inputs.
+    # versioned links. style.css and overrides.css are separate Nix-owned files
+    # so downstream presentation changes have an explicit, reviewable home.
+    # Themes and bundled wallpapers remain read-only inputs.
     xdg.configFile = staticStyleConfig // {
+      "caffyne-shell/style/style.css".source = caffyneStyleCss;
+      "caffyne-shell/style/overrides.css".source = caffyneOverridesCss;
       "caffyne-shell/themes".source = "${caffyneSource}/themes";
       "caffyne-shell/wallpapers".source = "${caffyneSource}/wallpapers";
     };
