@@ -1270,8 +1270,8 @@ in
     worldClocks = lib.mkOption {
       type = types.listOf types.str;
       default = [
-        "Europe/London"
-        "Europe/Paris"
+        "Europe/Birmingham"
+        "Africa/Lagos"
       ];
       description = "Up to two IANA time-zone identifiers shown by Caffyne.";
     };
