@@ -7,6 +7,8 @@
 let
   cfg = config.local.hyprland;
   fonts = config.local.fonts;
+  theme = config.local.theme.colors;
+  stripHash = lib.removePrefix "#";
 in
 {
   config = lib.mkIf cfg.enable {
@@ -85,8 +87,11 @@ in
             outer_color = "rgba(ffffff66)";
             inner_color = "rgba(00000033)";
             font_color = "rgba(ffffffff)";
-            check_color = "rgba(00000040)";
-            fail_color = "rgba(00000059)";
+            # Hyprlock replaces font_color with these colors while checking or
+            # reporting a failure. Caffyne calls this semantic role
+            # `on_surface`; local.theme.colors.text is the shared Nix token.
+            check_color = "rgb(${stripHash theme.text})";
+            fail_color = "rgb(${stripHash theme.text})";
             font_family = fonts.shell.family;
 
             # Password dots are centered in the input field.
