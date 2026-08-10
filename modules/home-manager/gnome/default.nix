@@ -170,7 +170,6 @@ in
         { package = pkgs.gnomeExtensions.just-perfection; }
         { package = pkgs.gnomeExtensions.mpris-label; }
         { package = pkgs.gnomeExtensions.vitals; }
-        { package = pkgs.gnomeExtensions.space-bar; }
       ];
     };
 
@@ -361,54 +360,6 @@ in
         right-padding = 25;
         second-field = "";
         use-album = false;
-      };
-
-      "org/gnome/shell/extensions/space-bar/appearance" = {
-        application-styles = ''
-          .space-bar {
-            -natural-hpadding: 12px;
-          }
-
-          .space-bar-workspace-label.active {
-            margin: 0 4px;
-            background-color: rgba(255,255,255,0.3);
-            color: rgba(255,255,255,1);
-            border-color: rgba(0,0,0,0);
-            font-weight: 700;
-            border-radius: 4px;
-            border-width: 0px;
-            padding: 3px 8px;
-          }
-
-          .space-bar-workspace-label.inactive {
-            margin: 0 4px;
-            background-color: rgba(0,0,0,0);
-            color: rgb(159,161,156);
-            border-color: rgba(0,0,0,0);
-            font-weight: 700;
-            border-radius: 4px;
-            border-width: 0px;
-            padding: 3px 8px;
-          }
-
-          .space-bar-workspace-label.inactive.empty {
-            margin: 0 4px;
-            background-color: rgba(0,0,0,0);
-            color: rgba(255,255,255,0.5);
-            border-color: rgba(0,0,0,0);
-            font-weight: 700;
-            border-radius: 4px;
-            border-width: 0px;
-            padding: 3px 8px;
-          }
-        '';
-        inactive-workspace-text-color = "rgb(159,161,156)";
-      };
-
-      "org/gnome/shell/extensions/space-bar/shortcuts" = {
-        activate-empty-key = [ "<Alt><Super>n" ];
-        enable-move-to-workspace-shortcuts = false;
-        open-menu = [ "<Alt><Super>w" ];
       };
 
       "org/gnome/shell/extensions/vitals" = {
