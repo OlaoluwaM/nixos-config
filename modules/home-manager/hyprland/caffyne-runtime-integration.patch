@@ -1,0 +1,660 @@
+diff --git a/services/network.py b/services/network.py
+index ea918be..364dcb6 100644
+--- a/services/network.py
++++ b/services/network.py
+@@ -1,9 +1,10 @@
+ from typing import Any, List, Literal
+ 
+ import gi
++import subprocess
+ from fabric.core.service import Property, Service, Signal
+ from fabric.utils import bulk_connect, exec_shell_command_async
+-from gi.repository import Gio
++from gi.repository import Gio, GLib
+ from loguru import logger
+ 
+ try:
+@@ -247,6 +248,124 @@ class Ethernet(Service):
+         self.notify(pn)
+         self.emit("changed")
+ 
++
++class WifiConnectRequest:
++    """Own one nmcli child, one NM handler, and one completion callback."""
++
++    def __init__(self, device, callback, timeout_ms: int = 30_000):
++        self._device = device
++        self._callback = callback
++        self._process = None
++        self._completed = False
++        self._cancelled = False
++        self._terminal = None
++        self._poll_source = None
++        self._kill_source = None
++        self._handler = device.connect("state-changed", self._on_state_changed)
++        self._timeout_source = GLib.timeout_add(timeout_ms, self._on_timeout)
++
++    def start(self, argv) -> None:
++        try:
++            self._process = subprocess.Popen(
++                argv,
++                stdout=subprocess.DEVNULL,
++                stderr=subprocess.DEVNULL,
++            )
++        except OSError:
++            self._complete(False, "Failed to start NetworkManager connection")
++            return
++        self._poll_source = GLib.timeout_add(100, self._poll_child)
++
++    def _on_state_changed(self, _device, new_state, _old_state, reason):
++        if self._completed or self._cancelled:
++            return
++        state = NM.DeviceState(new_state)
++        if state == NM.DeviceState.ACTIVATED:
++            self._terminal = (True, "Connected")
++        elif state in (NM.DeviceState.FAILED, NM.DeviceState.DISCONNECTED, NM.DeviceState.NEED_AUTH):
++            reason_str = NM.DeviceStateReason(reason).value_nick
++            message = "Wrong password" if state == NM.DeviceState.NEED_AUTH or "secret" in reason_str or "auth" in reason_str else f"Failed ({reason_str})"
++            self._terminal = (False, message)
++        # This handler only records; completion belongs to _poll_child (or
++        # cancel/timeout). Signals are dispatched from the same main loop but
++        # are not ordered against the child's exit, so completing here would
++        # let a queued intermediate failure (the DISCONNECTED hop emitted
++        # while switching networks) end a request whose nmcli has already
++        # exited 0. The poll tick that owns completion is at most 100 ms
++        # behind the exit and decides from the exit code instead.
++
++    def _poll_child(self):
++        if self._completed:
++            return False
++        returncode = self._process.poll()
++        if returncode is None:
++            return True
++        self._poll_source = None
++        # The exit code is authoritative once the child is gone. nmcli only
++        # exits 0 after NetworkManager reports the activation finished, so a
++        # stored failure at that point is a stale intermediate transition
++        # (e.g. the DISCONNECTED hop NM emits when switching networks) whose
++        # ACTIVATED follow-up lost the race with the child's exit. The
++        # stored tuple is kept only to give non-zero exits a more precise
++        # message ("Wrong password") than the generic fallback. Every branch
++        # completes: returning without completing here would orphan the
++        # request until the 30 s timeout, since this poll source never
++        # re-arms after the child has exited.
++        if self._cancelled:
++            self._complete(False, "Cancelled")
++        elif returncode == 0:
++            self._complete(True, "Connected")
++        elif self._terminal and not self._terminal[0]:
++            self._complete(*self._terminal)
++        else:
++            self._complete(False, "NetworkManager connection failed")
++        return False
++
++    def _stop_child(self):
++        if self._process and self._process.poll() is None:
++            self._process.terminate()
++            if self._kill_source is None:
++                self._kill_source = GLib.timeout_add(1_000, self._force_kill)
++
++    def _force_kill(self):
++        self._kill_source = None
++        if self._process and self._process.poll() is None:
++            self._process.kill()
++        return False
++
++    def _on_timeout(self):
++        self._timeout_source = None
++        self._terminal = (False, "Connection timed out")
++        self._stop_child()
++        if not self._process or self._process.poll() is not None:
++            self._complete(*self._terminal)
++        return False
++
++    def cancel(self) -> None:
++        if self._completed or self._cancelled:
++            return
++        self._cancelled = True
++        self._terminal = (False, "Cancelled")
++        self._stop_child()
++        if not self._process or self._process.poll() is not None:
++            self._complete(*self._terminal)
++
++    def _complete(self, success: bool, message: str) -> None:
++        if self._completed:
++            return
++        self._completed = True
++        for source_name in ("_poll_source", "_timeout_source", "_kill_source"):
++            source = getattr(self, source_name)
++            if source is not None:
++                GLib.source_remove(source)
++                setattr(self, source_name, None)
++        try:
++            self._device.disconnect(self._handler)
++        except Exception:
++            pass
++        callback, self._callback = self._callback, None
++        callback(success, message)
++
+ class NetworkClient(Service):
+ 
+     @Signal
+@@ -263,6 +382,7 @@ class NetworkClient(Service):
+         self.wifi_device: Wifi | None = None
+         self.wifi_devices: dict[str, Wifi] = {}
+         self.ethernet_device: Ethernet | None = None
++        self._wifi_connect_request: WifiConnectRequest | None = None
+         super().__init__(**kwargs)
+         NM.Client.new_async(
+             cancellable=None,
+@@ -347,41 +467,24 @@ class NetworkClient(Service):
+     def connect_wifi_with_password(self, bssid: str, password: str, callback):
+         if not self._client or not self.wifi_device:
+             callback(False, "No wifi device")
+-            return
++            return None
+ 
+         device = self.wifi_device._device
+-        handler_id: list[int] = []
+-
+-        def _on_state_changed(dev, new_state, old_state, reason):
+-            state = NM.DeviceState(new_state)
+-            if state == NM.DeviceState.ACTIVATED:
+-                _cleanup()
+-                callback(True, "Connected")
+-            elif state in (NM.DeviceState.FAILED, NM.DeviceState.DISCONNECTED):
+-                _cleanup()
+-                reason_str = NM.DeviceStateReason(reason).value_nick
+-                if "secret" in reason_str or "auth" in reason_str:
+-                    callback(False, "Wrong password")
+-                else:
+-                    callback(False, f"Failed ({reason_str})")
+-            elif state == NM.DeviceState.NEED_AUTH:
+-                _cleanup()
+-                callback(False, "Wrong password")
+-
+-        def _cleanup():
+-            if handler_id:
+-                try:
+-                    device.disconnect_by_func(_on_state_changed)
+-                except Exception:
+-                    pass
+-
+-        handler_id.append(device.connect("state-changed", _on_state_changed))
++        if self._wifi_connect_request:
++            self._wifi_connect_request.cancel()
+ 
+-        exec_shell_command_async(
+-            f"nmcli device wifi connect {bssid} password {password!r}",
+-            lambda *args: logger.debug(f"connect_with_password result: {args}"),
+-        )
++        request = None
++
++        def _finished(success, message):
++            if self._wifi_connect_request is request:
++                self._wifi_connect_request = None
++            callback(success, message)
++
++        request = WifiConnectRequest(device, _finished)
++        self._wifi_connect_request = request
++        request.start(["nmcli", "device", "wifi", "connect", bssid, "password", password])
++        return request
+ 
+     @Property(str, "readable")
+     def primary_device(self) -> Literal["wifi", "wired"] | None:
+-        return self._get_primary_device()
+\ No newline at end of file
++        return self._get_primary_device()
+diff --git a/services/wallpaper.py b/services/wallpaper.py
+index bac657e..42215f3 100644
+--- a/services/wallpaper.py
++++ b/services/wallpaper.py
+@@ -3,6 +3,7 @@ import shutil
+ import subprocess
+ import threading
+ import gc
++import time
+ import gi
+ gi.require_version("Gtk", "3.0")
+ gi.require_version("GdkPixbuf", "2.0")
+@@ -40,10 +41,35 @@ def _generate_blurred_cache(path: str, blur_radius: int = 20) -> None:
+     except Exception as e:
+         logger.error(f"WallpaperService: failed to generate blurred cache: {e}")
+ 
++def _awww_ready(timeout: float = 5.0) -> bool:
++    """Wait briefly for the systemd-owned awww daemon to accept requests."""
++    deadline = time.monotonic() + timeout
++    while time.monotonic() < deadline:
++        try:
++            result = subprocess.run(
++                ["awww", "query"],
++                stdout=subprocess.DEVNULL,
++                stderr=subprocess.DEVNULL,
++                timeout=1,
++                check=False,
++            )
++        except FileNotFoundError:
++            # awww is missing from PATH entirely; waiting cannot help.
++            return False
++        except subprocess.TimeoutExpired:
++            # A slow first query is the cold-start case this loop exists for.
++            # Keep polling until the deadline instead of giving up on it.
++            continue
++        if result.returncode == 0:
++            return True
++        time.sleep(0.1)
++    return False
++
++
+ def _awww_set(
+     path: str,
+     pos: tuple[float, float] | None = None,
+-) -> None:
++) -> bool:
+     """
+     Shell out to awww to set the wallpaper with a grow (circle-reveal) transition.
+ 
+@@ -64,12 +90,27 @@ def _awww_set(
+     ]
+ 
+     try:
+-        subprocess.Popen(cmd)
++        result = subprocess.run(
++            cmd,
++            stdout=subprocess.DEVNULL,
++            stderr=subprocess.DEVNULL,
++            timeout=10,
++            check=False,
++        )
++        if result.returncode != 0:
++            logger.error(f"awww: failed to set {path!r} (exit {result.returncode})")
++            return False
+         logger.info(f"awww: set {path!r} with grow from ({x:.3f}, {y:.3f})")
++        return True
+     except FileNotFoundError:
+         logger.error("awww not found — is it installed and on your PATH?")
++        return False
++    except subprocess.TimeoutExpired:
++        logger.error("awww: timed out while applying wallpaper")
++        return False
+     except Exception as e:
+         logger.error(f"awww: failed to run: {e}")
++        return False
+ 
+ class WallpaperDropWindow(WaylandWindow):
+     """
+@@ -237,30 +278,19 @@ class WallpaperService(Service):
+             # display.connect("monitor-added",  self._on_monitor_added)
+             # display.connect("monitor-removed", self._on_monitor_removed)
+ 
+-        self._ensure_awww_daemon()
++        awww_ready = self._ensure_awww_daemon()
+         # self._sync_monitors()
+ 
+-        if self._wallpaper_path and os.path.isfile(self._wallpaper_path):
++        if awww_ready and self._wallpaper_path and os.path.isfile(self._wallpaper_path):
+             _awww_set(self._wallpaper_path)
+ 
+-    def _ensure_awww_daemon(self) -> None:
+-        """Start awww-daemon if it isn't already running."""
+-        try:
+-            result = subprocess.run(["awww", "query"], capture_output=True)
+-            if result.returncode == 0:
+-                logger.info("awww-daemon already running")
+-                return
+-        except FileNotFoundError:
+-            logger.error("awww not found — install it with your package manager")
+-            return
+-
+-        try:
+-            subprocess.Popen(["awww-daemon"])
+-
+-            GLib.timeout_add(500, lambda: None)
+-            logger.info("awww-daemon started")
+-        except Exception as e:
+-            logger.error(f"Failed to start awww-daemon: {e}")
++    def _ensure_awww_daemon(self) -> bool:
++        """Require the systemd-owned awww daemon to be ready before use."""
++        if _awww_ready():
++            logger.info("awww-daemon is ready")
++            return True
++        logger.error("awww-daemon did not become ready within 5 seconds")
++        return False
+ 
+     def _clear_blurred_pixbuf(self) -> None:
+         """Explicitly unref and clear the cached pixbuf to free memory."""
+@@ -272,7 +302,17 @@ class WallpaperService(Service):
+             logger.warning(f"WallpaperService: path does not exist: {path}")
+             return
+ 
+-        _awww_set(path, pos)
++        # No readiness poll here: caffyne-shell.service already declares
++        # Wants=/After=caffyne-awww.service (Wants=, not Requires=, so a
++        # crash-looping awww degrades gracefully instead of taking the whole
++        # shell down with it -- see caffyne.nix), and startup already waited
++        # for the daemon via _awww_ready(). Re-polling would block the GTK
++        # main thread for up to five seconds on every wallpaper change
++        # whenever awww is unhealthy. _awww_set()'s own return value is what
++        # actually detects a failed apply here, not a fresh readiness check.
++        if not _awww_set(path, pos):
++            logger.error("WallpaperService: wallpaper was not applied; keeping previous state")
++            return
+         self._clear_blurred_pixbuf()
+ 
+         def copy_to_cache():
+diff --git a/windows/dash/wallpapers.py b/windows/dash/wallpapers.py
+index b1f505a..aacf44c 100644
+--- a/windows/dash/wallpapers.py
++++ b/windows/dash/wallpapers.py
+@@ -320,7 +320,16 @@ class DashWallpaperPage(DashSelectorPage):
+         self._preview_image.set_from_pixbuf(None)
+ 
+     def _load_wallpapers(self) -> None:
+-        walls_dir = os.path.expanduser("~/.config/caffyne-shell/wallpapers")
++        # WALLPAPERS_DIR is exported into the session (and into this shell's
++        # own systemd unit) so the picker can point at the user's real
++        # wallpaper library instead of only ever seeing the bundled Nix store
++        # wallpapers at ~/.config/caffyne-shell/wallpapers, which is a
++        # read-only symlink and can never gain new files. Fall back to that
++        # bundled path when the variable is unset or points somewhere that
++        # doesn't (yet) exist.
++        walls_dir = os.environ.get("WALLPAPERS_DIR", "")
++        if not walls_dir or not os.path.isdir(walls_dir):
++            walls_dir = os.path.expanduser("~/.config/caffyne-shell/wallpapers")
+         if not os.path.isdir(walls_dir):
+             return
+ 
+diff --git a/windows/quick_settings/menus/logoutmenu.py b/windows/quick_settings/menus/logoutmenu.py
+index d007b99..ce4319a 100644
+--- a/windows/quick_settings/menus/logoutmenu.py
++++ b/windows/quick_settings/menus/logoutmenu.py
+@@ -4,23 +4,28 @@ from fabric.widgets.button import Button
+ from snippets import Icon, HackedRevealer
+ from .menu import QSAppletPage
+ from snippets import AppletPage
+-from fabric.utils import get_relative_path
+ import subprocess
+-import os
+ from services.singletons import wm
+-from services.wm.niri.service import Niri
+ from services.wm.hyprland.service import Hyprland
+-from services.wm.mango.service import Mango
+ from utils.session import SESSION_MANAGER
+ from gi.repository import GLib
+ from utils.sounds import play_sound
+ from lockscreen import lock
+ from utils.update_checker import restart_shell
+-session_id = os.environ.get("XDG_SESSION_ID", "")
+-
+-
+ def _wm_logout():
+-    subprocess.Popen("loginctl terminate-session $XDG_SESSION_ID", shell=True)
++    # The user systemd manager is shared between graphical logins, so it must
++    # not retain a session-private XDG_SESSION_ID.  The Hyprland IPC socket is
++    # already scoped to the compositor instance Caffyne is attached to.
++    if not isinstance(wm, Hyprland):
++        print("[Logout] Refusing to quit: Caffyne is not attached to Hyprland")
++        return
++    try:
++        result = wm.send_command("exit")
++    except Exception as error:
++        print(f"[Logout] Failed to quit the attached Hyprland instance: {error}")
++        return
++    if result.strip().lower() not in ("ok", "success"):
++        print(f"[Logout] Hyprland rejected the logout request: {result!r}")
+ 
+ 
+ class ConfirmPage(AppletPage):
+@@ -138,7 +143,7 @@ class LogoutMenu(QSAppletPage):
+                             label="Reboot",
+                             on_clicked=lambda *_: confirm(
+                                 "arrow-clockwise-duotone", "Reboot",
+-                                lambda: subprocess.Popen(f"{SESSION_MANAGER} reboot", shell=True),
++                                lambda: subprocess.Popen([SESSION_MANAGER, "reboot"]),
+                                 should_sound=True
+                             ),
+                         ),
+@@ -147,7 +152,7 @@ class LogoutMenu(QSAppletPage):
+                             label="Suspend",
+                             on_clicked=lambda *_: confirm(
+                                 "pause-circle-duotone", "Suspend",
+-                                lambda: subprocess.Popen(f"{SESSION_MANAGER} suspend", shell=True),
++                                lambda: subprocess.Popen([SESSION_MANAGER, "suspend"]),
+                             ),
+                         ),
+                     ]),
+@@ -157,7 +162,7 @@ class LogoutMenu(QSAppletPage):
+                             label="Shutdown",
+                             on_clicked=lambda *_: confirm(
+                                 "power-duotone", "Shutdown",
+-                                lambda: subprocess.Popen(f"{SESSION_MANAGER} poweroff", shell=True),
++                                lambda: subprocess.Popen([SESSION_MANAGER, "poweroff"]),
+                                 should_sound=True
+                             ),
+                         ),
+@@ -166,7 +171,7 @@ class LogoutMenu(QSAppletPage):
+                             label="Hibernate",
+                             on_clicked=lambda *_: confirm(
+                                 "circle-vertical-line", "Hibernate",
+-                                lambda: subprocess.Popen(f"{SESSION_MANAGER} hibernate", shell=True),
++                                lambda: subprocess.Popen([SESSION_MANAGER, "hibernate"]),
+                             ),
+                         ),
+                     ]),
+diff --git a/windows/quick_settings/menus/wifi_password.py b/windows/quick_settings/menus/wifi_password.py
+index 1342884..c196059 100644
+--- a/windows/quick_settings/menus/wifi_password.py
++++ b/windows/quick_settings/menus/wifi_password.py
+@@ -96,11 +96,12 @@ class WifiPasswordMenu(QSAppletPage):
+             ),
+             **kwargs,
+         )
+-        self.connect("realize", lambda: self._on_realise())
++        self._stack_signal = (
++            self.stack.connect("notify::visible-child", self._on_page_changed)
++            if self.stack
++            else None
++        )
+ 
+-    def _on_realise(self):
+-        if self.stack:
+-            self.stack.connect("notify::visible-child", lambda *_: self._on_page_changed())
+     def _set_state(self, state: PasswordState, instruction: str = ""):
+         cfg = STATE_CONFIG[state]
+         self._shield.icon_name = cfg["icon"]
+@@ -143,10 +144,11 @@ class WifiPasswordMenu(QSAppletPage):
+     def show_connected(self):
+         self._set_state(PasswordState.CONNECTED, instruction="Successfully connected!")
+ 
+-    def _on_page_changed(self):
+-
++    def _on_page_changed(self, *_):
+         if not hasattr(self, "_state"):
+             return
++        if self.stack and self.stack.get_visible_child() is self:
++            return
+         if self._state == PasswordState.CONNECTING:
+             if self._on_cancel_cb:
+                 self._on_cancel_cb()
+@@ -155,6 +157,18 @@ class WifiPasswordMenu(QSAppletPage):
+                 instruction=f"{self._ssid} is a protected network. Please enter the password to proceed." if hasattr(self, "_ssid") else "",
+             )
+ 
++    def destroy(self):
++        if hasattr(self, "_state") and self._state == PasswordState.CONNECTING:
++            if self._on_cancel_cb:
++                self._on_cancel_cb()
++        if self.stack and self._stack_signal is not None:
++            try:
++                self.stack.disconnect(self._stack_signal)
++            except Exception:
++                pass
++            self._stack_signal = None
++        super().destroy()
++
+     def _toggle_visibility(self):
+         visible = self._entry.get_visibility()
+         self._entry.set_visibility(not visible)
+@@ -166,4 +180,4 @@ class WifiPasswordMenu(QSAppletPage):
+             return
+         self._set_state(PasswordState.CONNECTING, instruction="Attempting to connect…")
+         if self._on_submit_cb:
+-            self._on_submit_cb(self._bssid, password)
+\ No newline at end of file
++            self._on_submit_cb(self._bssid, password)
+diff --git a/windows/quick_settings/menus/wifimenu.py b/windows/quick_settings/menus/wifimenu.py
+index f23cd3e..1042f8b 100644
+--- a/windows/quick_settings/menus/wifimenu.py
++++ b/windows/quick_settings/menus/wifimenu.py
+@@ -288,6 +288,8 @@ class WifiMenu(QSAppletPage):
+         self.stack = stack
+         self.tab_stack = TabStack()
+         self._wifi_tabs: dict[str, _WifiTab] = {}   # iface -> _WifiTab
++        self._wifi_enabled_signals = {}
++        self._network_signals = []
+ 
+         self.switch = SmoothSwitch(
+             style_classes=["smooth-switch"],
+@@ -307,9 +309,11 @@ class WifiMenu(QSAppletPage):
+             **kwargs,
+         )
+ 
+-        network.connect("device-added",   self._on_network_device_added)
+-        network.connect("device-removed", self._on_network_device_removed)
+-        network.connect("device-ready",   self._on_device_ready)
++        self._network_signals.extend([
++            network.connect("device-added", self._on_network_device_added),
++            network.connect("device-removed", self._on_network_device_removed),
++            network.connect("device-ready", self._on_device_ready),
++        ])
+ 
+         # populate any devices already present
+         for iface, wifi in network.wifi_devices.items():
+@@ -317,6 +321,9 @@ class WifiMenu(QSAppletPage):
+         self._sync_switch()
+ 
+         self._password_menu = WifiPasswordMenu(stack=stack)
++        self._password_request = None
++        self._password_generation = 0
++        self._password_success_source = None
+         self.connect("realize", self._add_password_menu)
+ 
+     # ------------------------------------------------------------------ #
+@@ -345,18 +352,33 @@ class WifiMenu(QSAppletPage):
+         self._sync_switch()
+ 
+     def _on_network_device_removed(self, _, iface: str):
++        self._disconnect_wifi_enabled_signal(iface)
+         tab = self._wifi_tabs.pop(iface, None)
+         if tab:
+             tab.destroy()
+         self._sync_switch()
+ 
+     def _add_wifi_tab(self, iface: str, wifi):
++        self._disconnect_wifi_enabled_signal(iface)
+         if iface in self._wifi_tabs:
+             self._wifi_tabs.pop(iface).destroy()
+         tab = _WifiTab(wifi, self.tab_stack, on_connect=self._handle_ap_connect)
+-        wifi.connect("notify::enabled", lambda *_: self._sync_switch())
++        self._wifi_enabled_signals[iface] = (
++            wifi,
++            wifi.connect("notify::enabled", lambda *_: self._sync_switch()),
++        )
+         self._wifi_tabs[iface] = tab
+ 
++    def _disconnect_wifi_enabled_signal(self, iface: str):
++        signal = self._wifi_enabled_signals.pop(iface, None)
++        if not signal:
++            return
++        wifi, signal_id = signal
++        try:
++            wifi.disconnect(signal_id)
++        except Exception:
++            pass
++
+     # ------------------------------------------------------------------ #
+     # Password menu
+ 
+@@ -379,6 +401,7 @@ class WifiMenu(QSAppletPage):
+     # AP connection handling (shared across all tabs)
+ 
+     def _handle_ap_connect(self, ap: AccessPoint):
++        self._cancel_password_request()
+         if not ap.psk:
+             network.connect_wifi_bssid(ap._dict["bssid"])
+             return
+@@ -389,7 +412,10 @@ class WifiMenu(QSAppletPage):
+             ssid=ap.ssid,
+             bssid=ap._dict["bssid"],
+             on_submit=self._on_password_submit,
+-            on_cancel=lambda: self._reset_ap_item(ap._dict["bssid"]),
++            on_cancel=lambda: (
++                self._cancel_password_request(),
++                self._reset_ap_item(ap._dict["bssid"]),
++            ),
+         )
+         if self.stack:
+             self.stack.set_visible_child_name("wifi-password")
+@@ -402,15 +428,20 @@ class WifiMenu(QSAppletPage):
+                 break
+ 
+     def _on_password_submit(self, bssid: str, password: str):
++        self._password_generation += 1
++        generation = self._password_generation
++
+         def _result(success: bool, message: str):
++            if generation != self._password_generation:
++                return
++            self._password_request = None
++            if message == "Cancelled":
++                return
+             if success:
+                 self._password_menu.show_connected()
+-                GLib.timeout_add(
++                self._password_success_source = GLib.timeout_add(
+                     1500,
+-                    lambda: (
+-                        self.stack.set_visible_child_name("wifi") if self.stack else None,
+-                        False,
+-                    )[1],
++                    self._show_wifi_page,
+                 )
+             else:
+                 self._password_menu.show_error(message)
+@@ -420,4 +451,34 @@ class WifiMenu(QSAppletPage):
+                         item.set_failed()
+                         break
+ 
+-        network.connect_wifi_with_password(bssid, password, _result)
+\ No newline at end of file
++        self._password_request = network.connect_wifi_with_password(bssid, password, _result)
++
++    def _show_wifi_page(self):
++        self._password_success_source = None
++        if self.stack:
++            self.stack.set_visible_child_name("wifi")
++        return False
++
++    def _cancel_password_request(self):
++        self._password_generation += 1
++        if self._password_success_source is not None:
++            GLib.source_remove(self._password_success_source)
++            self._password_success_source = None
++        request, self._password_request = self._password_request, None
++        if request:
++            request.cancel()
++
++    def destroy(self):
++        self._cancel_password_request()
++        for signal_id in self._network_signals:
++            try:
++                network.disconnect(signal_id)
++            except Exception:
++                pass
++        self._network_signals.clear()
++        for iface in list(self._wifi_enabled_signals):
++            self._disconnect_wifi_enabled_signal(iface)
++        for tab in list(self._wifi_tabs.values()):
++            tab.destroy()
++        self._wifi_tabs.clear()
++        super().destroy()

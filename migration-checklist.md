@@ -4,10 +4,8 @@
 - [x] Git install
 - [x] Curl & wget install
 - [x] OMZ installation & Setup
-  - [x] Cleanup dotfiles
-- [ ] Create and add ssh keys to GitHub: Create an idempotent nix script via `writeShellApplication`. Authenticate the GitHub CLI manually
+- [x] Cleanup dotfiles
 - [x] Bootstrap file system using `home.activation`
-- [ ] Clone repos: I have decided to omit this since cloning repos isn't a difficult thing to do, but may be difficult to achieve with nix
 - [x] Docker install & setup
 - [x] VSCode install
 - [x] System packages install
@@ -18,25 +16,69 @@
   - [x] notebooklm-mcp-cli install
   - [x] Claude-Code install
   - [x] Codex install
-- [ ] AstroNvim setup: I have a [repo](https://github.com/OlaoluwaM/nvim-setup) already so I'll just make a nix script like what I've got in distro-setup
 - [x] Crates install: Handled via nixpkgs
 - [x] Global npm packages
-- [ ] Add dotfiles symlink home-manager module using `home.file`
-- [ ] Migrate cron jobs
-- [ ] `gh` extensions and aliases: Handle manually get them from dotfiles directory
+- [x] Add dotfiles symlink home-manager module using `home.file`
+- [x] Migrate cron jobs: wallpaper compression is now a Home Manager user systemd timer. Other legacy cron jobs were intentionally left out.
+- [x] `gh` extensions and aliases: Declared in `gh.nix`. Aliases come straight from the dotfiles `config.yml`; extensions are nix-packaged (script extensions pinned via `fetchFromGitHub`, `gh-screensaver` from nixpkgs; `gh-copilot` dropped — archived upstream, superseded by the standalone `github-copilot-cli`). Auth (`hosts.yml`) stays imperative via `gh auth login`
 - [x] Automatic updates
 - [x] Configure flatpaks and flathub
-- [ ] Configure Haskell
-- [ ] Configure multi-media per distro-setup script if applicable
+- [x] Configure Haskell: The NixOS convention is to not install Haskell globally, but to instead have it be a local setup per project using a flake.nix. However, we'd still want to install stack and/or cabal globally
+- [x] Configure multi-media per distro-setup script if applicable
 - [x] Create a module for using Gnome with NixOS
   - [x] Add gnome extension packages
   - [x] Configure gnome extension packages & their config
   - [x] Configure keybindings
   - [x] Configure other reasonably relevant gnome
 - [x] Create a module for using Hyprland with Nixos
-- [ ] Migrate the services, timers, and udev rules defined in $DOTS/system
-- [ ] Create a module for Nvidia stuff on NixOS
-- [ ] Create a module for Intel (CPU & GPU) stuff on Nixos
-- [ ] Configure Nvidia container toolkit
-- [ ] Create a module for AMD CPU stuff on Nixos
-- [ ] Create a module for AMD GPU stuff on Nixos (yes separate)
+- [x] Migrate the services, timers, and udev rules defined in $DOTS/system
+- [x] Create a module for Nvidia stuff on NixOS: Already covered by [nixos-hardware](https://github.com/NixOS/nixos-hardware)
+- [x] Create a module for Intel (CPU & GPU) stuff on Nixos: Already covered by [nixos-hardware](https://github.com/NixOS/nixos-hardware)
+- [x] Configure Nvidia container toolkit
+- [x] Use proprietary NVIDIA drivers with boreas
+- [x] Create a module for AMD CPU stuff on Nixos: Already covered by [nixos-hardware](https://github.com/NixOS/nixos-hardware)
+- [x] Create a module for AMD GPU stuff on Nixos: Already covered by [nixos-hardware](https://github.com/NixOS/nixos-hardware)
+- [x] Setup pinentry per desktop profile
+- [x] Port gnugpg configuration to nix
+- [x] Port fontconfig configuration to nix
+- [x] Document "Usage" and home-manager install steps in README
+- [x] Fix nixos vm to allow copy pasting of text and files across host and guest
+  - Looks like to do this we'll need to install `spice-vdagent` [on the nixos guest](https://unix.stackexchange.com/questions/109117/virt-manager-copy-paste-functionality-to-the-vm). NixOS has a configuration for this, so in the guest nixos config we need to set `services.spice-vdagentd.enable = true` then reboot: Per <https://search.nixos.org/options?channel=25.11&query=spice-vdagent>
+- [x] Setup fonts
+- [x] Configure catppuccin-cursors
+- [x] Configure colloid icon theme
+  - [x] Address gtk catppuccin conflicts
+- [x] Revise Hyprland config
+- [x] Configure catppuccin-nix
+  - [x] Decide how you want to integrate catppuccin-nix with desktop.nix and theme.nix. Specifically with GTK and QT (Adwatia vs Kvantum). I'd prefer if, when catppuccin is the set theme, we have GTK and QT use it and fallback to Adwatia-dark otherwise
+    - Icon theme should always be Colloid
+    - Cursor theme should always be catppuccin-cursor-mocha-dark
+  - [x] Address potentially conflicting dotfiles: ~~atuin~~, ~~bat~~, ~~kitty~~, ~~starship~~, ~~hyprland (might not be an issue)~~
+  - [x] Theme delta with catppuccin-nix
+  - [x] Theme fzf with catppuccin-nix
+    - [x] There is likely an env variable for fzf theming in the .zshrc file for boreas/nixos, this will need to be removed
+  - [x] Theme lsd with catppuccin-nix
+  - [x] Theme vicinae with catppuccin-nix, but only when hyprland is the desktop profile
+  - [x] Theme lazygit with catppuccin-nix
+  - [x] Theme yazi with catppuccin-nix
+    - [x] Port over config from dotfiles (boreas/nixos)
+  - [x] There are two sources of truth for `delta` theming: delta.nix and the `.gitconfig` in our dotfiles. We need to pick one
+  - [x] Go through and explicitly enable the things you want catppuccin-nix to integrate with
+  - [x] Theme `zsh-syntax-highlighting` with catppuccin-nix
+- [x] Switch from fast-syntax-highlighting back to zsh-syntax-highlighting
+- [x] Handle clashes between catppuccin-nix and the configuration in desktop.nix
+- [x] Document how all `nixos` and `home-manager` commands will now always need to reference our flake to work as we expect
+- [x] Upgrade to nixos 26.05
+- [x] Ensure hyprland config outputs the new lua config
+- [ ] Do a careful review of the entire thing, particularly, the Hyprland quickshell stuff. just to maintain an understanding of what's going on. The nix stuff specifically, leave out the quickshell stuff for now
+- [x] Hookup DejaDup
+- [x] Font fallbacks for all desktop environments
+- [x] Declare default applications (`xdg.mimeApps` in `desktop.nix`): Firefox as default browser plus the explicit Fedora defaults (VS Code for TeX/JSON, slack:// and claude-cli:// handlers). The gnome module contributes the GSConnect sms/tel associations; the hyprland module contributes session defaults GNOME otherwise ships stock (Loupe for images, Papers for PDF, VLC for video, Gapless for audio, Nautilus for directories). Deliberately skipped: stock GNOME defaults under the GNOME profile, and the ImHex octet-stream default (ImHex isn't in the nix config)
+- [x] Remove Hyprland TTY test script and harness
+- [x] Configure Github CLI (`gh.nix`: `programs.gh` with aliases and nix-packaged extensions; `gitCredentialHelper` disabled since git already uses SSH + libsecret)
+- [ ] Delete the temporary `boreas-vm` flake targets after the migration: the `boreas-vm` host data in the `let` block, `nixosConfigurations.boreas-vm`, and `homeConfigurations."olaolu@boreas-vm"`. All three are marked with `TEMPORARY (migration dry-run)` comments in `flake.nix`, so a search for either string will round them up.
+- [ ] Replace the VM-only bootloader before the first real `nixos-rebuild`. `hosts/boreas/default.nix` currently sets `boot.loader.grub.device = "/dev/vda"`, which only exists in the QEMU VM. On the Zephyrus (UEFI/NVMe) switch to `systemd-boot` (`boot.loader.systemd-boot.enable = true` + `boot.loader.efi.canTouchEfiVariables = true`) and drop the GRUB block. This is separate from copying `hardware-configuration.nix`; see the README Troubleshooting section.
+
+## Optional
+
+- [x] Configure a non-asus auto power profile management solution: the `battery-profile-threshold` timer in `hosts/boreas/default.nix` drives `powerprofilesctl`, which works on any host running power-profiles-daemon, and owns power-source switching outright (asusd's own auto-switching is disabled on both edges). On ASUS hardware, asusd links platform profiles to power-profiles-daemon, so the firmware profile follows; the asusd unit itself is skipped under virtualization (`ConditionVirtualization = false`), which keeps the VM dry-run quiet.

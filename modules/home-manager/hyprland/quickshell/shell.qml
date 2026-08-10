@@ -1,0 +1,240 @@
+pragma ComponentBehavior: Bound
+
+//  Root shell configuration.
+//
+//  This file wires shared services, command-backed data pipes, timers, and the
+//  three PanelWindows that make up the desktop shell. Visual content lives in
+//  Bar.qml, Popovers.qml, and ToastNotifications.qml. Theme.qml owns colors and
+//  sizing; generated command paths live in GeneratedCommands.qml.
+
+import QtQuick
+import Quickshell
+import Quickshell.Io
+import Quickshell.Services.SystemTray
+import Quickshell.Wayland
+
+Scope {
+    id: root
+
+    // ── Confirm dialog helpers ────────────────────────────────────────
+    function requestConfirmation(title, description, icon, danger, timeout, action) {
+        popupController.close();
+        confirmDialog.request(title, description, icon, danger, timeout, action);
+    }
+
+    // ── Data pipes (shell scripts → QML properties) ────────────────────
+    Process {
+        id: statusProcess
+        command: [GeneratedCommands.statusScript]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    let data = JSON.parse(this.text);
+                    // Write straight to the owning status domain via the facade's
+                    // ingestion alias; the controller stays a pure state facade.
+                    statusController.systemStatus.updateStatus(data);
+                } catch (e) {
+                    console.log("hypr-shell status parse failed:", e);
+                }
+                statusPollTimer.restart();
+            }
+        }
+    }
+
+    // The periodic poll is self-scheduling: each run arms the next one 2s after
+    // it finishes (above), so a slow poll can never overlap or stack with the
+    // next. statusProcess.running starts the first poll at launch.
+    Timer { id: statusPollTimer; interval: 2000; onTriggered: statusProcess.running = true }
+    Timer { id: statusRefreshTimer; interval: 450; onTriggered: statusProcess.running = true }
+
+    Timer {
+        id: osdRefreshTimer
+        property string osdType: ""
+        interval: 30
+        onTriggered: osdReadProcess.running = true
+    }
+
+    Process {
+        id: osdReadProcess
+        // Brightness read lives in the generated hypr-shell-osd-read script;
+        // it prints "<display> <keyboard>" percents (-1 when no backlight).
+        command: [GeneratedCommands.osdReadScript]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let parts = this.text.trim().split(" ");
+                // Keep the shell's -1 "no backlight" sentinel intact: parseInt of
+                // a missing/blank field is NaN, which `|| 0` would wrongly turn
+                // into a phantom 0% reading. Map NaN back to -1 instead.
+                let bri = parseInt(parts[0]);
+                if (isNaN(bri)) bri = -1;
+                let kbd = parseInt(parts[1]);
+                if (isNaN(kbd)) kbd = -1;
+
+                statusController.systemStatus.updateOsdReadings(bri);
+
+                // Only brightness/keyboard reach this process now (volume is
+                // shown directly from native state in onOsdRefreshRequested).
+                // Suppress the OSD on the -1 sentinel instead of flashing 0%.
+                let t = osdRefreshTimer.osdType;
+                if (t === "brightness") {
+                    if (bri >= 0) osdController.show(Icons.brightnessName(bri), bri);
+                } else if (t === "keyboard") {
+                    if (kbd >= 0) osdController.show(Icons.keyboardName(kbd), kbd);
+                }
+            }
+        }
+    }
+
+    Process {
+        id: timezoneProcess
+        command: [GeneratedCommands.timezoneScript]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    let data = JSON.parse(this.text);
+                    statusController.systemStatus.updateTimezones(data);
+                } catch (e) {
+                    console.log("hypr-shell timezone parse failed:", e);
+                }
+            }
+        }
+    }
+
+    Timer { interval: 30000; running: true; repeat: true; onTriggered: timezoneProcess.running = true }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  Windows
+    // ════════════════════════════════════════════════════════════════════
+
+    // ── Notification service ──────────────────────────────────────────
+    NotificationService { id: notificationService }
+
+    // ── Status controller ─────────────────────────────────────────────
+    StatusController { id: statusController }
+
+    // ── Command runner and domain actions ─────────────────────────────
+    CommandRunner {
+        id: commandRunner
+        onOsdRefreshRequested: function(osdType) {
+            // Volume reads live PipeWire state, so show it directly instead of
+            // spawning the brightness-read process (which would also wrongly
+            // gate a real volume OSD behind a backlight read).
+            if (osdType === "volume") {
+                osdController.show(Icons.volumeName(statusController.muted, statusController.volumePercent), statusController.volumePercent);
+                return;
+            }
+            osdRefreshTimer.osdType = osdType;
+            osdRefreshTimer.restart();
+        }
+
+        onStatusRefreshRequested: statusRefreshTimer.restart()
+    }
+
+    AudioActions {
+        id: audioActions
+        runner: commandRunner
+        status: statusController
+        onOsdRequested: function(muted, volumePercent) {
+            osdController.show(Icons.volumeName(muted, volumePercent), volumePercent);
+        }
+    }
+    BrightnessActions { id: brightnessActions; runner: commandRunner }
+    CaffeineActions { id: caffeineActions; runner: commandRunner; status: statusController }
+    MediaActions { id: mediaActions; status: statusController }
+    ConnectivityActions { id: connectivityActions; runner: commandRunner; status: statusController }
+
+    PowerActions {
+        id: powerActions
+        runner: commandRunner
+
+        onConfirmationRequested: function(title, description, icon, danger, timeout, action) {
+            root.requestConfirmation(title, description, icon, danger, timeout, action);
+        }
+    }
+
+    // ── Popup controller ──────────────────────────────────────────────
+    PopupController {
+        id: popupController
+        trayItemCount: SystemTray.items.values.length
+    }
+
+    // ── OSD controller ────────────────────────────────────────────────
+    OsdController { id: osdController }
+
+    // ── Hyprland global shortcuts ────────────────────────────────────
+    ShellShortcuts {
+        popups: popupController
+        audioActions: audioActions
+        brightnessActions: brightnessActions
+    }
+
+    // ── Top bar ────────────────────────────────────────────────────────
+    PanelWindow {
+        visible: true
+        color: "transparent"
+        aboveWindows: true
+        implicitWidth: 1200
+        // The window is taller than the visible bar so bar tooltips can draw
+        // below the capsules instead of being clipped by layer-shell.
+        implicitHeight: Theme.barWindowHeight
+        exclusiveZone: Theme.barExclusiveZone
+
+        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.namespace: "quickshell-topbar"
+
+        // Clip the input region to the visible bar. Without this the whole 96px
+        // surface — including the empty tooltip strip below the bar — accepts
+        // pointer input and steals clicks from windows underneath.
+        mask: Region { item: bar }
+
+        // To modify the topbar margins against the screen edge, change the values here
+        margins { top: Theme.barTopMargin; left: 8; right: 8; bottom: 0 }
+        anchors { top: true; left: true; right: true }
+
+        Bar {
+            id: bar
+            caffeineActions: caffeineActions
+            connectivityActions: connectivityActions
+            mediaActions: mediaActions
+            status: statusController
+            notifications: notificationService
+            popups: popupController
+            height: Theme.barHeight
+            anchors { top: parent.top; left: parent.left; right: parent.right }
+        }
+    }
+
+    // ── Popovers ───────────────────────────────────────────────────────
+    Popovers {
+        audioActions: audioActions
+        brightnessActions: brightnessActions
+        connectivityActions: connectivityActions
+        mediaActions: mediaActions
+        powerActions: powerActions
+        status: statusController
+        notifications: notificationService
+        popups: popupController
+    }
+
+    // ── Toast notifications ────────────────────────────────────────────
+    ToastNotifications { notifications: notificationService }
+
+    // ── OSD overlay (volume / brightness / keyboard backlight) ─────────
+    OsdOverlay { osd: osdController }
+
+    // ── Confirm dialog ────────────────────────────────────────────────
+    ConfirmDialog {
+        id: confirmDialog
+
+        onAccepted: function(action) {
+            switch (action) {
+                case "logout": powerActions.runLogoutCommand(); break;
+                case "reboot": powerActions.runRebootCommand(); break;
+                case "suspend": powerActions.runSleepCommand(); break;
+                case "poweroff": powerActions.runPowerOffCommand(); break;
+            }
+        }
+    }
+}

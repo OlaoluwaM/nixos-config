@@ -2,19 +2,19 @@
 # Use this to configure your home environment (it replaces ~/.config/nixpkgs/home.nix)
 # Based off: https://github.com/Misterio77/nix-starter-configs/blob/main/minimal/home-manager/home.nix
 {
-  inputs,
   hostConfig,
-  lib,
   config,
   pkgs,
   unstable,
   ...
 }:
 let
-  home = config.home.homeDirectory;
-  dots = "${home}/Desktop/dotfiles/nixos/.config";
+  # Using a literal value here because it aligns with the path. Making it variable doesn't make sense
+  username = "olaolu";
+  home = "/home/${username}";
   visual = "nvim";
-  dev = "${config.xdg.userDirs.desktop}/dev";
+  dev = "${config.xdg.userDirs.desktop}/${config.local.fsLayout.devDirname}";
+  hasNvidiaGpu = (hostConfig.gpu or null) == "nvidia";
 in
 {
   # You can import other home-manager modules here
@@ -24,8 +24,23 @@ in
 
     # You can also split up your configuration and import pieces of it here:
     # ./nvim.nix
+    ../../modules/home-manager/atuin.nix
+    ../../modules/home-manager/bat.nix
+    ../../modules/home-manager/bottom.nix
+    ../../modules/home-manager/deja-dup.nix
+    ../../modules/home-manager/delta.nix
     ../../modules/home-manager/desktop.nix
+    ../../modules/home-manager/direnv.nix
+    ../../modules/home-manager/dotfiles.nix
     ../../modules/home-manager/fs-layout.nix
+    ../../modules/home-manager/fontconfig.nix
+    ../../modules/home-manager/fzf.nix
+    ../../modules/home-manager/gh.nix
+    ../../modules/home-manager/git.nix
+    ../../modules/home-manager/gpg.nix
+    ../../modules/home-manager/lazygit.nix
+    ../../modules/home-manager/lsd.nix
+    ../../modules/home-manager/yazi.nix
     ../../modules/home-manager/zsh.nix
   ];
 
@@ -41,30 +56,6 @@ in
       #     patches = [ ./change-hello-to-hi.patch ];
       #   });
       # })
-      (final: prev: {
-        cheat = prev.cheat.overrideAttrs (old: {
-          version = "5.1.0";
-          src = prev.fetchFromGitHub {
-            owner = "cheat";
-            repo = "cheat";
-            rev = "5.1.0";
-            hash = lib.fakeHash; # TODO: Fake hash, nix will give you the right one to replace this with
-          };
-        });
-      })
-
-      (final: prev: {
-        defuddle = unstable.defuddle.overrideAttrs (old: {
-          version = "0.18.1";
-          src = prev.fetchFromGitHub {
-            owner = "kepano";
-            repo = "defuddle";
-            rev = "0.18.1";
-            hash = lib.fakeHash; # TODO: Fake hash, nix will give you the right one to replace this with
-          };
-        });
-      })
-
     ];
     # Configure your nixpkgs instance
     config = {
@@ -74,27 +65,12 @@ in
   };
 
   home = {
-    username = "olaolu";
-    homeDirectory = "/home/olaolu";
-    # TODO: Perhaps we should move this to our dotfiles module where we have `home.file` defined?
+    inherit username;
+    homeDirectory = home;
     sessionVariables = {
       VISUAL = visual;
       EDITOR = visual;
       DEV = dev;
-      DOTS = dots;
-      SYS_BAK_DIR_UNDER_GIT = "${dots}/system";
-      WALLPAPERS_DIR = "${config.xdg.userDirs.pictures}/wallpapers";
-      NAVI_PATH = "${dots}/navi/cheat";
-      NAVI_CONFIG_PATH = "${dots}/navi/config.yaml";
-      ATUIN_CONFIG_DIR = "${dots}/atuin";
-      _ZO_DATA_DIR = "${dots}/zoxide";
-      TEALDEER_CONFIG_DIR = "${dots}/tldr";
-      THEMES_DIR = "${config.xdg.dataHome}/themes";
-      CUSTOM_BIN_DIR = "${home}/.local/bin";
-      SYS_BAK_DIR_NOT_UNDER_GIT = "${home}/sys-bak";
-      CUSTOM_MAN_PATH = "${config.xdg.dataHome}/man";
-      FONT_DIR = "${config.xdg.dataHome}/fonts";
-      STARSHIP_CONFIG = "${dots}/starship/starship.toml";
       GIT_PAGER = "delta";
       COMPOSE_BAKE = "true";
     };
@@ -108,33 +84,27 @@ in
     acpi
     atool
 
-    bat
-    bat-extras.core
-    bitwarden-desktop
-    bottom
-
     cmake
-    cheat # Uses overlay
     claude-code # From https://github.com/sadjow/claude-code-nix
     codex # From https://github.com/sadjow/codex-cli-nix
 
-    defuddle # Uses overlay
-    direnv
+    unstable.defuddle
     duf
 
+    ente-auth
     expect
 
     fish
     fdupes
 
     gapless
-    git-extras
     glmark2
     gnumake
-    gnupg
     google-chrome
 
     haskellPackages.threadscope
+    haskellPackages.implicit-hie
+    haskellPackages.ghc-events
     (callPackage ../../pkgs/hacker-laws-cli { })
 
     libappindicator
@@ -147,8 +117,7 @@ in
     nmap
     nixfmt
     nitch
-    nvtopPackages.nvidia
-    nvtopPackages.intel
+    nvtopPackages.full
     # Add amd on an amd device
 
     openssl
@@ -158,7 +127,8 @@ in
     playerctl
     pgcli
     protobuf
-    protonvpn-gui
+    proton-vpn
+    protonmail-desktop
     powertop
 
     racket
@@ -168,6 +138,7 @@ in
     spotify
 
     texliveFull
+    ticktick # GNOME keybind <Control><Alt>t launches this
     typescript
     typst
 
@@ -180,9 +151,10 @@ in
     z3
 
     # Packages from unstable channel
-    unstable.atuin
+    unstable.cabal-install
+    unstable.cabal2nix
+    unstable.cheat # Creating an overlay would involve more effort than I am willing to expend
 
-    unstable.delta
     unstable.discord
 
     unstable.fastfetch
@@ -191,16 +163,8 @@ in
     unstable.ffmpeg-full
     unstable.ffmpegthumbnailer
     unstable.fx
-    unstable.fzf
 
     unstable.gdu
-    unstable.git-credential-manager
-    # Override example to add plugins, you can do this for any package
-    (unstable.git.override {
-      withSsh = true;
-      withLibsecret = true;
-    })
-    unstable.gh
     unstable.go
 
     unstable.httpie
@@ -217,29 +181,28 @@ in
 
     unstable.libdrm
     unstable.lazydocker
-    unstable.lazygit
     unstable.libgcc
     unstable.libva
     unstable.libva-utils
     unstable.lld
-    unstable.lsd
     unstable.lsof
 
     unstable.navi
     unstable.ncdu
     unstable.neovim
     unstable.neovim-node-client
-    unstable.nil
+    unstable.nil # For nix ide plugin
+    unstable.nixd # For nix ide plugin
     (callPackage ../../pkgs/notebooklm-mcp-cli { })
     unstable.noti
 
     unstable.obsidian
     unstable.openai-whisper
+    unstable.opencode
 
     unstable.pavucontrol
     unstable.perl
     unstable.pciutils
-    unstable.pinentry-curses
     unstable.procs
     unstable.proton-vpn-cli
     # withPackages wraps python3 so these libraries are importable by the interpreter.
@@ -251,6 +214,7 @@ in
     ]))
 
     unstable.rainfrog
+    unstable.readest
     unstable.rip2
     unstable.ripgrep
     unstable.ripgrep-all
@@ -261,6 +225,10 @@ in
     unstable.shellcheck
     unstable.shfmt
     unstable.socat
+    unstable.stack
+    # stack2nix is marked broken in nixpkgs; use cabal2nix for simple
+    # package expression generation, or haskell.nix for Stack/Stackage fidelity.
+    # unstable.stack2nix
     unstable.starship
 
     unstable.tealdeer
@@ -270,15 +238,13 @@ in
 
     unstable.uv
 
-    unstable.virt-manager
-    unstable.virt-viewer
     unstable.vscode-fhs
 
     unstable.w3m
     unstable.webp-pixbuf-loader
     unstable.witr
+    unstable.wireshark
 
-    unstable.yazi
     unstable.yt-dlp
 
     unstable.zoxide
@@ -287,12 +253,11 @@ in
   services.flatpak = {
     enable = true;
     packages = [
-      "io.ente.auth"
       "im.riot.Riot"
       "it.mijorus.gearlever"
-      "com.bilingify.readest"
-      "io.github.flattool.Warehouse"
+      "com.bitwarden.desktop"
       "com.github.tchx84.Flatseal"
+      "io.github.flattool.Warehouse"
     ];
     update.auto = {
       enable = true;
@@ -320,54 +285,47 @@ in
     };
   };
 
+  # Enable dotfiles. Must be done first so symlinks can be created for those configurations that depend on them
+  local.dotfiles = {
+    enable = true;
+    dotsPath = "${config.xdg.userDirs.desktop}/${hostConfig.dotfilesRelativePath}";
+  };
+
+  local.atuin.enable = true;
+  local.bat.enable = true;
+  local.bottom.enable = true;
+  local.dejaDup.enable = true;
+  local.delta.enable = true;
+  local.direnv.enable = true;
+  local.fzf.enable = true;
+  local.gh.enable = true;
+  local.git.enable = true;
+  local.lazygit.enable = true;
+  local.lsd.enable = true;
+  local.yazi.enable = true;
+
+  local.fsLayout.devDirname = hostConfig.devDirname;
+
   # Enable and configure zsh with OMZ and our custom module
   local.zsh = {
     enable = true;
-    localConfigPath = "${dots}/shell/.zshrc.nix.zsh";
-    dotsConfigPath = dots;
+    zshrcConfigPath = "${home}/.zshrc.nix.zsh";
+    # Keep shell history OUT of the dotfiles git tree — it can contain secrets,
+    # and atuin already handles cross-machine history. Lives under XDG data.
+    histFilePath = "${config.xdg.dataHome}/zsh/.zsh_history";
   };
 
   local.desktop.profile = hostConfig.desktopProfile;
-
-  # Home Manager automatic upgrades. This is the user-level updater: it first
-  # refreshes flake.lock so the repo points at newer package versions, then it
-  # updates user tools and dotfiles. NixOS later uses the same lockfile
-  # for the operating-system update. See README.md for the split.
-  services.home-manager.autoUpgrade = {
-    # Turn on the scheduled Home Manager update job.
-    enable = true;
-
-    # Run every Saturday at 9 AM. systemd uses 24-hour time.
-    frequency = "Sat 09:00";
-
-    # Use the repo's flake.nix for Home Manager instead of the older
-    # channel-based setup.
-    useFlake = true;
-
-    # Refresh flake.lock before applying the Home Manager config. This is what
-    # actually moves the repo to newer package versions.
-    preSwitchCommands = [ "nix flake update" ];
-
-    # The folder containing this repo's flake.nix. The timer enters this folder
-    # before refreshing flake.lock and applying the Home Manager config.
-    flakeDir = ""; # Something like "/home/olaolu/Desktop/labs/nixos-config"
-
-    # Keep detailed build output in the logs so failures are easier to diagnose.
-    flags = [ "-L" ];
-  };
+  local.theme.preset = "catppuccin-mocha";
 
   programs.obs-studio = {
     enable = true;
 
-    # TODO: Move this to a dedicated Nvidia module
-    # optional Nvidia hardware acceleration
-    # package = (
-    #   unstable.obs-studio.override {
-    #     cudaSupport = true;
-    #   }
-    # );
-
-    package = unstable.obs-studio;
+    package = (
+      unstable.obs-studio.override {
+        cudaSupport = hasNvidiaGpu;
+      }
+    );
 
     plugins = with unstable.obs-studio-plugins; [
       wlrobs
@@ -382,5 +340,5 @@ in
   };
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
-  home.stateVersion = "25.11";
+  home.stateVersion = "26.05";
 }

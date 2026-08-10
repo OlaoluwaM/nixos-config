@@ -1,30 +1,38 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 let
   cfg = config.local.zsh;
+  dotfiles = config.local.dotfiles;
+  home = config.home.homeDirectory;
+
+  mkDotfileSource =
+    relativeFilepathFromDotsSubPath:
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles.dotsPath}/${relativeFilepathFromDotsSubPath}";
 in
 {
   options.local.zsh = {
-    enable = lib.mkEnableOption "opinionated Zsh configuration";
+    enable = lib.mkEnableOption "Opinionated Zsh configuration";
 
-    dotsConfigPath = lib.mkOption {
-      type = lib.types.str;
-      example = "\${config.home.homeDirectory}/Desktop/dotfiles/<hostname>/nixos";
+    histFilePath = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "\${config.home.homeDirectory}/.zsh_history";
       description = ''
-        Dotfiles config directory.
+        Path to zsh history file.
       '';
     };
 
-    localConfigPath = lib.mkOption {
-      type = lib.types.str;
-      default = "${cfg.dotsConfigPath}/shell/.zshrc.nix.zsh";
-      example = "\${config.home.homeDirectory}/Desktop/dotfiles/<hostname>/nixos/.zshrc.nix.zsh";
+    zshrcConfigPath = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "\${config.home.homeDirectory}/.zshrc";
       description = ''
-        Runtime path to an extra Zsh config file to source after Home Manager
-        and oh-my-zsh have initialized.
+        Path to an extra Zsh config file to source after Home Manager
+        and oh-my-zsh initialization.
       '';
     };
 
@@ -34,39 +42,64 @@ in
       description = "NVM directory used by the oh-my-zsh nvm plugin.";
     };
 
-    ohMyZshPlugins = lib.mkOption {
+    extraOhMyZshPlugins = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [
-        "git"
-        "command-not-found"
-        "git-escape-magic"
-        "safe-paste"
-        "fast-syntax-highlighting"
-        "you-should-use"
-        "gh"
-        "zoxide"
-        "nvm"
-        "direnv"
-      ];
+      default = [ ];
       description = "Oh My Zsh plugins to load.";
     };
   };
 
   config = lib.mkIf cfg.enable {
+    catppuccin.zsh-syntax-highlighting.enable = true;
+
+    home = {
+      file = {
+        ".shell-env".source = mkDotfileSource "shell/.shell-env";
+        ".zshrc.nix.zsh".source = mkDotfileSource "shell/.zshrc.nix.zsh";
+      };
+
+      sessionVariables = {
+        SHELL_ENV = "${home}/.shell-env";
+      };
+
+      # zsh writes HISTFILE on exit but never creates its parent directory, so
+      # ensure it exists — otherwise history silently fails to persist when
+      # HISTFILE points outside the home root (e.g. under XDG data).
+      activation = lib.mkIf (cfg.histFilePath != null) {
+        ensureZshHistDir = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+          run mkdir -p $VERBOSE_ARG ${lib.escapeShellArg (builtins.dirOf cfg.histFilePath)}
+        '';
+      };
+    };
+
     programs.zsh = {
       enable = true;
       enableCompletion = true;
       # Home Manager sources zsh-autosuggestions directly; no need to also load it as an oh-my-zsh plugin.
       autosuggestion.enable = true;
+      syntaxHighlighting.enable = true;
 
       sessionVariables = {
         NVM_DIR = cfg.nvmDir;
-        HISTFILE = "${cfg.dotsConfigPath}/shell/.zsh_history";
+      }
+      // lib.optionalAttrs (cfg.histFilePath != null) {
+        HISTFILE = cfg.histFilePath;
       };
 
       oh-my-zsh = {
         enable = true;
-        plugins = cfg.ohMyZshPlugins;
+        plugins = [
+          "git"
+          "command-not-found"
+          "git-escape-magic"
+          "safe-paste"
+          "gh"
+          "zoxide"
+          "nvm"
+          # No "direnv" plugin here: the direnv module's enableZshIntegration
+          # provides the shell hook, and both together would run it twice.
+        ]
+        ++ cfg.extraOhMyZshPlugins;
 
         extraConfig = ''
           zstyle :omz:plugins:nvm autoload yes
@@ -74,10 +107,18 @@ in
         '';
       };
 
-      initContent = lib.mkIf (cfg.localConfigPath != null) (
-        lib.mkAfter ''
-          if [[ -f "${cfg.localConfigPath}" ]]; then
-            source "${cfg.localConfigPath}"
+      plugins = [
+        {
+          name = "you-should-use";
+          src = pkgs.zsh-you-should-use.src;
+        }
+      ];
+
+      initContent = lib.mkIf (cfg.zshrcConfigPath != null) (
+        # This way, the zshrc file in our dotfiles for nixos will be sourced before OMZ is loaded
+        lib.mkOrder 790 ''
+          if [[ -f "${cfg.zshrcConfigPath}" ]]; then
+            source "${cfg.zshrcConfigPath}"
           fi
         ''
       );

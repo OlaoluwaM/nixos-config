@@ -9,7 +9,16 @@
 
 let
   cfg = config.local.gnome;
-  home = config.home.homeDirectory;
+  xdgDirs = config.xdg.userDirs;
+  documents = xdgDirs.documents;
+  downloads = xdgDirs.download;
+  music = xdgDirs.music;
+  pictures = xdgDirs.pictures;
+  videos = xdgDirs.videos;
+  # Upper case because that is how Gnome has it and changing it isn't easy and we want it to be unified across desktop profiles, that is all screenshots and screencasts should be stored in the same place
+  screenshots = "${pictures}/Screenshots";
+  screencasts = "${videos}/Screencasts";
+  wallpapers = "${pictures}/wallpapers";
   enableAsusRogKeybindings = hostConfig.enableAsusRogKeybindings or false;
   # dconf stores GNOME settings as typed GVariant values; these helpers
   # preserve exact types for values Nix cannot infer, like tuples and variants.
@@ -57,40 +66,40 @@ let
       ]
     ]))
   ]);
+  customKeybindingSchema = "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings";
+  # Used in the media-keys custom-keybindings list, which expects slash-wrapped dconf paths.
+  mkCustomKeybindingPath = index: "/${customKeybindingSchema}/custom${toString index}/";
+  # Used as a dconf.settings attr key, where Home Manager expects the same path without edge slashes.
+  mkCustomKeybindingKey = index: "${customKeybindingSchema}/custom${toString index}";
   customKeybindings =
-    [
-      "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
-      "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/"
-      "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/"
-      "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/"
-      "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/"
-      "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/"
-    ]
+    map mkCustomKeybindingPath (lib.range 0 6)
     ++ lib.optionals enableAsusRogKeybindings [
-      "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom6/"
-      "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7/"
+      (mkCustomKeybindingPath 7)
+      (mkCustomKeybindingPath 8)
     ];
-  favoriteApps =
-    [
-      "firefox.desktop"
-      "kitty.desktop"
-    ]
-    ++ lib.optionals enableAsusRogKeybindings [
-      "rog-control-center.desktop"
-    ];
+  favoriteApps = [
+    "firefox.desktop"
+    "obsidian.desktop"
+    "kitty.desktop"
+    "com.obsproject.Studio.desktop"
+    "com.github.neithern.g4music.desktop"
+  ]
+  ++ lib.optionals enableAsusRogKeybindings [
+    "rog-control-center.desktop"
+  ];
   gtkBookmarks = ''
-    file://${home}/Documents/job-items
-    file://${home}/Videos/Screencasts
-    file://${home}/Pictures/Screenshots
-    file://${home}/Desktop
-    file://${home}/Pictures/wallpapers/images wallpapers
-    file://${home}/Documents/library/non-technical-shelf
-    file://${home}/Documents/library/technical-shelf
-    file://${home}/Documents
-    file://${home}/Music
-    file://${home}/Pictures
-    file://${home}/Videos
-    file://${home}/Downloads
+    file://${documents}/job-items
+    file://${screencasts}
+    file://${screenshots}
+    file://${xdgDirs.desktop}
+    file://${wallpapers}
+    file://${documents}/library/non-technical-shelf
+    file://${documents}/library/technical-shelf
+    file://${documents}
+    file://${music}
+    file://${pictures}
+    file://${videos}
+    file://${downloads}
   '';
 in
 {
@@ -108,12 +117,12 @@ in
       gnome-keyring
       gnome-sound-recorder
 
-      kooha
-
       libappindicator-gtk3
       libgda5
 
-      pinentry-gnome3
+      # Stable to match the hyprland module, so both profiles run the same
+      # version of the same app.
+      mission-center
 
       seahorse
       sticky-notes
@@ -121,8 +130,6 @@ in
       # Unstable Packages
       unstable.gthumb
       unstable.gtk3
-
-      unstable.mission-center
 
       unstable.refine
     ];
@@ -137,45 +144,43 @@ in
       "gtk-4.0/bookmarks".text = gtkBookmarks;
     };
 
+    # GSConnect handles sms:/tel: links. Declared next to the extension that
+    # provides the desktop file (merged into the xdg.mimeApps set that
+    # desktop.nix enables); kept as associations rather than defaults,
+    # mirroring the Fedora setup. GSConnect cannot add them itself at runtime
+    # because Home Manager owns mimeapps.list.
+    xdg.mimeApps.associations.added = {
+      "x-scheme-handler/sms" = "org.gnome.Shell.Extensions.GSConnect.desktop";
+      "x-scheme-handler/tel" = "org.gnome.Shell.Extensions.GSConnect.desktop";
+    };
+
     programs.gnome-shell = {
       enable = true;
 
+      # Extensions must match the running GNOME Shell version, which comes from
+      # stable nixpkgs. Source them all from stable `pkgs` so the GNOME version
+      # stays aligned by construction; pulling them from `unstable` works only
+      # while both channels happen to share a GNOME release.
       extensions = [
-        { package = unstable.gnomeExtensions.appindicator; }
-        { package = unstable.gnomeExtensions.blur-my-shell; }
-        { package = unstable.gnomeExtensions.caffeine; }
-        { package = unstable.gnomeExtensions.clipboard-indicator; }
-        { package = unstable.gnomeExtensions.gsconnect; }
-        { package = unstable.gnomeExtensions.just-perfection; }
-        { package = unstable.gnomeExtensions.mpris-label; }
-        { package = unstable.gnomeExtensions.vitals; }
-        { package = pkgs.gnomeExtensions.space-bar; }
+        { package = pkgs.gnomeExtensions.appindicator; }
+        { package = pkgs.gnomeExtensions.blur-my-shell; }
+        { package = pkgs.gnomeExtensions.caffeine; }
+        { package = pkgs.gnomeExtensions.clipboard-indicator; }
+        { package = pkgs.gnomeExtensions.gsconnect; }
+        { package = pkgs.gnomeExtensions.just-perfection; }
+        { package = pkgs.gnomeExtensions.mpris-label; }
+        { package = pkgs.gnomeExtensions.vitals; }
       ];
     };
 
     dconf.settings = {
       # Appearance
 
-      # TODO: Enable once you've install NixOS proper and update the uris
-      # "org/gnome/desktop/background" = {
-      #   picture-options = "zoom";
-      #   picture-uri = "file:///home/olaolu/.config/background";
-      #   picture-uri-dark = "file:///home/olaolu/.config/background";
-      # };
-
       "org/gnome/desktop/interface" = {
-        color-scheme = "prefer-dark";
-        # cursor-theme = "catppuccin-mocha-dark-cursors"; TODO: Enable once the catppuccin-mocha-dark-cursors cursor pack is install (alongside icons)
-        # TODO: Uncomment these once fonts have been restored on system
-        # document-font-name = "SF Pro Display Medium 10";
         enable-animations = true;
         enable-hot-corners = false;
         font-antialiasing = "rgba";
         font-hinting = "medium";
-        # font-name = "SF Pro Display Medium 10";
-        gtk-theme = "Adwaita-dark";
-        # icon-theme = "Colloid-Dark"; TODO: Enable once the colliod dark icon theme has been installed
-        monospace-font-name = "Berkeley Mono Medium 10";
         toolkit-accessibility = false;
       };
 
@@ -357,54 +362,6 @@ in
         use-album = false;
       };
 
-      "org/gnome/shell/extensions/space-bar/appearance" = {
-        application-styles = ''
-          .space-bar {
-            -natural-hpadding: 12px;
-          }
-
-          .space-bar-workspace-label.active {
-            margin: 0 4px;
-            background-color: rgba(255,255,255,0.3);
-            color: rgba(255,255,255,1);
-            border-color: rgba(0,0,0,0);
-            font-weight: 700;
-            border-radius: 4px;
-            border-width: 0px;
-            padding: 3px 8px;
-          }
-
-          .space-bar-workspace-label.inactive {
-            margin: 0 4px;
-            background-color: rgba(0,0,0,0);
-            color: rgb(159,161,156);
-            border-color: rgba(0,0,0,0);
-            font-weight: 700;
-            border-radius: 4px;
-            border-width: 0px;
-            padding: 3px 8px;
-          }
-
-          .space-bar-workspace-label.inactive.empty {
-            margin: 0 4px;
-            background-color: rgba(0,0,0,0);
-            color: rgba(255,255,255,0.5);
-            border-color: rgba(0,0,0,0);
-            font-weight: 700;
-            border-radius: 4px;
-            border-width: 0px;
-            padding: 3px 8px;
-          }
-        '';
-        inactive-workspace-text-color = "rgb(159,161,156)";
-      };
-
-      "org/gnome/shell/extensions/space-bar/shortcuts" = {
-        activate-empty-key = [ "<Alt><Super>n" ];
-        enable-move-to-workspace-shortcuts = false;
-        open-menu = [ "<Alt><Super>w" ];
-      };
-
       "org/gnome/shell/extensions/vitals" = {
         hot-sensors = [
           "_memory_usage_"
@@ -417,9 +374,9 @@ in
       # Keybindings
       "org/gnome/shell/keybindings" = {
         focus-active-notification = emptyStringArray;
-        screenshot = [ "<Control>F6" ];
-        screenshot-window = [ "<Shift><Control>F6" ];
-        show-screen-recording-ui = [ "<Shift>F6" ];
+        screenshot = [ "<Shift>F6" ];
+        screenshot-window = [ "<Control>F6" ];
+        show-screen-recording-ui = [ "<Shift><Super>r" ];
         show-screenshot-ui = [ "F6" ];
         toggle-message-tray = [ "<Super>v" ];
         toggle-quick-settings = [ "<Super>q" ];
@@ -435,8 +392,8 @@ in
         move-to-workspace-last = [ "<Shift><Alt>Right" ];
         move-to-workspace-left = [ "<Shift><Super>Left" ];
         move-to-workspace-right = [ "<Shift><Super>Right" ];
-        toggle-fullscreen = [ "<Super>g" ];
-        toggle-maximized = [ "<Super>f" ];
+        toggle-fullscreen = [ "<Super>f" ];
+        toggle-maximized = emptyStringArray;
         unmaximize = [
           "<Super>Down"
           "<Alt>F5"
@@ -457,57 +414,60 @@ in
       };
 
       # Custom keybindings
-      "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0" = {
+      "${mkCustomKeybindingKey 0}" = {
         binding = "<Super>o";
-        command = "flatpak run md.obsidian.Obsidian";
+        command = "obsidian";
         name = "Obsidian";
       };
 
-      "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1" = {
+      "${mkCustomKeybindingKey 1}" = {
         binding = "<Super>t";
         command = "kitty";
         name = "Terminal";
       };
 
-      "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2" = {
+      "${mkCustomKeybindingKey 2}" = {
         binding = "<Control><Alt>t";
         command = "ticktick";
         name = "TickTick";
       };
 
-      "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3" = {
+      "${mkCustomKeybindingKey 3}" = {
         binding = "<Super>s";
         command = "slack";
         name = "Slack";
       };
 
-      "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4" = {
+      "${mkCustomKeybindingKey 4}" = {
         binding = "<Alt>s";
-        command = "flatpak run com.spotify.Client";
+        command = "spotify";
         name = "Spotify";
       };
 
-      "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5" = {
+      "${mkCustomKeybindingKey 5}" = {
         binding = "<Super>d";
-        command = "flatpak run com.discordapp.Discord";
+        # nixpkgs' discord ships the binary as "Discord" (capitalised).
+        command = "Discord";
         name = "Discord";
       };
 
-      "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom6" =
-        lib.mkIf enableAsusRogKeybindings
-          {
-            binding = "Launch1";
-            command = "rog-control-center";
-            name = "Rog Control Center";
-          };
+      "${mkCustomKeybindingKey 6}" = {
+        binding = "<Shift><Super>m";
+        command = "missioncenter";
+        name = "Mission Center";
+      };
 
-      "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7" =
-        lib.mkIf enableAsusRogKeybindings
-          {
-            binding = "F5";
-            command = "asusctl profile -n";
-            name = "Switch Power profile";
-          };
+      "${mkCustomKeybindingKey 7}" = lib.mkIf enableAsusRogKeybindings {
+        binding = "Launch1";
+        command = "rog-control-center";
+        name = "Rog Control Center";
+      };
+
+      "${mkCustomKeybindingKey 8}" = lib.mkIf enableAsusRogKeybindings {
+        binding = "F5";
+        command = "asusctl profile -n";
+        name = "Switch Power profile";
+      };
     };
   };
 }
