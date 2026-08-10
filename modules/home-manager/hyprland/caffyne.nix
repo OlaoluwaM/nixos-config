@@ -1055,6 +1055,15 @@ let
     .bar-button.system-tray.active {
       background-color: var(--surface_container_high);
     }
+
+    /*
+     * Upstream narrows the tray padding because it normally contains several
+     * inline icons. The downstream tray is one overflow control, so give it
+     * the same horizontal padding as the adjacent single-icon bar buttons.
+     */
+    .bar-button.system-tray {
+      padding: 0 10px;
+    }
   '';
 
   caffyneActionCases = lib.concatStringsSep "\n" (
