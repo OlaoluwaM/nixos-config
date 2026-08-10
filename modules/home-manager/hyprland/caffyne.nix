@@ -30,9 +30,9 @@ let
   # When updating the Caffyne pin, inspect UserOptions.save(), the built-in bar
   # widget variants, and the desktop applet model before changing this module.
   # The schema check below catches serialized sections, and the widget-tables
-  # check catches renamed widgets, changed variant sets, incompatible-group
-  # pairs, and desktop applet names. Still unchecked: theme preset names and
-  # the desktop-canvas placement field semantics.
+  # check catches renamed widgets or popup applets, changed variant sets,
+  # incompatible-group pairs, and desktop applet names. Still unchecked: theme
+  # preset names and the desktop-canvas placement field semantics.
 
   # These values mirror the pinned bar implementation. Keeping them here makes
   # invalid layouts fail during Home Manager evaluation instead of at Caffyne
@@ -94,6 +94,155 @@ let
     "Processes"
     "Weather"
   ];
+
+  # One catalogue owns every user-facing Caffyne action. It generates both the
+  # allowlisted D-Bus helper and the desktop entries indexed by Vicinae, so a
+  # maintainer cannot add an entry that the helper refuses to execute (or add
+  # a helper action that remains undiscoverable).
+  #
+  # `applet` entries must match the patched APPLET_WIDGETS table exactly. The
+  # build-time source check below enforces that contract. `page` entries are
+  # dedicated Dash pages that Caffyne exposes through BarManager.toggle(); they
+  # do not expose the general Dash, app launcher, or live layout editor.
+  #
+  # Bar-only widgets are deliberately absent: Workspaces and Focused have no
+  # popup, Tray delegates actions to each status item, and Brightness lives in
+  # Settings. Dash, Dock, and Launcher conflict with this profile's declarative
+  # layout or its Vicinae-only application-launcher boundary.
+  caffyneActions = {
+    bluetooth = {
+      key = "Bluetooth";
+      name = "Bluetooth";
+      icon = "bluetooth-duotone";
+      comment = "Manage Bluetooth devices with Caffyne";
+      categories = [ "Settings" ];
+      kind = "applet";
+    };
+    calculator = {
+      key = "Calculator";
+      name = "Calculator";
+      icon = "calculator-duotone";
+      comment = "Open Caffyne's calculator";
+      categories = [ "Utility" ];
+      kind = "applet";
+    };
+    calendar = {
+      key = "Calendar";
+      name = "Calendar";
+      icon = "calendar-blank-duotone";
+      comment = "Open Caffyne's calendar";
+      categories = [ "Office" ];
+      kind = "applet";
+    };
+    clock = {
+      key = "Clock";
+      name = "Clocks and Timers";
+      icon = "clock-duotone";
+      comment = "Open Caffyne's clocks and timers";
+      categories = [ "Utility" ];
+      kind = "applet";
+    };
+    energy = {
+      key = "Energy";
+      name = "Battery and Power";
+      icon = "lightning-duotone";
+      comment = "Inspect battery and power information with Caffyne";
+      categories = [ "System" ];
+      kind = "applet";
+    };
+    keyboard = {
+      key = "Keyboard";
+      name = "Keyboard Layout";
+      icon = "keyboard-duotone";
+      comment = "Select a keyboard layout with Caffyne";
+      categories = [ "Settings" ];
+      kind = "applet";
+    };
+    media = {
+      key = "Media";
+      name = "Media";
+      icon = "music-notes-duotone";
+      comment = "Control media players with Caffyne";
+      categories = [ "AudioVideo" ];
+      kind = "applet";
+    };
+    notifications = {
+      key = "Notifications";
+      name = "Notifications";
+      icon = "bell-simple-duotone";
+      comment = "Open Caffyne's notification history";
+      categories = [ "Utility" ];
+      kind = "applet";
+    };
+    processes = {
+      key = "Processes";
+      name = "System Monitor";
+      icon = "cpu-duotone";
+      comment = "Inspect system activity and processes with Caffyne";
+      categories = [ "System" ];
+      kind = "applet";
+    };
+    session = {
+      key = "Session";
+      name = "Session Controls";
+      icon = "power-duotone";
+      comment = "Lock, log out, suspend, or power off from Caffyne";
+      categories = [ "System" ];
+      kind = "applet";
+    };
+    settings = {
+      key = "Settings";
+      name = "Quick Settings";
+      icon = "sliders-horizontal-duotone";
+      comment = "Open Caffyne's quick settings";
+      categories = [ "Settings" ];
+      kind = "applet";
+    };
+    themes = {
+      key = "Themes";
+      name = "Theme Picker";
+      icon = "palette-duotone";
+      comment = "Select a Caffyne theme";
+      categories = [ "Settings" ];
+      kind = "page";
+    };
+    volume = {
+      key = "Volume";
+      name = "Volume";
+      icon = "speaker-simple-high-duotone";
+      comment = "Control application and device volume with Caffyne";
+      categories = [ "Settings" ];
+      kind = "applet";
+    };
+    wallpapers = {
+      key = "Wallpapers";
+      name = "Wallpaper Picker";
+      icon = "image-duotone";
+      comment = "Select and apply a wallpaper with Caffyne";
+      categories = [ "Settings" ];
+      kind = "page";
+    };
+    weather = {
+      key = "Weather";
+      name = "Weather";
+      icon = "cloud-sun-duotone";
+      comment = "Open Caffyne's weather forecast";
+      categories = [ "Utility" ];
+      kind = "applet";
+    };
+    wifi = {
+      key = "Wifi";
+      name = "Wi-Fi";
+      icon = "wifi-high-duotone";
+      comment = "Manage Wi-Fi networks with Caffyne";
+      categories = [ "Settings" ];
+      kind = "applet";
+    };
+  };
+  caffyneActionSlugs = builtins.attrNames caffyneActions;
+  caffyneAppletWidgetNames = map (action: action.key) (
+    builtins.filter (action: action.kind == "applet") (builtins.attrValues caffyneActions)
+  );
 
   barWidgetType = types.enum barWidgetNames;
   barVariantType = types.enum barVariantNames;
@@ -560,13 +709,18 @@ let
         )
   '';
 
-  # The Nix-side widget tables above, serialized for the build-time drift
-  # check. excludedBarWidgets lists widgets that exist upstream but that this
-  # module deliberately does not offer (see the bars option description), so
-  # the check can demand an exact match instead of a subset.
+  # The Nix-side widget and applet tables above, serialized for the build-time
+  # drift check. excludedBarWidgets lists widgets that exist upstream but that
+  # this module deliberately does not offer (see the bars option description),
+  # so the check can demand an exact match instead of a subset.
   caffyneWidgetTables = pkgs.writeText "caffyne-widget-tables.json" (
     builtins.toJSON {
-      inherit barWidgetVariants invalidGroupPairs desktopAppletNames;
+      inherit
+        barWidgetVariants
+        caffyneAppletWidgetNames
+        invalidGroupPairs
+        desktopAppletNames
+        ;
       excludedBarWidgets = [ "Dock" ];
     }
   );
@@ -574,12 +728,12 @@ let
   # Companion to caffyneSchemaCheck: re-derives the bar widget names, their
   # variant sets (following class inheritance for the shared
   # BaseButton/StatButton/ProgressButton VARIANTS), the incompatible group
-  # pairs, and the desktop applet names from the *patched* source, then fails
-  # the build unless they match the Nix tables exactly. Runs in postPatch so
-  # it sees the tree the shell will actually run (e.g. Launcher already
-  # removed by the Vicinae patch). Limitation: plugins loaded at runtime via
-  # plugin_loader can still extend these tables; only the built-ins are
-  # checkable statically, and only built-ins are declarable from Nix anyway.
+  # pairs, popup applet names, and desktop applet names from the *patched*
+  # source, then fails the build unless they match the Nix tables exactly. Runs
+  # in postPatch so it sees the tree the shell will actually run (e.g. Launcher
+  # already removed by the Vicinae patch). Limitation: plugins loaded at
+  # runtime via plugin_loader can still extend these tables; only the built-ins
+  # are checkable statically, and only built-ins are declarable from Nix anyway.
   caffyneWidgetTablesCheck = pkgs.writeText "check-caffyne-widget-tables.py" ''
     import ast
     import json
@@ -610,6 +764,7 @@ let
 
     bar_tree = parse(src / "bar.py")
     bar_widgets = None
+    applet_widgets = None
     incompatible = None
     for node in bar_tree.body:
         value = assigned_value(node, "BAR_WIDGETS")
@@ -618,6 +773,13 @@ let
             for key, cls in zip(value.keys, value.values):
                 if isinstance(key, ast.Constant) and isinstance(cls, ast.Name):
                     bar_widgets[key.value] = cls.id
+        value = assigned_value(node, "APPLET_WIDGETS")
+        if isinstance(value, ast.Dict):
+            applet_widgets = {
+                key.value
+                for key in value.keys
+                if isinstance(key, ast.Constant)
+            }
         value = assigned_value(node, "INCOMPATIBLE_GROUPS")
         if isinstance(value, ast.Set):
             incompatible = set()
@@ -639,6 +801,8 @@ let
 
     if bar_widgets is None:
         raise SystemExit("could not locate BAR_WIDGETS in bar.py")
+    if applet_widgets is None:
+        raise SystemExit("could not locate APPLET_WIDGETS in bar.py")
     if incompatible is None:
         raise SystemExit("could not locate INCOMPATIBLE_GROUPS in bar.py")
 
@@ -726,6 +890,14 @@ let
             "INCOMPATIBLE_GROUPS drifted: upstream "
             f"{sorted(sorted(p) for p in incompatible)}, Nix table "
             f"{sorted(sorted(p) for p in expected_pairs)}"
+        )
+
+    expected_applets = set(expected["caffyneAppletWidgetNames"])
+    if applet_widgets != expected_applets:
+        errors.append(
+            "APPLET_WIDGETS drifted: upstream "
+            f"{sorted(applet_widgets)}, desktop-entry catalogue "
+            f"{sorted(expected_applets)}"
         )
 
     applet_tree = parse(src / "desktop_applets" / "__init__.py")
@@ -857,9 +1029,36 @@ let
      */
   '';
 
+  caffyneActionCases = lib.concatStringsSep "\n" (
+    lib.mapAttrsToList (slug: action: ''
+      ${slug})
+        source="bar_manager.toggle('${action.key}')"
+        ;;
+    '') caffyneActions
+  );
+  caffyneActionUsage = lib.concatStringsSep "|" caffyneActionSlugs;
+
+  # Use Caffyne's own duotone SVGs for visual continuity in Vicinae. Absolute
+  # Nix store paths are valid desktop-entry icons and keep the entries working
+  # even when the active system icon theme lacks an equivalent glyph.
+  caffyneDesktopEntries = lib.mapAttrs' (
+    slug: action:
+    lib.nameValuePair "caffyne-${slug}" {
+      name = "Caffyne · ${action.name}";
+      genericName = action.name;
+      inherit (action) comment categories;
+      exec = "${lib.getExe caffyneAction} ${slug}";
+      icon = "${caffyneSource}/svgs/${action.icon}.svg";
+      terminal = false;
+      # The helper asks an existing Caffyne process to show a surface. It does
+      # not own a conventional application window or startup notification.
+      startupNotify = false;
+    }
+  ) caffyneActions;
+
   # Fabric exposes the same Execute method used by fabric-cli over D-Bus. Keep
-  # the local wrapper intentionally narrow so Hyprland keybindings can invoke
-  # only the Caffyne actions owned by this profile.
+  # the local wrapper intentionally narrow so keybindings and desktop entries
+  # can invoke only the Caffyne actions declared in caffyneActions above.
   caffyneAction = pkgs.writeShellApplication {
     name = "hypr-shell-caffyne-action";
     runtimeInputs = [
@@ -870,26 +1069,9 @@ let
       action="''${1:-}"
 
       case "$action" in
-        settings)
-          source="bar_manager.toggle('Settings')"
-          ;;
-        wifi)
-          source="bar_manager.toggle('Wifi')"
-          ;;
-        bluetooth)
-          source="bar_manager.toggle('Bluetooth')"
-          ;;
-        session)
-          source="bar_manager.toggle('Session')"
-          ;;
-        wallpapers)
-          source="bar_manager.toggle('Wallpapers')"
-          ;;
-        notifications)
-          source="bar_manager.toggle('Notifications')"
-          ;;
+        ${caffyneActionCases}
         *)
-          echo "usage: hypr-shell-caffyne-action {settings|wifi|bluetooth|session|wallpapers|notifications}" >&2
+          echo "usage: hypr-shell-caffyne-action {${caffyneActionUsage}}" >&2
           exit 64
           ;;
       esac
@@ -1130,6 +1312,11 @@ in
       caffynePackage
       pkgs.matugen
     ];
+
+    # Vicinae indexes these like normal applications. This provides direct,
+    # searchable access to each applet without putting every widget on the bar
+    # or restoring Dash's imperative layout editor.
+    xdg.desktopEntries = caffyneDesktopEntries;
 
     # Caffyne writes colors, borders and font choices at runtime. Keep those
     # three files mutable while managing the rest of upstream's style tree as
