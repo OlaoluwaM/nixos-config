@@ -33,6 +33,11 @@ in
           # Hide the mouse cursor while locked.
           hide_cursor = true;
           immediate_render = true;
+
+          # hyprlock defaults to two seconds, which is easy to miss while the
+          # field transitions back to its placeholder. Keep failures visible
+          # long enough to read without leaving stale auth state on screen.
+          fail_timeout = 5000;
         };
 
         background = [
@@ -72,16 +77,16 @@ in
             halign = "center";
             valign = "bottom";
 
-            # Dark translucent glass guarantees that white password text does
-            # not disappear over the brightest part of a wallpaper. Auth
-            # states vary neutral opacity instead of hue; fail_text remains the
-            # clear failure signal when a red accent is intentionally absent.
+            # The background's brightness cap supplies the contrast boundary,
+            # so this pill only needs a light neutral tint rather than an
+            # opaque black fill. Auth states vary opacity instead of hue;
+            # fail_text remains the clear signal when color is absent.
             outline_thickness = 1;
             outer_color = "rgba(ffffff66)";
-            inner_color = "rgba(0000008c)";
+            inner_color = "rgba(00000033)";
             font_color = "rgba(ffffffff)";
-            check_color = "rgba(000000a6)";
-            fail_color = "rgba(000000b3)";
+            check_color = "rgba(00000040)";
+            fail_color = "rgba(00000059)";
             font_family = fonts.shell.family;
 
             # Password dots are centered in the input field.
@@ -89,7 +94,9 @@ in
             fade_on_empty = false;
             placeholder_text = "Enter Password";
             check_text = "Authenticating...";
-            fail_text = "$PAMFAIL";
+            # $FAIL is hyprlock's backend-agnostic failure message. $PAMFAIL
+            # can be empty when no PAM-specific string accompanies a failure.
+            fail_text = "$FAIL";
             rounding = 22;
             shadow_passes = 2;
             shadow_size = 4;
