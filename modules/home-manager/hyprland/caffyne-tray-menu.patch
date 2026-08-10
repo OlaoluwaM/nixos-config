@@ -1,5 +1,5 @@
 diff --git a/bar_widgets/system_tray.py b/bar_widgets/system_tray.py
-index 96edb21..31bf59a 100644
+index 96edb21..fd61f44 100644
 --- a/bar_widgets/system_tray.py
 +++ b/bar_widgets/system_tray.py
 @@ -8,7 +8,7 @@ from snippets import Icon
@@ -11,62 +11,23 @@ index 96edb21..31bf59a 100644
  
  
  class TrayItem(EventBox):
-@@ -48,24 +48,33 @@ class TrayItem(EventBox):
-         child.show()
-         self.set_tooltip_text(self._get_tooltip())
- 
-+    def _open_menu(self, event):
-+        menu = self._item.get_menu()
-+        if menu:
-+            if user_options.theme.blur:
-+                popup_with_blur(menu, event)
-+            else:
-+                menu.popup_at_pointer(event)
-+        else:
-+            self._item.invoke_menu_for_event(event)
-+
-     def _on_button_press(self, _, event):
-         if edit_mode.edit_mode:
-             return False
-         match event.button:
-             case 1:
-                 try:
--                    self._item.activate_for_event(event)
-+                    # AppIndicators such as udiskie set ItemIsMenu and do not
-+                    # provide a useful Activate action. Follow that protocol
-+                    # hint so a primary click opens their exported menu.
-+                    if self._item.is_menu:
-+                        self._open_menu(event)
-+                    else:
-+                        self._item.activate_for_event(event)
-                 except Exception as e:
--                    logger.warning(f"[TrayItem] can't activate {self._item.identifier} ({e})")
-+                    logger.warning(f"[TrayItem] can't handle primary click for {self._item.identifier} ({e})")
-             case 3:
--                menu = self._item.get_menu()
--                if menu:
--                    if user_options.theme.blur:
--                        popup_with_blur(menu, event)
--                    else:
--                        menu.popup_at_pointer(event)
--                else:
--                    self._item.invoke_menu_for_event(event)
-+                self._open_menu(event)
- 
- 
- class SystemTray(Box):
-@@ -84,26 +93,75 @@ class SystemTray(Box):
+@@ -84,26 +84,80 @@ class SystemTray(Box):
              ],
          )
  
 -        self.tray = Box(
-+        # Keep one fixed-size control in the bar. Showing every status icon
-+        # inline makes the centered clock move as applications join or leave.
-+        self.tray_button = EventBox(
-             style_classes=["bar-button", "system-tray"],
+-            style_classes=["bar-button", "system-tray"],
 -            spacing=8,
++        # Keep one fixed-size control in the bar. The distinct class avoids
++        # upstream's narrower padding for its original multi-icon tray, so the
++        # overflow control matches adjacent single-icon bar buttons.
++        self.tray_button_content = Box(
++            style_classes=["bar-button", "tray-overflow-button"],
++            children=[Icon(icon_name="dots-three-circle-duotone")],
++        )
++        self.tray_button = EventBox(
 +            tooltip_text="System Tray",
-+            child=Icon(icon_name="dots-three-circle-duotone"),
++            child=self.tray_button_content,
          )
 +        self.tray_button.connect("button-release-event", self._on_tray_button_press)
 +
@@ -82,6 +43,7 @@ index 96edb21..31bf59a 100644
 +        self.tray_flow.get_style_context().add_class("tray-overflow-grid")
 +
 +        self.tray_popover = Gtk.Popover.new(self.tray_button)
++        self.tray_popover.set_constrain_to(Gtk.PopoverConstraint.NONE)
 +        self.tray_popover.get_style_context().add_class("tray-overflow-popover")
 +        self.tray_popover.add(self.tray_flow)
 +        self.tray_popover.connect("notify::visible", self._on_popover_visibility_changed)
@@ -126,7 +88,7 @@ index 96edb21..31bf59a 100644
 +        return True
 +
 +    def _on_popover_visibility_changed(self, *_):
-+        style = self.tray_button.get_style_context()
++        style = self.tray_button_content.get_style_context()
 +        if self.tray_popover.get_visible():
 +            style.add_class("active")
 +        else:
@@ -135,7 +97,7 @@ index 96edb21..31bf59a 100644
      def _on_item_added(self, _, identifier: str):
          if identifier in self._items:
              return
-@@ -112,19 +170,25 @@ class SystemTray(Box):
+@@ -112,19 +166,25 @@ class SystemTray(Box):
              return
          tray_item = TrayItem(item)
          self._items[identifier] = tray_item

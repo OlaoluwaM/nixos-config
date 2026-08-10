@@ -939,7 +939,7 @@ let
       ./caffyne-vicinae-only.patch
       # Integrate logout, Wi-Fi, wallpaper, and service lifecycle behavior.
       ./caffyne-runtime-integration.patch
-      # Keep tray icons in a popup and honor menu-only primary clicks.
+      # Collapse tray icons into a popup without changing item click behavior.
       ./caffyne-tray-menu.patch
       # Remove Caffyne's native PAM/idle path in favor of hyprlock/hypridle.
       ./caffyne-hypridle-hyprlock.patch
@@ -1032,8 +1032,8 @@ let
 
     /*
      * Keep status icons out of the bar so their changing count cannot move
-     * the centered clock. The patched tray presents them in this popover and
-     * inherits Caffyne's existing surface, outline, and radius tokens.
+     * the centered clock. The patch changes only their container; each item
+     * retains Caffyne's upstream activation and context-menu behavior.
      */
     popover.tray-overflow-popover {
       background-color: var(--background);
@@ -1052,18 +1052,10 @@ let
     }
 
     .tray-overflow-grid .tray-item:hover,
-    .bar-button.system-tray.active {
+    .bar-button.tray-overflow-button.active {
       background-color: var(--surface_container_high);
     }
 
-    /*
-     * Upstream narrows the tray padding because it normally contains several
-     * inline icons. The downstream tray is one overflow control, so give it
-     * the same horizontal padding as the adjacent single-icon bar buttons.
-     */
-    .bar-button.system-tray {
-      padding: 0 10px;
-    }
   '';
 
   caffyneActionCases = lib.concatStringsSep "\n" (
