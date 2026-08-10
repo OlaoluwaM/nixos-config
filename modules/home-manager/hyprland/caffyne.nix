@@ -1035,12 +1035,14 @@ let
      * the centered clock. The patch changes only their container; each item
      * retains Caffyne's upstream activation and context-menu behavior.
      */
-    popover.tray-overflow-popover {
+    .tray-overflow-surface {
       background-color: var(--background);
       border-radius: apply(radius-l);
       box-shadow:
         inset 0 0 0 1px var(--outline_variant),
         0 4px 4px 0 rgba(0, 0, 0, 0.33);
+      min-height: 96px;
+      min-width: 96px;
       padding: 8px;
     }
 
