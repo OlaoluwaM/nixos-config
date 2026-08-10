@@ -6,27 +6,23 @@
 
 let
   cfg = config.local.hyprland;
-  theme = config.local.theme.colors;
   fonts = config.local.fonts;
-  stripHash = s: lib.removePrefix "#" s;
 in
 {
   config = lib.mkIf cfg.enable {
-    # Only theme the lock screen through the Catppuccin port when that preset is
-    # active, and never let it source its example layout: the explicit
-    # background/input-field/label blocks below already define every widget, so
-    # useDefaultConfig would append a second, duplicate set of them.
-    catppuccin.hyprlock = {
-      enable = config.local.catppuccin.enable;
-      useDefaultConfig = false;
-    };
+    # Keep Catppuccin from injecting accent variables or its example layout.
+    # This lock screen deliberately uses only neutral white, translucent white,
+    # and black so the wallpaper supplies all visible color.
+    catppuccin.hyprlock.enable = false;
     # Beginner orientation:
     #
     # hyprlock is the lock screen. It is what you see after pressing SUPER+L or
     # after hypridle locks the session.
     #
     # This block controls the look of the lock screen: background, password
-    # input field, time label, and date label.
+    # input field, time, date, and username. The composition borrows macOS's
+    # quiet hierarchy and neutral glass treatment. PAM and session-lock
+    # ownership remain entirely with hyprlock.
     #
     # Source: https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/
     programs.hyprlock = {
@@ -36,21 +32,30 @@ in
         general = {
           # Hide the mouse cursor while locked.
           hide_cursor = true;
+          immediate_render = true;
         };
 
         background = [
           {
-            # Waypaper updates this symlink after a wallpaper is selected.
-            # hyprlock uses the symlink as the lock-screen background.
-            path = "${config.xdg.cacheHome}/hypr-shell/lock-wallpaper";
+            # Use the same Nix-owned wallpaper that is written into Caffyne's
+            # durable config. A stable Home Manager link makes this work in a
+            # clean VM and avoids capturing readable window contents at lock
+            # time. The solid color is shown while immediate rendering loads
+            # the image, and remains as the fallback if the path is unreadable.
+            path = cfg.wallpaper;
 
-            # Blur makes the wallpaper less visually noisy behind the password
-            # field. Higher values are stronger but may be heavier to render.
+            # Blur keeps the wallpaper recognizable. The stronger brightness
+            # reduction is also a contrast boundary: every possible image is
+            # darkened before white text is composited, instead of relying on
+            # the current wallpaper happening to be dark behind each label.
             blur_passes = 3;
             blur_size = 8;
+            brightness = 0.42;
+            contrast = 0.9;
+            vibrancy = 0.2;
+            vibrancy_darkness = 0.2;
 
-            # Fallback background color if the wallpaper path cannot be read.
-            color = "rgb(${stripHash theme.lockBackground})";
+            color = "rgb(000000)";
           }
         ];
 
@@ -59,50 +64,86 @@ in
             # Empty monitor means "show this on all monitors".
             monitor = "";
 
-            # Password box size and position. Position is an offset from the
-            # alignment point. Here it is centered horizontally and shifted down.
-            size = "280, 54";
-            position = "0, -70";
+            # Anchor the compact password pill to the bottom rather than the
+            # display center. This keeps the clock visually dominant and makes
+            # the composition adapt to the VM and laptop display heights.
+            size = "260, 44";
+            position = "0, 100";
+            halign = "center";
+            valign = "bottom";
 
-            outline_thickness = 2;
-            outer_color = "rgb(${stripHash theme.lockRingColor})";
-            inner_color = "rgb(${stripHash theme.lockInputColor})";
-            font_color = "rgb(${stripHash theme.lockTextColor})";
-            check_color = "rgb(${stripHash theme.lockCheckColor})";
-            fail_color = "rgb(${stripHash theme.lockFailColor})";
+            # Dark translucent glass guarantees that white password text does
+            # not disappear over the brightest part of a wallpaper. Auth
+            # states vary neutral opacity instead of hue; fail_text remains the
+            # clear failure signal when a red accent is intentionally absent.
+            outline_thickness = 1;
+            outer_color = "rgba(ffffff66)";
+            inner_color = "rgba(0000008c)";
+            font_color = "rgba(ffffffff)";
+            check_color = "rgba(000000a6)";
+            fail_color = "rgba(000000b3)";
+            font_family = fonts.shell.family;
 
             # Password dots are centered in the input field.
             dots_center = true;
             fade_on_empty = false;
-            placeholder_text = "Password";
-            rounding = 10;
+            placeholder_text = "Enter Password";
+            check_text = "Authenticating...";
+            fail_text = "$PAMFAIL";
+            rounding = 22;
             shadow_passes = 2;
+            shadow_size = 4;
+            shadow_color = "rgba(000000cc)";
           }
         ];
 
         label = [
           {
-            # Large clock label. hyprlock substitutes $TIME itself.
+            # The date sits above the clock, following the reference hierarchy.
+            # GNU date's %-d omits the leading zero from single-digit days.
             monitor = "";
-            text = "$TIME";
-            color = "rgb(${stripHash theme.lockClockColor})";
-            font_size = 64;
+            text = "cmd[update:60000] date '+%A, %B %-d'";
+            color = "rgba(ffffffe6)";
+            font_size = 20;
             font_family = fonts.shell.family;
-            position = "0, 90";
+            position = "0, -75";
             halign = "center";
-            valign = "center";
+            valign = "top";
+            shadow_passes = 4;
+            shadow_size = 5;
+            shadow_color = "rgba(000000e6)";
           }
           {
-            # Smaller date label. cmd[update:30000] means hyprlock runs the date
-            # command every 30 seconds and uses the output as label text.
+            # hyprlock substitutes $TIME without spawning a helper. Keep this
+            # as the largest element, but leave enough top margin for laptop
+            # panels with a camera notch or thick bezel.
             monitor = "";
-            text = "cmd[update:30000] date '+%A, %B %d'";
-            color = "rgb(${stripHash theme.lockDateColor})";
-            font_size = 18;
+            text = "$TIME";
+            color = "rgba(ffffffff)";
+            font_size = 84;
             font_family = fonts.shell.family;
-            position = "0, 35";
+            position = "0, -115";
             halign = "center";
-            valign = "center";
+            valign = "top";
+            shadow_passes = 4;
+            shadow_size = 6;
+            shadow_color = "rgba(000000e6)";
+          }
+          {
+            # An AccountsService avatar is not provisioned by this repo, so a
+            # username label is deterministic in a clean VM while still giving
+            # the lower authentication area a clear identity.
+            monitor = "";
+            text = "$USER";
+            color = "rgba(fffffff2)";
+            font_size = 16;
+            font_family = fonts.shell.family;
+            position = "0, 160";
+            halign = "center";
+            valign = "bottom";
+            shadow_passes = 4;
+            shadow_size = 5;
+            shadow_color = "rgba(000000e6)";
           }
         ];
       };

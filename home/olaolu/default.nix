@@ -103,6 +103,8 @@ in
     google-chrome
 
     haskellPackages.threadscope
+    haskellPackages.implicit-hie
+    haskellPackages.ghc-events
     (callPackage ../../pkgs/hacker-laws-cli { })
 
     libappindicator
@@ -196,6 +198,7 @@ in
 
     unstable.obsidian
     unstable.openai-whisper
+    unstable.opencode
 
     unstable.pavucontrol
     unstable.perl

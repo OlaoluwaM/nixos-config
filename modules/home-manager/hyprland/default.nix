@@ -1,6 +1,7 @@
 {
   config,
   hostConfig,
+  inputs,
   lib,
   pkgs,
   unstable,
@@ -34,8 +35,13 @@ let
   luaString = builtins.toJSON;
   mod = "SUPER";
   terminal = "kitty";
+  useCaffyne = cfg.enable && cfg.shell.backend == "caffyne";
+  useQuickshell = cfg.enable && cfg.shell.backend == "quickshell";
 
   vicinaeCommand = lib.getExe' config.programs.vicinae.package "vicinae";
+  caffyneActionCommand = lib.getExe commands.caffyneAction;
+  brightnessCommand = lib.getExe pkgs.brightnessctl;
+  wpctlCommand = lib.getExe' pkgs.wireplumber "wpctl";
 
   execDispatcher = command: "hl.dsp.exec_cmd(${luaString command})";
   mkBind = keys: dispatcher: {
@@ -59,27 +65,12 @@ let
   wallpapersDir =
     config.home.sessionVariables.WALLPAPERS_DIR or "${config.xdg.userDirs.pictures}/wallpapers";
 
-  # Waypaper manages the desktop wallpaper. Hyprlock still needs one stable file
-  # path for its background, so Waypaper runs this tiny hook after a wallpaper is
-  # selected. The hook only updates the lock-screen symlink; it does not choose
-  # or apply wallpapers.
-  wallpaperLockHook = pkgs.writeShellApplication {
-    name = "hypr-shell-lock-wallpaper";
-    runtimeInputs = with pkgs; [
-      coreutils
-    ];
-    text = ''
-      wallpaper="''${1:-}"
-
-      if [ -z "$wallpaper" ] || [ ! -f "$wallpaper" ]; then
-        exit 0
-      fi
-
-      cache_dir="''${XDG_CACHE_HOME:-$HOME/.cache}/hypr-shell"
-      mkdir -p "$cache_dir"
-      ln -sfn "$wallpaper" "$cache_dir/lock-wallpaper"
-    '';
-  };
+  # Keep the built-in default at a stable path outside Caffyne's own config
+  # directory. Both shell backends use the same hyprlock module, so the lock
+  # screen must not depend on the Caffyne backend being active before its
+  # background exists.
+  defaultWallpaperConfigPath = "hypr/wallpapers/default.jpg";
+  defaultWallpaper = "${config.xdg.configHome}/${defaultWallpaperConfigPath}";
 
   # Screenshot script wraps grim/slurp/satty into one command with modes for
   # area, full-screen, and active-window screenshots.
@@ -111,10 +102,38 @@ let
     ];
     text = builtins.readFile ./scripts/hypr-shell-screenrecord.sh;
   };
+
+  caffeineScript = pkgs.writeShellApplication {
+    name = "hypr-shell-caffeine";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.systemd
+    ];
+    text = builtins.readFile ./scripts/hypr-shell-caffeine.sh;
+  };
 in
 {
   # Import the focused modules that make up the riced Hyprland session.
   imports = [
+    # This setting began as a Caffyne-only preference. It now belongs to the
+    # whole Hyprland session because hyprlock uses the same durable wallpaper.
+    # Keep the rename so an older host override continues to evaluate while a
+    # maintainer migrates it to local.hyprland.wallpaper.
+    (lib.mkRenamedOptionModule
+      [
+        "local"
+        "hyprland"
+        "shell"
+        "caffyne"
+        "wallpaper"
+      ]
+      [
+        "local"
+        "hyprland"
+        "wallpaper"
+      ]
+    )
+    ./caffyne.nix
     ./hypridle.nix
     ./hyprlock.nix
     ../vicinae.nix
@@ -125,6 +144,29 @@ in
     # Creates the option local.hyprland.enable. Other files can set this to true
     # to enable the whole Home Manager Hyprland profile.
     enable = lib.mkEnableOption "Hyprland configuration";
+
+    shell.backend = lib.mkOption {
+      type = lib.types.enum [
+        "caffyne"
+        "quickshell"
+      ];
+      default = "caffyne";
+      description = ''
+        Desktop shell backend for the Hyprland session. The backends are
+        mutually exclusive so only one bar, notification server, OSD, and
+        wallpaper integration runs at a time. Idle and lock services are shared.
+      '';
+    };
+
+    wallpaper = lib.mkOption {
+      type = lib.types.str;
+      default = defaultWallpaper;
+      description = ''
+        Stable wallpaper path shared by the desktop shell and hyprlock. Prefer
+        a Home Manager path over a versioned Nix store path so applications can
+        persist the value without retaining an obsolete store generation.
+      '';
+    };
 
     # Shared internal values, not normal user-facing settings. Think like shared
     # internal state without the usual enforcement by native language facilities, like in Python.
@@ -143,6 +185,18 @@ in
     # Hyprland module files in this directory, not settings users are expected
     # to configure/set directly.
     commands = {
+      caffyneAction = lib.mkOption {
+        type = lib.types.package;
+        internal = true;
+        description = "Narrow Caffyne D-Bus action helper used by Hyprland keybinds.";
+      };
+
+      caffeineScript = lib.mkOption {
+        type = lib.types.package;
+        internal = true;
+        description = "Shared manual idle-inhibitor helper used by both shell backends.";
+      };
+
       airctl = lib.mkOption {
         type = lib.types.package;
         internal = true;
@@ -167,6 +221,7 @@ in
     local.hyprland.commands = {
       inherit
         airctl
+        caffeineScript
         screenshotScript
         screenrecordScript
         ;
@@ -182,6 +237,28 @@ in
     # session stops. Without one shared target, each service would need its own
     # separate start/stop rules and they could drift out of sync.
     wayland.systemd.target = hyprlandSessionTarget;
+
+    # WALLPAPERS_DIR is set via home.sessionVariables (modules/home-manager/
+    # dotfiles.nix), which only lands in
+    # ~/.nix-profile/etc/profile.d/hm-session-vars.sh. Nothing sources that
+    # file for this greetd-launched session: there is no ~/.profile, greetd's
+    # worker only tries /etc/profile and $HOME/.profile before exec'ing
+    # start-hyprland, and start-hyprland is an ELF binary, not a shell
+    # script, so it can never source anything either. Without this, Caffyne's
+    # wallpaper picker (windows/dash/wallpapers.py in
+    # caffyne-runtime-integration.patch) reads os.environ, finds
+    # WALLPAPERS_DIR unset, and silently falls back to the read-only bundled
+    # wallpapers under the Nix store.
+    #
+    # Setting it here instead makes Home Manager write it into
+    # ~/.config/environment.d/, which every unit the systemd user manager
+    # starts inherits -- including caffyne-shell.service -- without needing
+    # a per-unit Environment= line.
+    #
+    # Caveat: environment.d is only read when the systemd user manager itself
+    # starts, not on every `home-manager switch`. An already-running session
+    # will not pick this up until the next login.
+    systemd.user.sessionVariables.WALLPAPERS_DIR = wallpapersDir;
 
     wayland.windowManager.hyprland = {
       enable = true;
@@ -401,8 +478,6 @@ in
             execDispatcher "${vicinaeCommand} 'vicinae://launch/clipboard/history?toggle=true'"
           ))
 
-          (mkBind "${mod} + SHIFT + W" (execDispatcher "${unstable.waypaper}/bin/waypaper"))
-
           (mkBind "F6" (execDispatcher "${commands.screenshotScript}/bin/hypr-shell-screenshot area"))
           (mkBind "SHIFT + F6" (execDispatcher "${commands.screenshotScript}/bin/hypr-shell-screenshot full"))
           (mkBind "CTRL + F6" (
@@ -419,21 +494,11 @@ in
             execDispatcher "${commands.screenrecordScript}/bin/hypr-shell-record stop"
           ))
 
-          # See ShellShortcuts.qml: Hyprland owns the key chord, Quickshell owns
-          # the named shell actions.
-          (mkBind "${mod} + Q" "hl.dsp.global(\"quickshell:quickSettings\")")
-
           (mkBind "${mod} + N" (execDispatcher "${pkgs.nautilus}/bin/nautilus"))
-          (mkBind "${mod} + ALT + W" (execDispatcher "${commands.airctl}/bin/airctl"))
-          (mkBind "${mod} + B" (execDispatcher "${unstable.overskride}/bin/overskride"))
+          (mkBind "${mod} + L" (execDispatcher "${pkgs.systemd}/bin/loginctl lock-session"))
 
           (mkBind "${mod} + M" (execDispatcher (lib.getExe pkgs.protonmail-desktop)))
           (mkBind "${mod} + SHIFT + M" (execDispatcher "${pkgs.mission-center}/bin/missioncenter"))
-
-          (mkBind "${mod} + Escape" (execDispatcher "${unstable.hyprshutdown}/bin/hyprshutdown"))
-          (mkBind "XF86PowerOff" (execDispatcher "${unstable.hyprshutdown}/bin/hyprshutdown"))
-
-          (mkBind "${mod} + L" (execDispatcher "${pkgs.systemd}/bin/loginctl lock-session"))
 
           (mkBind "${mod} + SHIFT + Q" "hl.dsp.window.close()")
           (mkBind "ALT + F4" "hl.dsp.window.close()")
@@ -461,36 +526,95 @@ in
           (mkBindWithFlags "${mod} + SUPER_L" (execDispatcher "${vicinaeCommand} open") { release = true; })
           (mkBindWithFlags "${mod} + SUPER_R" (execDispatcher "${vicinaeCommand} open") { release = true; })
 
-          # Locked binds allow media keys even when input is inhibited, such as
-          # while the lock screen is active. ShellShortcuts.qml owns hold-repeat
-          # behavior so a tap cannot turn into a flood of global shortcut activations.
-          (mkBindWithFlags "XF86AudioRaiseVolume" "hl.dsp.global(\"quickshell:audioUp\")" { locked = true; })
+          # Mouse binds keep running while the mouse button is held. Used here so
+          # Super+left-drag moves a window and Super+right-drag resizes one.
+          (mkBindWithFlags "${mod} + mouse:272" "hl.dsp.window.drag()" { mouse = true; })
+          (mkBindWithFlags "${mod} + mouse:273" "hl.dsp.window.resize()" { mouse = true; })
+        ]
+        ++ lib.optionals useQuickshell [
+          (mkBind "${mod} + SHIFT + W" (execDispatcher "${unstable.waypaper}/bin/waypaper"))
+
+          # Hyprland owns the key chords while Quickshell owns these named
+          # actions and their hold-repeat behavior.
+          (mkBind "${mod} + Q" "hl.dsp.global(\"quickshell:quickSettings\")")
+          (mkBind "${mod} + ALT + W" (execDispatcher "${commands.airctl}/bin/airctl"))
+          (mkBind "${mod} + B" (execDispatcher "${unstable.overskride}/bin/overskride"))
+          (mkBind "${mod} + Escape" (execDispatcher "${unstable.hyprshutdown}/bin/hyprshutdown"))
+          (mkBind "XF86PowerOff" (execDispatcher "${unstable.hyprshutdown}/bin/hyprshutdown"))
+          (mkBindWithFlags "XF86AudioRaiseVolume" "hl.dsp.global(\"quickshell:audioUp\")" {
+            locked = true;
+          })
           (mkBindWithFlags "XF86AudioLowerVolume" "hl.dsp.global(\"quickshell:audioDown\")" {
             locked = true;
           })
-          (mkBindWithFlags "XF86AudioMute" "hl.dsp.global(\"quickshell:audioMute\")" { locked = true; })
-
+          (mkBindWithFlags "XF86AudioMute" "hl.dsp.global(\"quickshell:audioMute\")" {
+            locked = true;
+          })
           (mkBindWithFlags "XF86MonBrightnessUp" "hl.dsp.global(\"quickshell:brightnessUp\")" {
             locked = true;
           })
           (mkBindWithFlags "XF86MonBrightnessDown" "hl.dsp.global(\"quickshell:brightnessDown\")" {
             locked = true;
           })
-
           (mkBindWithFlags "XF86KbdBrightnessUp" "hl.dsp.global(\"quickshell:keyboardBrightnessUp\")" {
             locked = true;
           })
           (mkBindWithFlags "XF86KbdBrightnessDown" "hl.dsp.global(\"quickshell:keyboardBrightnessDown\")" {
             locked = true;
           })
-
-          # Mouse binds keep running while the mouse button is held. Used here so
-          # Super+left-drag moves a window and Super+right-drag resizes one.
-          (mkBindWithFlags "${mod} + mouse:272" "hl.dsp.window.drag()" { mouse = true; })
-          (mkBindWithFlags "${mod} + mouse:273" "hl.dsp.window.resize()" { mouse = true; })
+        ]
+        ++ lib.optionals useCaffyne [
+          (mkBind "${mod} + SHIFT + W" (execDispatcher "${caffyneActionCommand} wallpapers"))
+          (mkBind "${mod} + Q" (execDispatcher "${caffyneActionCommand} settings"))
+          (mkBind "${mod} + ALT + W" (execDispatcher "${caffyneActionCommand} wifi"))
+          (mkBind "${mod} + B" (execDispatcher "${caffyneActionCommand} bluetooth"))
+          (mkBind "${mod} + Escape" (execDispatcher "${caffyneActionCommand} session"))
+          (mkBind "XF86PowerOff" (execDispatcher "${caffyneActionCommand} session"))
+          # Direct device commands keep hardware keys usable while locked.
+          # Caffyne observes PipeWire and backlight changes and owns the OSD.
+          (mkBindWithFlags "XF86AudioRaiseVolume"
+            (execDispatcher "${wpctlCommand} set-volume --limit 1.0 @DEFAULT_AUDIO_SINK@ 5%+")
+            {
+              locked = true;
+              repeating = true;
+            }
+          )
+          (mkBindWithFlags "XF86AudioLowerVolume"
+            (execDispatcher "${wpctlCommand} set-volume @DEFAULT_AUDIO_SINK@ 5%-")
+            {
+              locked = true;
+              repeating = true;
+            }
+          )
+          (mkBindWithFlags "XF86AudioMute"
+            (execDispatcher "${wpctlCommand} set-mute @DEFAULT_AUDIO_SINK@ toggle")
+            { locked = true; }
+          )
+          (mkBindWithFlags "XF86MonBrightnessUp" (execDispatcher "${brightnessCommand} set 5%+") {
+            locked = true;
+            repeating = true;
+          })
+          (mkBindWithFlags "XF86MonBrightnessDown" (execDispatcher "${brightnessCommand} set 5%-") {
+            locked = true;
+            repeating = true;
+          })
+          (mkBindWithFlags "XF86KbdBrightnessUp"
+            (execDispatcher "${brightnessCommand} --device='*::kbd_backlight' set 5%+")
+            {
+              locked = true;
+              repeating = true;
+            }
+          )
+          (mkBindWithFlags "XF86KbdBrightnessDown"
+            (execDispatcher "${brightnessCommand} --device='*::kbd_backlight' set 5%-")
+            {
+              locked = true;
+              repeating = true;
+            }
+          )
         ]
         ++ lib.optionals enableAsusRogKeybindings [
-          (mkBind "Launch1" (execDispatcher (lib.getExe' unstable.asusctl "rog-control-center")))
+          (mkBind "XF86Launch1" (execDispatcher (lib.getExe' unstable.asusctl "rog-control-center")))
           (mkBind "F5" (execDispatcher "${lib.getExe' unstable.asusctl "asusctl"} profile -n"))
         ];
       };
@@ -499,47 +623,54 @@ in
     # Baseline user packages for the Hyprland profile. These are not all visible
     # apps; some are fonts and Qt support libraries that make the UI render
     # correctly.
-    home.packages = with pkgs; [
-      # General font/icon support. The Quickshell bar should not depend on Nerd
-      # Font glyph icons; it uses SVG icons instead. The symbols font is kept as
-      # a broad fallback for terminal/app text that may still contain those
-      # characters outside this shell. Noto (incl. color emoji) comes from the
-      # fontconfig module, which owns the fallback fonts for every profile.
-      font-awesome
-      nerd-fonts.symbols-only
+    home.packages =
+      (with pkgs; [
+        # General font/icon support. The Quickshell bar should not depend on Nerd
+        # Font glyph icons; it uses SVG icons instead. The symbols font is kept as
+        # a broad fallback for terminal/app text that may still contain those
+        # characters outside this shell. Noto (incl. color emoji) comes from the
+        # fontconfig module, which owns the fallback fonts for every profile.
+        font-awesome
+        nerd-fonts.symbols-only
 
-      # Qt Wayland/QML support. Quickshell is a Qt/QML program, so these help
-      # editor tooling and Qt apps understand the Wayland session.
-      libsForQt5.qtwayland
-      nautilus
-      qt6.qtdeclarative
-      qt6.qtimageformats
-      qt6.qtsvg
-      qt6.qtwayland
+        nautilus
 
-      # Hyprland session utilities and apps launched by the keybinds above.
-      brightnessctl
-      commands.airctl
-      commands.screenrecordScript
-      commands.screenshotScript
-      grim
-      jq
-      libnotify
-      # Image viewer and PDF reader for the session; GNOME ships equivalents as
-      # part of the desktop, Hyprland has to bring its own. These two are the
-      # defaults declared in xdg.mimeApps below.
-      loupe
-      mission-center
-      papers
-      satty
-      slurp
-      unstable.awww
-      unstable.hyprshutdown
-      unstable.overskride
-      unstable.waypaper
-      wayland-pipewire-idle-inhibit
-      wf-recorder
-    ];
+        # Hyprland session utilities and apps launched by the keybinds above.
+        brightnessctl
+        commands.caffeineScript
+        commands.screenrecordScript
+        commands.screenshotScript
+        grim
+        jq
+        libnotify
+        # Image viewer and PDF reader for the session; GNOME ships equivalents as
+        # part of the desktop, Hyprland has to bring its own. These two are the
+        # defaults declared in xdg.mimeApps below.
+        loupe
+        mission-center
+        papers
+        satty
+        slurp
+        wayland-pipewire-idle-inhibit
+        wf-recorder
+      ])
+      ++ lib.optionals useQuickshell (
+        with pkgs;
+        [
+          # Qt Wayland/QML support belongs to the Quickshell rollback backend.
+          libsForQt5.qtwayland
+          qt6.qtdeclarative
+          qt6.qtimageformats
+          qt6.qtsvg
+          qt6.qtwayland
+
+          commands.airctl
+          unstable.awww
+          unstable.hyprshutdown
+          unstable.overskride
+          unstable.waypaper
+        ]
+      );
 
     # Everyday file-type defaults for the Hyprland session, merged into the
     # xdg.mimeApps set that desktop.nix enables. GNOME gets these as stock
@@ -584,45 +715,56 @@ in
       NIXOS_OZONE_WL = "1";
     };
 
-    # .desktop entry for waypaper so it can show up in app launchers like vicinae
-    xdg.desktopEntries.waypaper = {
-      name = "Waypaper";
-      genericName = "Wallpaper Picker";
-      comment = "Pick and apply wallpapers for the Hyprland session";
-      exec = "${unstable.waypaper}/bin/waypaper";
-      icon = "waypaper";
-      terminal = false;
-      categories = [
-        "Utility"
-        "GTK"
-        "DesktopSettings"
-      ];
+    # Waypaper remains part of the Quickshell rollback backend. Caffyne owns
+    # wallpaper selection and awww when its backend is selected.
+    xdg.desktopEntries = lib.mkIf useQuickshell {
+      waypaper = {
+        name = "Waypaper";
+        genericName = "Wallpaper Picker";
+        comment = "Pick and apply wallpapers for the Hyprland session";
+        exec = "${unstable.waypaper}/bin/waypaper";
+        icon = "waypaper";
+        terminal = false;
+        categories = [
+          "Utility"
+          "GTK"
+          "DesktopSettings"
+        ];
+      };
     };
 
-    # Waypaper is the wallpaper picker. awww is the background daemon that
-    # actually draws the wallpaper on the Wayland outputs.
-    xdg.configFile."waypaper/config.ini".text = ''
-      [Settings]
-      language = en
-      folder = ${wallpapersDir}
-      backend = awww
-      monitors = All
-      fill = Fill
-      sort = name
-      color = ${theme.lockBackground}
-      subfolders = False
-      all_subfolders = False
-      show_hidden = False
-      show_gifs_only = False
-      show_path_in_tooltip = True
-      number_of_columns = 3
-      use_xdg_state = True
-      zen_mode = False
+    xdg.configFile = lib.mkMerge [
+      {
+        # Provision a default image even in a clean VM and even when
+        # Quickshell is selected. The public option points at this stable link
+        # by default; users can override it with another durable path without
+        # changing the modules that consume the wallpaper.
+        ${defaultWallpaperConfigPath}.source = "${inputs.caffyne}/wallpapers/wall14.jpg";
+      }
+      (lib.mkIf useQuickshell {
+        # Waypaper is the wallpaper picker. awww is the background daemon that
+        # actually draws the wallpaper on the Wayland outputs.
+        "waypaper/config.ini".text = ''
+          [Settings]
+          language = en
+          folder = ${wallpapersDir}
+          backend = awww
+          monitors = All
+          fill = Fill
+          sort = name
+          color = ${theme.lockBackground}
+          subfolders = False
+          all_subfolders = False
+          show_hidden = False
+          show_gifs_only = False
+          show_path_in_tooltip = True
+          number_of_columns = 3
+          use_xdg_state = True
+          zen_mode = False
 
-      # Waypaper replaces $wallpaper with an escaped file path. Leave it
-      # unquoted here so paths with spaces still reach the hook correctly.
-      post_command = ${wallpaperLockHook}/bin/hypr-shell-lock-wallpaper $wallpaper
-    '';
+        '';
+      })
+    ];
 
     # udiskie watches removable drives. automount=true means USB drives can show
     # up automatically without manually running mount commands.
@@ -638,37 +780,91 @@ in
 
     # hyprsunset shifts the display color temperature later in the day. Lower
     # temperature values look warmer/oranger. This is separate from the QML UI.
+    #
+    # Shared session infrastructure under both shell backends, not just
+    # Quickshell: Caffyne's Quick Settings night-mode tile is a thin control
+    # over this same unit (services/night_mode.py in
+    # caffyne-hypridle-hyprlock.patch) rather than owning its own wlsunset
+    # process, mirroring how the Caffeine tile controls
+    # hypr-shell-caffeine.service instead of doing the work itself.
+    #
+    # The endpoints mirror the GNOME profile this replaces (neutral during
+    # the day, 2467K overnight -- see modules/home-manager/gnome/default.nix:
+    # org/gnome/settings-daemon/plugins/color, from = 19.0, to = 8.0,
+    # temperature = 2467). hyprsunset applies each profile entry abruptly and
+    # has no native fade, so the 19:00 and 19:30 entries step the temperature
+    # down across the hour after GNOME's configured start time instead of
+    # jumping straight to 2467K.
     services.hyprsunset = {
       enable = true;
       systemdTarget = hyprlandSessionTarget;
       settings = {
         profile = [
           {
-            time = "7:00";
+            time = "8:00";
             identity = true;
           }
           {
             time = "19:00";
-            temperature = 5000;
+            temperature = 4500;
           }
           {
-            time = "22:00";
-            temperature = 4200;
+            time = "19:30";
+            temperature = 3500;
+          }
+          {
+            time = "20:00";
+            temperature = 2467;
           }
         ];
       };
     };
 
     # Extra Hyprland-session user services that do not have dedicated Home
-    # Manager modules in this config. Quickshell, Vicinae, hypridle, and
-    # hyprsunset are configured elsewhere; these are the remaining session
-    # helpers that need to start and stop with hyprland-session.target.
+    # Manager modules in this config. The media inhibitor is backend-neutral;
+    # Waypaper and its awww daemon belong only to the Quickshell rollback path.
     systemd.user.services = {
+      # Block idle while PipeWire reports active media playback, so videos,
+      # calls, and similar media do not let the selected idle manager lock the
+      # session.
+      hypr-shell-media-idle-inhibit = {
+        Unit = {
+          Description = "Inhibit idle while PipeWire media is playing";
+          PartOf = [ hyprlandSessionTarget ];
+        };
+
+        Install.WantedBy = [ hyprlandSessionTarget ];
+
+        Service = {
+          ExecStart = "${pkgs.wayland-pipewire-idle-inhibit}/bin/wayland-pipewire-idle-inhibit";
+          Restart = "on-failure";
+        };
+      };
+
+      # Manual Caffeine is shared session infrastructure. Both shell backends
+      # control this unit, and hypridle respects its systemd idle inhibitor.
+      hypr-shell-caffeine = {
+        Unit = {
+          Description = "Manual Hyprland idle inhibitor";
+          PartOf = [ hyprlandSessionTarget ];
+        };
+
+        Service = {
+          ExecStart = "${pkgs.systemd}/bin/systemd-inhibit --what=idle --who=HyprShell --why=Manual-caffeine-mode --mode=block ${pkgs.coreutils}/bin/sleep infinity";
+        };
+      };
+    }
+    // lib.optionalAttrs useQuickshell {
       # awww is the wallpaper backend daemon. Waypaper chooses the wallpaper,
       # but awww is the process that actually draws it on the Wayland outputs.
       hypr-shell-awww = {
         Unit = {
           Description = "Wayland wallpaper daemon";
+          # Same ordering fix as caffyne-awww in caffyne.nix: without this,
+          # sd-switch/systemd is free to start awww before the Hyprland
+          # session target is up, where it fails against no compositor and
+          # burns through its restart budget.
+          After = [ hyprlandSessionTarget ];
           PartOf = [ hyprlandSessionTarget ];
         };
 
@@ -698,21 +894,6 @@ in
         };
       };
 
-      # Block idle while PipeWire reports active media playback, so videos,
-      # calls, and similar media do not let hypridle lock the session.
-      hypr-shell-media-idle-inhibit = {
-        Unit = {
-          Description = "Inhibit idle while PipeWire media is playing";
-          PartOf = [ hyprlandSessionTarget ];
-        };
-
-        Install.WantedBy = [ hyprlandSessionTarget ];
-
-        Service = {
-          ExecStart = "${pkgs.wayland-pipewire-idle-inhibit}/bin/wayland-pipewire-idle-inhibit";
-          Restart = "on-failure";
-        };
-      };
     };
 
     # xdg-desktop-portal 1.17+ requires an explicit backend selection when

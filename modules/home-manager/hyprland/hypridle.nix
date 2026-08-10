@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  unstable,
   ...
 }:
 
@@ -23,12 +24,27 @@ in
     services.hypridle = {
       enable = true;
 
+      # NixOS 26.05 still packages hypridle 0.1.7. Use 0.1.8 from the
+      # repository's existing unstable package set because upstream 0.1.8
+      # fixes D-Bus inhibitor cookie/count accounting when one owner exits
+      # while holding multiple cookies. Keeping D-Bus inhibition enabled then
+      # remains safe without carrying a local downstream source patch.
+      package = unstable.hypridle;
+
       settings = {
         general = {
           # lock_cmd is what hypridle runs when something asks the session to
-          # lock, including loginctl lock-session. pidof hyprlock prevents
-          # launching another hyprlock if one is already running.
-          lock_cmd = "${pkgs.procps}/bin/pidof hyprlock || ${pkgs.hyprlock}/bin/hyprlock";
+          # lock, including loginctl lock-session. Run hyprlock for every
+          # request so a terminating or unrelated process cannot hide a fresh
+          # lock request. Hyprland rejects duplicate session-lock clients while
+          # preserving the valid lock client.
+          #
+          # Use the same hyprlock the profile installs and themes
+          # (config.programs.hyprlock.package, set in hyprlock.nix) instead of
+          # pkgs.hyprlock directly. Both resolve to the same package today,
+          # but pkgs.hyprlock would silently drift from whatever this profile
+          # actually configures if that ever changes.
+          lock_cmd = "${config.programs.hyprlock.package}/bin/hyprlock";
 
           # before_sleep_cmd runs before suspend/sleep. Locking before sleep
           # means the machine should ask for a password after waking.
@@ -40,11 +56,23 @@ in
 
           # Wait until the lock screen reports that the session is locked before
           # allowing suspend to continue.
-          inhibit_sleep = 3;
+          #
+          # 2 ("auto"), not 3 ("wait until locked"), deliberately. Both pick
+          # hypridle's lock-notify path for this exact pair of commands: auto
+          # selects it when lock_cmd mentions hyprlock and before_sleep_cmd
+          # mentions lock-session, which is what we generate below. The
+          # difference is the failure mode. hypridle's `case 3` only assigns a
+          # behaviour when the compositor advertises hyprland-lock-notify-v1
+          # and has no else branch, so on a compositor without that protocol it
+          # falls through to "no sleep inhibitor at all" and the machine can
+          # suspend before hyprlock is up. `case 2` falls back to a normal
+          # logind delay inhibitor instead. Same behaviour today on Hyprland
+          # 0.55.4, safer if the protocol ever goes away.
+          inhibit_sleep = 2;
 
           # Keep hypridle wired into the inhibitor mechanisms used by browsers,
           # media players, wayland-pipewire-idle-inhibit, and the manual
-          # Quickshell caffeine toggle.
+          # shared Caffeine toggle.
           ignore_dbus_inhibit = false;
           ignore_systemd_inhibit = false;
           ignore_wayland_inhibit = false;
@@ -52,18 +80,20 @@ in
 
         listener = [
           {
-            # After 900 seconds of inactivity, ask systemd/loginctl to lock the
+            # After 600 seconds of inactivity, ask systemd/loginctl to lock the
             # session. That flows back into lock_cmd above.
-            timeout = 900;
+            timeout = 600;
             on-timeout = "${pkgs.systemd}/bin/loginctl lock-session";
           }
-          # VM displays can fail to wake cleanly after DPMS off. Re-enable this
-          # on bare metal if display-off idle behavior is still wanted.
-          # {
-          #   timeout = 1200;
-          #   on-timeout = "${pkgs.hyprland}/bin/hyprctl dispatch dpms off";
-          #   on-resume = "${pkgs.hyprland}/bin/hyprctl dispatch dpms on";
-          # }
+          {
+            timeout = 660;
+            on-timeout = "${pkgs.hyprland}/bin/hyprctl dispatch dpms off";
+            on-resume = "${pkgs.hyprland}/bin/hyprctl dispatch dpms on";
+          }
+          {
+            timeout = 900;
+            on-timeout = "${pkgs.systemd}/bin/systemctl suspend";
+          }
         ];
       };
     };
