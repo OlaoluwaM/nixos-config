@@ -939,6 +939,8 @@ let
       ./caffyne-vicinae-only.patch
       # Integrate logout, Wi-Fi, wallpaper, and service lifecycle behavior.
       ./caffyne-runtime-integration.patch
+      # Keep tray icons in a popup and honor menu-only primary clicks.
+      ./caffyne-tray-menu.patch
       # Remove Caffyne's native PAM/idle path in favor of hyprlock/hypridle.
       ./caffyne-hypridle-hyprlock.patch
       # Apply externally reconciled durable theme settings during startup.
@@ -1027,6 +1029,32 @@ let
      * presentation that Caffyne exposes only through GTK CSS. Recheck selector
      * names whenever the pinned Caffyne revision changes.
      */
+
+    /*
+     * Keep status icons out of the bar so their changing count cannot move
+     * the centered clock. The patched tray presents them in this popover and
+     * inherits Caffyne's existing surface, outline, and radius tokens.
+     */
+    popover.tray-overflow-popover {
+      background-color: var(--background);
+      border-radius: apply(radius-l);
+      box-shadow:
+        inset 0 0 0 1px var(--outline_variant),
+        0 4px 4px 0 rgba(0, 0, 0, 0.33);
+      padding: 8px;
+    }
+
+    .tray-overflow-grid .tray-item {
+      border-radius: apply(radius-m);
+      min-height: 28px;
+      min-width: 28px;
+      padding: 4px;
+    }
+
+    .tray-overflow-grid .tray-item:hover,
+    .bar-button.system-tray.active {
+      background-color: var(--surface_container_high);
+    }
   '';
 
   caffyneActionCases = lib.concatStringsSep "\n" (

@@ -1,0 +1,166 @@
+diff --git a/bar_widgets/system_tray.py b/bar_widgets/system_tray.py
+index 96edb21..31bf59a 100644
+--- a/bar_widgets/system_tray.py
++++ b/bar_widgets/system_tray.py
+@@ -8,7 +8,7 @@ from snippets import Icon
+ from services.singletons import edit_mode, watcher
+ from user_options import user_options
+ from utils.helpers import popup_with_blur
+-from gi.repository import GLib
++from gi.repository import GLib, Gtk
+ 
+ 
+ class TrayItem(EventBox):
+@@ -48,24 +48,33 @@ class TrayItem(EventBox):
+         child.show()
+         self.set_tooltip_text(self._get_tooltip())
+ 
++    def _open_menu(self, event):
++        menu = self._item.get_menu()
++        if menu:
++            if user_options.theme.blur:
++                popup_with_blur(menu, event)
++            else:
++                menu.popup_at_pointer(event)
++        else:
++            self._item.invoke_menu_for_event(event)
++
+     def _on_button_press(self, _, event):
+         if edit_mode.edit_mode:
+             return False
+         match event.button:
+             case 1:
+                 try:
+-                    self._item.activate_for_event(event)
++                    # AppIndicators such as udiskie set ItemIsMenu and do not
++                    # provide a useful Activate action. Follow that protocol
++                    # hint so a primary click opens their exported menu.
++                    if self._item.is_menu:
++                        self._open_menu(event)
++                    else:
++                        self._item.activate_for_event(event)
+                 except Exception as e:
+-                    logger.warning(f"[TrayItem] can't activate {self._item.identifier} ({e})")
++                    logger.warning(f"[TrayItem] can't handle primary click for {self._item.identifier} ({e})")
+             case 3:
+-                menu = self._item.get_menu()
+-                if menu:
+-                    if user_options.theme.blur:
+-                        popup_with_blur(menu, event)
+-                    else:
+-                        menu.popup_at_pointer(event)
+-                else:
+-                    self._item.invoke_menu_for_event(event)
++                self._open_menu(event)
+ 
+ 
+ class SystemTray(Box):
+@@ -84,26 +93,75 @@ class SystemTray(Box):
+             ],
+         )
+ 
+-        self.tray = Box(
++        # Keep one fixed-size control in the bar. Showing every status icon
++        # inline makes the centered clock move as applications join or leave.
++        self.tray_button = EventBox(
+             style_classes=["bar-button", "system-tray"],
+-            spacing=8,
++            tooltip_text="System Tray",
++            child=Icon(icon_name="dots-three-circle-duotone"),
+         )
++        self.tray_button.connect("button-release-event", self._on_tray_button_press)
++
++        # Gtk.FlowBox wraps each TrayItem in a FlowBoxChild. Six columns keep
++        # the popup compact while still allowing any number of rows.
++        self.tray_flow = Gtk.FlowBox()
++        self.tray_flow.set_selection_mode(Gtk.SelectionMode.NONE)
++        self.tray_flow.set_homogeneous(True)
++        self.tray_flow.set_min_children_per_line(1)
++        self.tray_flow.set_max_children_per_line(6)
++        self.tray_flow.set_row_spacing(8)
++        self.tray_flow.set_column_spacing(8)
++        self.tray_flow.get_style_context().add_class("tray-overflow-grid")
++
++        self.tray_popover = Gtk.Popover.new(self.tray_button)
++        self.tray_popover.get_style_context().add_class("tray-overflow-popover")
++        self.tray_popover.add(self.tray_flow)
++        self.tray_popover.connect("notify::visible", self._on_popover_visibility_changed)
+ 
+         super().__init__(
+             spacing=0,
+-            children=[self.edit_overlay, self.tray],
++            children=[self.edit_overlay, self.tray_button],
+             **kwargs,
+         )
+ 
+-        self.tray.set_visible(False)
++        self.tray_button.set_visible(False)
+         self.connect("realize", self._on_realize)
++        self.connect("destroy", lambda *_: self.tray_popover.destroy())
+ 
+     def _on_realize(self, *_):
++        # Open toward the screen interior for either supported bar edge.
++        bar_alignment = getattr(self.get_toplevel(), "alignment", "top")
++        popover_position = (
++            Gtk.PositionType.TOP
++            if bar_alignment == "bottom"
++            else Gtk.PositionType.BOTTOM
++        )
++        self.tray_popover.set_position(popover_position)
+         watcher.connect("item-added", self._on_item_added)
+         watcher.connect("item-removed", self._on_item_removed)
++        # The watcher can receive registrations before this widget realizes.
++        for identifier in tuple(watcher.items):
++            self._on_item_added(watcher, identifier)
+         edit_mode.connect("notify::edit-mode", lambda *_: self._update_visibility())
+         GLib.idle_add(self._update_visibility)
+ 
++    def _on_tray_button_press(self, _, event):
++        if edit_mode.edit_mode or event.button != 1:
++            return False
++        if self.tray_popover.get_visible():
++            self.tray_popover.popdown()
++        else:
++            self.tray_flow.show_all()
++            self.tray_popover.popup()
++        return True
++
++    def _on_popover_visibility_changed(self, *_):
++        style = self.tray_button.get_style_context()
++        if self.tray_popover.get_visible():
++            style.add_class("active")
++        else:
++            style.remove_class("active")
++
+     def _on_item_added(self, _, identifier: str):
+         if identifier in self._items:
+             return
+@@ -112,19 +170,25 @@ class SystemTray(Box):
+             return
+         tray_item = TrayItem(item)
+         self._items[identifier] = tray_item
+-        self.tray.add(tray_item)
++        self.tray_flow.add(tray_item)
+         tray_item.show()
+         self._update_visibility()
+ 
+     def _on_item_removed(self, _, identifier: str):
+         if identifier in self._items:
+             widget = self._items.pop(identifier)
+-            self.tray.remove(widget)
++            # FlowBox owns an intermediate child rather than TrayItem itself.
++            flow_child = widget.get_parent()
++            if flow_child:
++                self.tray_flow.remove(flow_child)
++                flow_child.destroy()
+             self._update_visibility()
+ 
+     def _update_visibility(self):
+         has_items = bool(self._items)
+         is_editing = edit_mode.edit_mode
+-        self.tray.set_visible(has_items)
++        self.tray_button.set_visible(has_items)
+         self.edit_overlay.set_visible(is_editing and not has_items)
++        if not has_items or is_editing:
++            self.tray_popover.popdown()
+         self.get_parent().get_parent().set_visible(has_items or is_editing)
