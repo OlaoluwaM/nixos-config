@@ -69,16 +69,16 @@ in
             # Empty monitor means "show this on all monitors".
             monitor = "";
 
-            # Anchor the compact password pill to the bottom rather than the
+            # Anchor the compact password field to the bottom rather than the
             # display center. This keeps the clock visually dominant and makes
             # the composition adapt to the VM and laptop display heights.
-            size = "260, 44";
+            size = "240, 40";
             position = "0, 100";
             halign = "center";
             valign = "bottom";
 
             # The background's brightness cap supplies the contrast boundary,
-            # so this pill only needs a light neutral tint rather than an
+            # so this field only needs a light neutral tint rather than an
             # opaque black fill. Auth states vary opacity instead of hue;
             # fail_text remains the clear signal when color is absent.
             outline_thickness = 1;
@@ -97,7 +97,9 @@ in
             # $FAIL is hyprlock's backend-agnostic failure message. $PAMFAIL
             # can be empty when no PAM-specific string accompanies a failure.
             fail_text = "$FAIL";
-            rounding = 22;
+            # Ten pixels reads as a rounded rectangle rather than a pill while
+            # preserving the soft geometry used elsewhere in the lock screen.
+            rounding = 10;
             shadow_passes = 2;
             shadow_size = 4;
             shadow_color = "rgba(000000cc)";
