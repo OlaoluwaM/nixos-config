@@ -103,6 +103,8 @@ in
     google-chrome
 
     haskellPackages.threadscope
+    haskellPackages.implicit-hie
+    haskellPackages.ghc-events
     (callPackage ../../pkgs/hacker-laws-cli { })
 
     libappindicator
