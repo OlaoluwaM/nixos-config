@@ -101,6 +101,6 @@ If the MCP server is not configured, fall back to official Qt and Quickshell doc
 
 ## Worktree Discipline
 
-The worktree may contain unrelated user changes. Do not revert, reformat, or fold them into your work unless the task explicitly requires it. Specifically, ignore the `flake.lock` file
+The worktree may contain unrelated user changes. Do not revert, reformat, or fold them into your work unless the task explicitly requires it.
 
 Before editing, check `git status --short`. Before finalizing, show or inspect the relevant diff. Keep commits atomic if Olaolu asks for a commit.
