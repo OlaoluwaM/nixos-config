@@ -14,7 +14,6 @@ let
   flatpak = "${pkgs.flatpak}/bin/flatpak";
 
   includeList = [
-    "${userDirs.download}/rpms"
     "${userDirs.pictures}"
     "${dataHome}/fonts"
     "${dataHome}/zoxide" # _ZO_DATA_DIR (see dotfiles.nix)
@@ -33,7 +32,6 @@ let
     "${home}/.claude"
     "${home}/.codex"
     configHome
-    "${userDirs.desktop}/${config.local.fsLayout.devDirname}/archive"
   ];
 
   excludeList = [
