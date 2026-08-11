@@ -139,11 +139,13 @@ in
         "org.gnome.Chess"
         "com.leinardi.gst"
       ];
-      overrides.settings = {
+      # The new overrides.settings syntax doesn't seem to work so we're using the old overrides syntax
+      # https://github.com/gmodena/nix-flatpak/issues/211
+      overrides = {
         # Force gst to use the Adwaita dark theme.
-        "com.leinardi.gst".Environment = [
-          "GTK_THEME=Adwaita:dark"
-        ];
+        "com.leinardi.gst".Environment = {
+          GTK_THEME = "Adwaita:dark";
+        };
       };
     };
 
