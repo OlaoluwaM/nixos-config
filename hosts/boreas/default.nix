@@ -2,7 +2,6 @@
 # Use this to configure your system environment (it replaces /etc/nixos/configuration.nix)
 # Based off: https://github.com/Misterio77/nix-starter-configs/blob/main/minimal/nixos/configuration.nix
 # Host: Asus ROG Zephyrus M16 (2023)
-# TODO: Update relevant configuration once we have a bare metal installation of nixos
 {
   lib,
   config,
@@ -71,12 +70,11 @@ in
   };
 
   # Bootloader.
-  boot.loader.grub.enable = true;
-  boot.loader.grub.device = "/dev/vda";
-  boot.loader.grub.useOSProber = true;
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
 
   # Enable memtest
-  # boot.loader.systemd-boot.memtest86.enable = true;
+  boot.loader.systemd-boot.memtest86.enable = true;
 
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
@@ -126,6 +124,8 @@ in
     #media-session.enable = true;
   };
 
+  services.flatpak.enable = true;
+
   # NOTE: You can configure your system-wide user settings (groups, etc), add more users as needed.
   users.users = {
     # You can add more user entries here if you want to. They'll all follow the same schema as "olaolu"
@@ -155,6 +155,9 @@ in
 
   # Install ZSH
   programs.zsh.enable = true;
+
+  # https://blog.kaorubb.org/en/posts/nixos-fix-could-not-start-dynamically-linked-executable/
+  programs.nix-ld.enable = true;
 
   # Enable docker. CDI is only useful with the NVIDIA container toolkit, so it's
   # gated on the GPU too — otherwise dockerd advertises a feature nothing backs.
@@ -206,8 +209,12 @@ in
   virtualisation.libvirtd.enable = true;
   virtualisation.spiceUSBRedirection.enable = true;
 
-  # Necessary as described here: https://nix-community.github.io/home-manager/options.xhtml#opt-programs.zsh.enableCompletion
-  environment.pathsToLink = [ "/share/zsh" ];
+  environment = {
+    # Necessary as described here: https://nix-community.github.io/home-manager/options.xhtml#opt-programs.zsh.enableCompletion
+    pathsToLink = [ "/share/zsh" ];
+    # https://discourse.nixos.org/t/how-to-add-a-dir-to-my-systems-or-users-path/19488
+    localBinInPath = true;
+  };
 
   # supergfxctl is deprecated; asusctl/asusd now owns ASUS firmware controls. Force this
   # off because older nixpkgs asusd modules may still enable supergfxd by default.
