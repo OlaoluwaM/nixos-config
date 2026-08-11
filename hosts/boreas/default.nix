@@ -241,7 +241,8 @@ in
             // Replaces the old Fedora udev script that stopped nvidia-powerd on battery
             // and restarted it on AC. Dynamic Boost is useful on wall power, but it can
             // burn battery when unplugged.
-            // The asusd setting is broken in asusctl 6.3.8. It parses disable_nvidia_powerd_on_battery, but no runtime code reads the value. The source declares it in [config.rs (line 31)](/nix/store/i77jy8hyx2nxwczpkrqfgmsnf4ydx4ix-source/asusd/src/config.rs:31), while the AC/DC handler in [ctrl_platform.rs (line 293)](/nix/store/i77jy8hyx2nxwczpkrqfgmsnf4ydx4ix-source/asusd/src/ctrl_platform.rs:293) only manages profiles and commands.
+            // asusctl 6.3.8 parses disable_nvidia_powerd_on_battery but does not
+            // read it after loading the configuration.
             // So we explicitly start and stop the nvidia-powerd service on AC and battery events using the ac_command and bat_command hooks below.
             disable_nvidia_powerd_on_battery: true,
 
