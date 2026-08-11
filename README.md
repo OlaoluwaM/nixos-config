@@ -49,6 +49,12 @@ home-manager switch --flake ~/nixos-config#olaolu@boreas
 
 On a fresh install this order is mandatory: standalone Home Manager can only run once `nixos-rebuild` has produced what it needs (our user account, the nix daemon, `allowed-users`). Afterwards the two are independent — if only one layer changed, running just that layer's `switch` is fine — but for changes spanning both, keep system first: the home config usually assumes system plumbing (sessions, groups, dbus services) that should land before it. Cross-layer changes may also need a re-login for `hm-session-vars.sh` to take effect.
 
+## TODOs
+
+- [ ] Make hosts/boreas a bit more modular. Move out stuff like the nvidia configuration into a separate module to allow for better composition moving forward
+- [ ] Add shell aliases for the `nixos-rebuild` and `home-manager switch` flake commands
+- [ ] Look into declaratively setting up a wallpaper (**Optional**)
+
 ## Troubleshooting
 
 ### Not booting up?
