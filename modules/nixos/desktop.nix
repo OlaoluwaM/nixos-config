@@ -38,14 +38,7 @@ in
     (lib.mkIf enableDesktop {
       security.polkit.enable = true;
 
-      programs.gnupg.agent = {
-        enable = true;
-        enableSSHSupport = true;
-        pinentryPackage = if cfg.profile == "gnome" then pkgs.pinentry-gnome3 else pkgs.pinentry-qt;
-        settings = {
-          pinentry-timeout = 0;
-        };
-      };
+      programs.seahorse.enable = true;
     })
 
     # Do not move these up because when profile is set to "none", the values of these options becomes a bit unclear

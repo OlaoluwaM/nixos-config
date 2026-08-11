@@ -15,6 +15,64 @@ let
   visual = "nvim";
   dev = "${config.xdg.userDirs.desktop}/${config.local.fsLayout.devDirname}";
   hasNvidiaGpu = (hostConfig.gpu or null) == "nvidia";
+
+  # Keep this override launcher-scoped. Exporting GTK_THEME as a session
+  # variable would force the theme on every GTK application.
+  gtkThemeEnv = "${pkgs.lib.getExe' pkgs.coreutils "env"} GTK_THEME=Adwaita:dark";
+
+  # Preserve each package's upstream desktop metadata and patch only its Exec
+  # lines. Home Manager merges home.packages into one profile, so hiPrio makes
+  # this small derivation win the filename collision with the original entry.
+  # The original application package must still be listed in home.packages.
+  overrideDesktopEntry =
+    {
+      package,
+      desktopFile,
+      execReplacements,
+    }:
+    pkgs.lib.hiPrio (
+      # `--replace-fail` stops the build when upstream changes an expected
+      # Exec line, instead of silently dropping the override.
+      pkgs.runCommand "${desktopFile}-override" { } ''
+        install -Dm644 \
+          "${package}/share/applications/${desktopFile}" \
+          "$out/share/applications/${desktopFile}"
+        ${pkgs.lib.concatMapStringsSep "\n" (replacement: ''
+          substituteInPlace "$out/share/applications/${desktopFile}" \
+            --replace-fail ${pkgs.lib.escapeShellArg replacement.from} \
+            ${pkgs.lib.escapeShellArg replacement.to}
+        '') execReplacements}
+      ''
+    );
+
+  enteAuthDesktopEntry = overrideDesktopEntry {
+    package = pkgs.ente-auth;
+    desktopFile = "io.ente.auth.desktop";
+    execReplacements = [
+      {
+        from = "Exec=enteauth";
+        to = "Exec=${gtkThemeEnv} enteauth";
+      }
+    ];
+  };
+
+  # code.desktop contains the main launcher and the New Empty Window action.
+  # The separate code-url-handler.desktop entry does not need this GTK override.
+  vscodeDesktopEntry = overrideDesktopEntry {
+    package = unstable.vscode-fhs;
+    desktopFile = "code.desktop";
+    execReplacements = [
+      {
+        from = "Exec=code %F";
+        to = "Exec=${gtkThemeEnv} code %F";
+      }
+      # Desktop actions have independent Exec lines.
+      {
+        from = "Exec=code --new-window %F";
+        to = "Exec=${gtkThemeEnv} code --new-window %F";
+      }
+    ];
+  };
 in
 {
   # You can import other home-manager modules here
@@ -40,6 +98,8 @@ in
     ../../modules/home-manager/gpg.nix
     ../../modules/home-manager/lazygit.nix
     ../../modules/home-manager/lsd.nix
+    ../../modules/home-manager/neovim.nix
+    ../../modules/home-manager/ssh.nix
     ../../modules/home-manager/yazi.nix
     ../../modules/home-manager/zsh.nix
   ];
@@ -78,7 +138,6 @@ in
 
   # Add stuff for your user as you see fit:
   # Doing this mean home-manager will be the one to manage your configuration for the program in question
-  # programs.neovim.enable = true;
   home.packages = with pkgs; [
     # Packages from stable channel
     acpi
@@ -88,16 +147,19 @@ in
     claude-code # From https://github.com/sadjow/claude-code-nix
     codex # From https://github.com/sadjow/codex-cli-nix
 
+    dconf2nix
     unstable.defuddle
     duf
 
     ente-auth
+    enteAuthDesktopEntry
     expect
 
     fish
     fdupes
 
     gapless
+    gcc
     glmark2
     gnumake
     google-chrome
@@ -128,7 +190,6 @@ in
     pgcli
     protobuf
     proton-vpn
-    protonmail-desktop
     powertop
 
     racket
@@ -189,8 +250,6 @@ in
 
     unstable.navi
     unstable.ncdu
-    unstable.neovim
-    unstable.neovim-node-client
     unstable.nil # For nix ide plugin
     unstable.nixd # For nix ide plugin
     (callPackage ../../pkgs/notebooklm-mcp-cli { })
@@ -201,9 +260,10 @@ in
     unstable.opencode
 
     unstable.pavucontrol
-    unstable.perl
     unstable.pciutils
+    unstable.perl
     unstable.procs
+    unstable.protonmail-desktop
     unstable.proton-vpn-cli
     # withPackages wraps python3 so these libraries are importable by the interpreter.
     # Again we are installing pynvim and dnspython this way because they are libraries not standalone executables.
@@ -239,6 +299,7 @@ in
     unstable.uv
 
     unstable.vscode-fhs
+    vscodeDesktopEntry
 
     unstable.w3m
     unstable.webp-pixbuf-loader
@@ -254,6 +315,7 @@ in
     enable = true;
     packages = [
       "im.riot.Riot"
+      "org.gnome.DejaDup"
       "it.mijorus.gearlever"
       "com.bitwarden.desktop"
       "com.github.tchx84.Flatseal"
@@ -300,8 +362,11 @@ in
   local.fzf.enable = true;
   local.gh.enable = true;
   local.git.enable = true;
+  local.gpg.enable = true;
   local.lazygit.enable = true;
   local.lsd.enable = true;
+  local.neovim.enable = true;
+  local.ssh.enable = true;
   local.yazi.enable = true;
 
   local.fsLayout.devDirname = hostConfig.devDirname;

@@ -497,7 +497,7 @@ in
           (mkBind "${mod} + N" (execDispatcher "${pkgs.nautilus}/bin/nautilus"))
           (mkBind "${mod} + L" (execDispatcher "${pkgs.systemd}/bin/loginctl lock-session"))
 
-          (mkBind "${mod} + M" (execDispatcher (lib.getExe pkgs.protonmail-desktop)))
+          (mkBind "${mod} + M" (execDispatcher (lib.getExe unstable.protonmail-desktop)))
           (mkBind "${mod} + SHIFT + M" (execDispatcher "${pkgs.mission-center}/bin/missioncenter"))
 
           (mkBind "${mod} + SHIFT + Q" "hl.dsp.window.close()")

@@ -115,8 +115,8 @@ in
       ];
 
       initContent = lib.mkIf (cfg.zshrcConfigPath != null) (
-        # This way, the zshrc file in our dotfiles for nixos will be sourced before OMZ is loaded
-        lib.mkOrder 790 ''
+        # This way, the zshrc file in our dotfiles for nixos will be sourced after OMZ is loaded. There are some scripts that depend on being loaded after OMZ
+        lib.mkOrder 900 ''
           if [[ -f "${cfg.zshrcConfigPath}" ]]; then
             source "${cfg.zshrcConfigPath}"
           fi

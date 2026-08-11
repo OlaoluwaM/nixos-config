@@ -14,5 +14,13 @@ in
   config = lib.mkIf cfg.enable {
     services.displayManager.gdm.enable = true;
     services.desktopManager.gnome.enable = true;
+
+    # Enable the GVfs daemon with Google backend support
+    services.gvfs.enable = true;
+
+    # Ensure Gnome Online Accounts daemon is active
+    services.gnome.gnome-online-accounts.enable = true;
+
+    services.gnome.gnome-keyring.enable = true;
   };
 }

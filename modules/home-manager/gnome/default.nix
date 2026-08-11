@@ -168,7 +168,7 @@ in
         { package = pkgs.gnomeExtensions.clipboard-indicator; }
         { package = pkgs.gnomeExtensions.gsconnect; }
         { package = pkgs.gnomeExtensions.just-perfection; }
-        { package = pkgs.gnomeExtensions.mpris-label; }
+        { package = unstable.gnomeExtensions.media-controller; }
         { package = pkgs.gnomeExtensions.vitals; }
       ];
     };
@@ -207,7 +207,7 @@ in
         action-double-click-titlebar = "toggle-maximize";
         action-middle-click-titlebar = "none";
         action-right-click-titlebar = "menu";
-        button-layout = "close,minimize,maximize:appmenu";
+        button-layout = "appmenu:minimize,maximize,close";
         focus-mode = "click";
         resize-with-right-button = true;
         workspace-names = [
@@ -318,9 +318,9 @@ in
       };
 
       "org/gnome/shell/extensions/clipboard-indicator" = {
-        cache-size = 100;
+        cache-size = 150;
         enable-keybindings = true;
-        history-size = 50;
+        history-size = 80;
         move-item-first = true;
         strip-text = true;
         toggle-menu = [ "<Alt>v" ];
@@ -369,6 +369,47 @@ in
           "__temperature_avg__"
         ];
         position-in-panel = 0;
+      };
+
+      "org/gnome/shell/extensions/media-controller" = {
+        # Keep it on the left like your old Mpris Label.
+        panel-position = "left";
+
+        # Panel contents.
+        show-player-icon = true;
+        show-title = true;
+        show-artist = false;
+
+        # Keep the panel reasonably compact.
+        panel-text-width = 160;
+        scroll-loop = true;
+
+        # Visible panel controls.
+        show-previous = true;
+        show-play-pause = true;
+        show-next = true;
+        show-seek-backward = false;
+        show-seek-forward = false;
+        show-shuffle = false;
+        show-loop = false;
+
+        controls-on-left = false;
+        hide-when-inactive = true;
+
+        # Popup card.
+        card-show-art = true;
+        card-art-size = "medium";
+        card-show-player-switcher = true;
+        card-show-seek-bar = true;
+        card-show-seek-buttons = true;
+        card-show-shuffle = true;
+        card-show-loop = true;
+
+        seek-step-seconds = 10;
+        card-width = 400;
+
+        # Prevent two MPRIS players playing simultaneously.
+        pause-others-on-play = true;
       };
 
       # Keybindings

@@ -49,7 +49,7 @@
           username = "olaolu";
           userFullName = "Olaoluwa Mustapha";
           nixosConfigPath = "/home/${username}/nixos-config";
-          desktopProfile = "hyprland"; # Can be "hyprland" or "gnome"
+          desktopProfile = "gnome"; # Can be "hyprland" or "gnome"
           enableAsusRogKeybindings = true;
           dotfilesRelativePath = "dotfiles/boreas/nixos";
           devDirname = "dev";
@@ -58,19 +58,6 @@
       };
 
       boreas = hosts.boreas;
-
-      # TEMPORARY (migration dry-run) — delete this and every other boreas-vm
-      # block once the migration to real hardware is done.
-      #
-      # A variant of the boreas host for running this config inside a QEMU/KVM
-      # guest used to dry-run the migration, where no NVIDIA GPU is passed
-      # through. Reuses all of boreas's host data but reports no GPU, so the
-      # NVIDIA driver + container toolkit (and the CDI generator service that
-      # fails without a GPU) are gated off. Build it in the VM with
-      # `nixos-rebuild switch --flake .#boreas-vm`.
-      boreas-vm = boreas // {
-        gpu = "none";
-      };
 
       # Single unstable pkgs instance shared by the NixOS and Home Manager
       # entrypoints. electron-39 is marked insecure upstream but is pulled in
@@ -101,20 +88,6 @@
             ./hosts/boreas
           ];
         };
-
-        # TEMPORARY (migration dry-run) — delete after the migration.
-        # VM test target. Same modules as boreas but without the Asus laptop
-        # hardware profile (irrelevant in a guest) and with the no-GPU hostConfig
-        # so the NVIDIA bits are gated off.
-        boreas-vm = nixpkgs.lib.nixosSystem {
-          specialArgs = {
-            inherit inputs unstable;
-            hostConfig = boreas-vm;
-          };
-          modules = [
-            ./hosts/boreas
-          ];
-        };
       };
 
       # Standalone home-manager configuration entrypoint
@@ -136,35 +109,6 @@
             nix-flatpak.homeManagerModules.nix-flatpak
             # We're getting claude-code from this repo https://github.com/sadjow/claude-code-nix to always have the most up to date version
             # The same guy also has a repo for codex https://github.com/sadjow/codex-cli-nix
-            {
-              nixpkgs.overlays = [
-                claude-code.overlays.default
-                codex-cli.overlays.default
-              ];
-            }
-            catppuccin.homeModules.catppuccin
-          ];
-        };
-
-        # TEMPORARY (migration dry-run) — delete after the migration.
-        # Home Manager counterpart of nixosConfigurations.boreas-vm: identical
-        # to olaolu@boreas except for the no-GPU hostConfig, which keeps the VM
-        # from pulling the CUDA-enabled OBS build (a multi-GB closure that's
-        # useless without an NVIDIA GPU).
-        #
-        # NOTE: the VM's hostname is still "boreas", so a bare
-        # `home-manager switch --flake .` inside the VM would auto-resolve to
-        # olaolu@boreas (the CUDA one). Always name this target explicitly:
-        # `home-manager switch --flake .#olaolu@boreas-vm`.
-        "${boreas.username}@boreas-vm" = home-manager.lib.homeManagerConfiguration {
-          pkgs = nixpkgs.legacyPackages.${boreas.system};
-          extraSpecialArgs = {
-            inherit inputs unstable;
-            hostConfig = boreas-vm;
-          };
-          modules = [
-            ./home/${boreas.username}
-            nix-flatpak.homeManagerModules.nix-flatpak
             {
               nixpkgs.overlays = [
                 claude-code.overlays.default

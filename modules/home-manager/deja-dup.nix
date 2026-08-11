@@ -9,6 +9,41 @@ let
   cfg = config.local.dejaDup;
   home = config.home.homeDirectory;
   inherit (config.xdg) configHome dataHome userDirs;
+
+  dejaDupAppId = "org.gnome.DejaDup";
+  flatpak = "${pkgs.flatpak}/bin/flatpak";
+
+  includeList = [
+    "${userDirs.download}/rpms"
+    "${userDirs.pictures}"
+    "${dataHome}/fonts"
+    "${dataHome}/zoxide" # _ZO_DATA_DIR (see dotfiles.nix)
+    "${home}/sys-bak"
+    "${userDirs.videos}/useful-stuff"
+    userDirs.documents
+    "${userDirs.download}/image-merge-staging-area"
+    "${userDirs.videos}/random-vids"
+    "${userDirs.videos}/YouTube"
+    "${userDirs.music}/local-music"
+    "${userDirs.music}/lies-o-p-full-soundtrack-original"
+    "${userDirs.music}/lies-o-p-full-soundtrack-partitioned"
+    "${home}/.var/app/io.github.flattool.Warehouse/data/Snapshots"
+    "${home}/.var"
+    "${userDirs.desktop}/digital-brain"
+    "${home}/.claude"
+    "${home}/.codex"
+    configHome
+    "${userDirs.desktop}/${config.local.fsLayout.devDirname}/archive"
+  ];
+
+  excludeList = [
+    "$TRASH"
+    "$DOWNLOAD"
+  ];
+
+  # JSON string/list syntax is also valid GVariant syntax for these values.
+  gvariant = value: lib.escapeShellArg (builtins.toJSON value);
+
 in
 {
   options.local.dejaDup = {
@@ -16,76 +51,53 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # No duplicity/borg/restic needed alongside: the nixpkgs package bakes in
-    # absolute paths to its backend tools at build time.
-    home.packages = [ pkgs.deja-dup ];
-
-    # Deja Dup keeps its whole configuration in GSettings, so it's declared
-    # here as dconf keys. Migrated from the Fedora flatpak's keyfile
-    # (~/.var/app/org.gnome.DejaDup/config/glib-2.0/settings/keyfile).
     #
-    # Only "intent" keys are declared. Runtime state (last-run, last-backup,
-    # periodic-timestamp, window geometry) is deliberately left out — dconf
-    # keys are rewritten on every HM activation, so declaring state would keep
-    # resetting the scheduler's bookkeeping.
+    # Install the working Flatpak instead of nixpkgs' deja-dup.
     #
-    # Not declarable at all: the Google OAuth token and encryption passphrase
-    # live in the keyring (libsecret), so the first backup on a fresh install
-    # still needs an interactive Google sign-in in the app.
-    dconf.settings = {
-      "org/gnome/deja-dup" = {
-        backend = "google";
+    services.flatpak.packages = [
+      dejaDupAppId
+    ];
 
-        # Automatic weekly backups, old snapshots pruned after ~3 months.
-        periodic = true;
-        "periodic-period" = 7;
-        "delete-after" = 90;
+    #
+    # Configure the Flatpak's own GSettings store.
+    #
+    # With the deja-dup flatpak, we cannot directly manage durable config using dconf because the flatpak version isn't configured with dconf
+    #
+    # We also cannot use home.file on the flatpak's configuration files because they are mutable and change as the app is used. We do not want to mess with that either.
+    # Instead, we hook into the nix-flatpak activation mechanism to configure the deja-dup flatpak with the necessary values at activation time.
+    #
+    # Runtime state such as last-run, last-backup and periodic-timestamp still remains owned by Deja Dup itself.
+    #
+    # Google OAuth credentials and the backup encryption password also
+    # remain in the secrets/keyring system and are configured interactively.
+    #
+    # We are using the flatpak over the native nixpkgs version because the native application doesn't seem to connect to google drive properly.
+    home.activation.configureDejaDup = lib.hm.dag.entryAfter [ "flatpak-managed-install" ] ''
+      if ${flatpak} info --user ${dejaDupAppId} >/dev/null 2>&1; then
+        run ${flatpak} run --user --command=gsettings ${dejaDupAppId} \
+          set org.gnome.DejaDup backend ${gvariant "google"}
 
-        # Carried over verbatim from the Fedora install. Some entries are
-        # Fedora-era (rpms, flatpak data under ~/.var) and are pruned by hand,
-        # not by this module.
-        # XDG variables where one exists; plain ${home} only for dirs outside
-        # the XDG layout (sys-bak, flatpak's ~/.var, agent CLIs' dotdirs).
-        "include-list" = [
-          "${userDirs.download}/rpms"
-          "${userDirs.pictures}"
-          "${dataHome}/fonts"
-          "${dataHome}/zoxide" # _ZO_DATA_DIR (see dotfiles.nix)
-          "${home}/sys-bak"
-          "${userDirs.videos}/useful-stuff"
-          userDirs.documents
-          "${userDirs.download}/image-merge-staging-area"
-          "${userDirs.videos}/random-vids"
-          "${userDirs.videos}/YouTube"
-          "${userDirs.music}/local-music"
-          "${userDirs.music}/lies-o-p-full-soundtrack-original"
-          "${userDirs.music}/lies-o-p-full-soundtrack-partitioned"
-          "${home}/.var/app/io.github.flattool.Warehouse/data/Snapshots"
-          "${home}/.var"
-          "${userDirs.desktop}/digital-brain"
-          "${home}/.claude"
-          "${home}/.codex"
-          configHome
-          "${userDirs.desktop}/${config.local.fsLayout.devDirname}/archive"
-        ];
-        "exclude-list" = [
-          "$TRASH"
-          "$DOWNLOAD"
-        ];
-      };
+        run ${flatpak} run --user --command=gsettings ${dejaDupAppId} \
+          set org.gnome.DejaDup periodic true
 
-      # Folder inside Google Drive that receives the backup chain. Renamed from
-      # the Fedora-era "fedora-backups"; a new folder starts a fresh chain, and
-      # the old one stays restorable by pointing the app back at it.
-      "org/gnome/deja-dup/google".folder = "linux-system-backups-deja-dup";
-    };
+        run ${flatpak} run --user --command=gsettings ${dejaDupAppId} \
+          set org.gnome.DejaDup periodic-period 7
 
-    # Scheduled backups are driven by deja-dup-monitor, which the package ships
-    # as an XDG autostart entry. Link it into ~/.config/autostart explicitly so
-    # scheduling works even when the profile's etc/xdg isn't on
-    # XDG_CONFIG_DIRS; user entries take precedence over system ones, so this
-    # never duplicates.
-    xdg.configFile."autostart/org.gnome.DejaDup.Monitor.desktop".source =
-      "${pkgs.deja-dup}/etc/xdg/autostart/org.gnome.DejaDup.Monitor.desktop";
+        run ${flatpak} run --user --command=gsettings ${dejaDupAppId} \
+          set org.gnome.DejaDup delete-after 90
+
+        run ${flatpak} run --user --command=gsettings ${dejaDupAppId} \
+          set org.gnome.DejaDup include-list ${gvariant includeList}
+
+        run ${flatpak} run --user --command=gsettings ${dejaDupAppId} \
+          set org.gnome.DejaDup exclude-list ${gvariant excludeList}
+
+        run ${flatpak} run --user --command=gsettings ${dejaDupAppId} \
+          set org.gnome.DejaDup.Google folder \
+          ${gvariant "linux-system-backups-deja-dup"}
+      else
+        _i "Deja Dup Flatpak is not installed; skipping configuration"
+      fi
+    '';
   };
 }

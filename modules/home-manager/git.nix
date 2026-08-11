@@ -41,7 +41,7 @@ in
 
       signing = {
         format = "openpgp";
-        key = "164ED3E4B3FADB32";
+        key = "C16B79DB8BEBD0AA";
         signByDefault = true;
         signer = "gpg2";
       };
