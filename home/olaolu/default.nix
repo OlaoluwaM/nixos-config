@@ -73,6 +73,16 @@ let
       }
     ];
   };
+  protonMailDesktopEntry = overrideDesktopEntry {
+    package = unstable.protonmail-desktop;
+    desktopFile = "proton-mail.desktop";
+    execReplacements = [
+      {
+        from = "Exec=proton-mail %U";
+        to = "Exec=${gtkThemeEnv} proton-mail %U";
+      }
+    ];
+  };
 in
 {
   # You can import other home-manager modules here
@@ -264,6 +274,7 @@ in
     unstable.perl
     unstable.procs
     unstable.protonmail-desktop
+    protonMailDesktopEntry
     unstable.proton-vpn-cli
     # withPackages wraps python3 so these libraries are importable by the interpreter.
     # Again we are installing pynvim and dnspython this way because they are libraries not standalone executables.
