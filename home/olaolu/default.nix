@@ -20,7 +20,7 @@ let
   # variable would force the theme on every GTK application.
   gtkThemeEnv = "${pkgs.lib.getExe' pkgs.coreutils "env"} GTK_THEME=Adwaita:dark";
 
-  # Preserve each package's upstream desktop metadata and patch only its Exec
+  # Preserve each package's upstream desktop metadata and patch only selected
   # lines. Home Manager merges home.packages into one profile, so hiPrio makes
   # this small derivation win the filename collision with the original entry.
   # The original application package must still be listed in home.packages.
@@ -28,11 +28,11 @@ let
     {
       package,
       desktopFile,
-      execReplacements,
+      replacements,
     }:
     pkgs.lib.hiPrio (
       # `--replace-fail` stops the build when upstream changes an expected
-      # Exec line, instead of silently dropping the override.
+      # source line, instead of silently dropping the override.
       pkgs.runCommand "${desktopFile}-override" { } ''
         install -Dm644 \
           "${package}/share/applications/${desktopFile}" \
@@ -41,14 +41,14 @@ let
           substituteInPlace "$out/share/applications/${desktopFile}" \
             --replace-fail ${pkgs.lib.escapeShellArg replacement.from} \
             ${pkgs.lib.escapeShellArg replacement.to}
-        '') execReplacements}
+        '') replacements}
       ''
     );
 
   enteAuthDesktopEntry = overrideDesktopEntry {
     package = pkgs.ente-auth;
     desktopFile = "io.ente.auth.desktop";
-    execReplacements = [
+    replacements = [
       {
         from = "Exec=enteauth";
         to = "Exec=${gtkThemeEnv} enteauth";
@@ -61,7 +61,7 @@ let
   vscodeDesktopEntry = overrideDesktopEntry {
     package = unstable.vscode-fhs;
     desktopFile = "code.desktop";
-    execReplacements = [
+    replacements = [
       {
         from = "Exec=code %F";
         to = "Exec=${gtkThemeEnv} code %F";
@@ -73,16 +73,24 @@ let
       }
     ];
   };
+
   protonMailDesktopEntry = overrideDesktopEntry {
     package = unstable.protonmail-desktop;
     desktopFile = "proton-mail.desktop";
-    execReplacements = [
+    replacements = [
       {
         from = "Exec=proton-mail %U";
         to = "Exec=${gtkThemeEnv} proton-mail %U";
       }
+      # Proton Mail registers this protocol at startup. Declaring it here keeps
+      # xdg-settings from replacing the profile-linked entry with a local copy that is unmanaged by home-manager.
+      {
+        from = "MimeType=x-scheme-handler/mailto;";
+        to = "MimeType=x-scheme-handler/proton-inbox;x-scheme-handler/mailto;";
+      }
     ];
   };
+
 in
 {
   # You can import other home-manager modules here
