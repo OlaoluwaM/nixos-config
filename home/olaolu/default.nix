@@ -58,7 +58,7 @@ let
   # code.desktop contains the main launcher and the New Empty Window action.
   # The separate code-url-handler.desktop entry does not need this GTK override.
   vscodeDesktopEntry = overrideDesktopEntry {
-    package = unstable.vscode-fhs;
+    package = unstable.vscode;
     desktopFile = "code.desktop";
     replacements = [
       {
@@ -318,7 +318,10 @@ in
 
     unstable.uv
 
-    unstable.vscode-fhs
+    # vscode-fhs uses a user namespace that maps only this user's UID.
+    # Unmapped Nix store owners appear as nobody, so OpenSSH rejects Home
+    # Manager's Nix-store-backed ~/.ssh/config.
+    unstable.vscode
     vscodeDesktopEntry
 
     unstable.w3m
