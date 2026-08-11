@@ -134,10 +134,18 @@ in
       unstable.refine
     ];
 
-    services.flatpak.packages = [
-      "org.gnome.Chess"
-      "com.leinardi.gst"
-    ];
+    services.flatpak = {
+      packages = [
+        "org.gnome.Chess"
+        "com.leinardi.gst"
+      ];
+      overrides.settings = {
+        # Force gst to use the Adwaita dark theme.
+        "com.leinardi.gst".Environment = [
+          "GTK_THEME=Adwaita:dark"
+        ];
+      };
+    };
 
     xdg.configFile = {
       "gtk-3.0/bookmarks".text = gtkBookmarks;
