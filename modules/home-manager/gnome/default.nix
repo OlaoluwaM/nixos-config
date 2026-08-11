@@ -389,7 +389,7 @@ in
         show-artist = false;
 
         # Keep the panel reasonably compact.
-        panel-text-width = 160;
+        panel-text-width = 100;
         scroll-loop = true;
 
         # Visible panel controls.
