@@ -149,7 +149,7 @@ in
   # Install ZSH
   programs.zsh.enable = true;
 
-  # https://blog.kaorubb.org/en/posts/nixos-fix-could-not-start-dynamically-linked-executable/
+  # Allow unpatched dynamically linked Linux executables to use nix-ld.
   programs.nix-ld.enable = true;
 
   # Enable docker with CDI support for the NVIDIA container toolkit.
