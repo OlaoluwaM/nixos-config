@@ -19,7 +19,7 @@ let
   screenshots = "${pictures}/Screenshots";
   screencasts = "${videos}/Screencasts";
   wallpapers = "${pictures}/wallpapers";
-  enableAsusRogKeybindings = hostConfig.enableAsusRogKeybindings or false;
+  enableAsusRogKeybindings = config.local.capabilities.input.asusRogKeys;
   # dconf stores GNOME settings as typed GVariant values; these helpers
   # preserve exact types for values Nix cannot infer, like tuples and variants.
   gvariant = lib.hm.gvariant;

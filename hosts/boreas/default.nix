@@ -3,7 +3,6 @@
 # Based off: https://github.com/Misterio77/nix-starter-configs/blob/main/minimal/nixos/configuration.nix
 # Host: Asus ROG Zephyrus M16 (2023)
 {
-  lib,
   config,
   unstable,
   hostConfig,
@@ -16,12 +15,6 @@ let
     userFullName
     ;
 
-  # boreas runs both on bare metal (with a real NVIDIA GPU) and as a QEMU/KVM
-  # guest used to test this config, where no GPU is passed through. Gate all the
-  # NVIDIA bits on the host's declared GPU so the VM rebuild doesn't try to run
-  # the CDI generator (which probes NVML and fails with "Driver Not Loaded").
-  # Mirrors the same flag the home-manager config already uses.
-  hasNvidiaGpu = (hostConfig.gpu or null) == "nvidia";
 in
 {
   # You can import other NixOS modules here
@@ -159,43 +152,40 @@ in
   # https://blog.kaorubb.org/en/posts/nixos-fix-could-not-start-dynamically-linked-executable/
   programs.nix-ld.enable = true;
 
-  # Enable docker. CDI is only useful with the NVIDIA container toolkit, so it's
-  # gated on the GPU too — otherwise dockerd advertises a feature nothing backs.
+  # Enable docker with CDI support for the NVIDIA container toolkit.
   virtualisation.docker = {
     enable = true;
     daemon.settings.features = {
-      cdi = hasNvidiaGpu;
+      cdi = true;
     };
   };
 
   # Setup docker with nvidia & nvidia-container-toolkit.
-  # Gated on hasNvidiaGpu so the CDI generator service isn't pulled in on the VM,
-  # where it would fail to initialize NVML (no GPU passed through).
-  hardware.nvidia-container-toolkit = lib.mkIf hasNvidiaGpu {
+  hardware.nvidia-container-toolkit = {
     enable = true;
     package = unstable.nvidia-container-toolkit;
   };
 
   # Use nvidia proprietary drivers
-  hardware.nvidia = lib.mkIf hasNvidiaGpu {
+  hardware.nvidia = {
     open = false;
     modesetting.enable = true;
     package = config.boot.kernelPackages.nvidiaPackages.production;
+    # Enable nvidia-powerd service for improved GPU power consumption
+    dynamicBoost.enable = true;
   };
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
-  environment.systemPackages =
-    with pkgs;
-    [
-      vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is installed by default.
-      wget
-      curl
-      memtest86plus
-      spice-vdagent
-      virt-viewer
-    ]
-    ++ lib.optional hasNvidiaGpu unstable.nvidia-container-toolkit;
+  environment.systemPackages = with pkgs; [
+    vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is installed by default.
+    wget
+    curl
+    memtest86plus
+    spice-vdagent
+    virt-viewer
+    unstable.nvidia-container-toolkit
+  ];
 
   # All this spice stuff is to make this config viable on a VM guest. Specifically to allow for copy-pasting between host and guest
   # Though it looks like we still need to run spice-vdagent in the foreground for this all to work
@@ -251,12 +241,14 @@ in
             // Replaces the old Fedora udev script that stopped nvidia-powerd on battery
             // and restarted it on AC. Dynamic Boost is useful on wall power, but it can
             // burn battery when unplugged.
+            // The asusd setting is broken in asusctl 6.3.8. It parses disable_nvidia_powerd_on_battery, but no runtime code reads the value. The source declares it in [config.rs (line 31)](/nix/store/i77jy8hyx2nxwczpkrqfgmsnf4ydx4ix-source/asusd/src/config.rs:31), while the AC/DC handler in [ctrl_platform.rs (line 293)](/nix/store/i77jy8hyx2nxwczpkrqfgmsnf4ydx4ix-source/asusd/src/ctrl_platform.rs:293) only manages profiles and commands.
+            // So we explicitly start and stop the nvidia-powerd service on AC and battery events using the ac_command and bat_command hooks below.
             disable_nvidia_powerd_on_battery: true,
 
             // Escape hatches for custom scripts on power-source changes. Keep these empty
             // so asusd/asusctl owns power management without extra shell glue.
-            ac_command: "",
-            bat_command: "",
+            ac_command: "systemctl start nvidia-powerd.service",
+            bat_command: "systemctl stop nvidia-powerd.service",
 
             // When asusd changes the ASUS platform profile, also update the CPU
             // energy_performance_preference. Without this, switching to Quiet/Performance

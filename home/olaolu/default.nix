@@ -14,7 +14,6 @@ let
   home = "/home/${username}";
   visual = "nvim";
   dev = "${config.xdg.userDirs.desktop}/${config.local.fsLayout.devDirname}";
-  hasNvidiaGpu = (hostConfig.gpu or null) == "nvidia";
 
   # Keep this override launcher-scoped. Exporting GTK_THEME as a session
   # variable would force the theme on every GTK application.
@@ -114,6 +113,7 @@ in
     ../../modules/home-manager/gh.nix
     ../../modules/home-manager/git.nix
     ../../modules/home-manager/gpg.nix
+    ../../modules/home-manager/hardware-interface.nix
     ../../modules/home-manager/lazygit.nix
     ../../modules/home-manager/lsd.nix
     ../../modules/home-manager/neovim.nix
@@ -213,6 +213,7 @@ in
     racket
     (callPackage ../../pkgs/rxfetch { })
 
+    service-wrapper
     slack
     spotify
 
@@ -407,7 +408,7 @@ in
 
     package = (
       unstable.obs-studio.override {
-        cudaSupport = hasNvidiaGpu;
+        cudaSupport = config.local.capabilities.graphics.cuda;
       }
     );
 

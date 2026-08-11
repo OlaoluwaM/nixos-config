@@ -30,7 +30,7 @@ let
   theme = config.local.theme.colors;
   stripHash = s: lib.removePrefix "#" s;
   hyprlandSessionTarget = "hyprland-session.target";
-  enableAsusRogKeybindings = hostConfig.enableAsusRogKeybindings or false;
+  enableAsusRogKeybindings = config.local.capabilities.input.asusRogKeys;
   lua = lib.generators.mkLuaInline;
   luaString = builtins.toJSON;
   mod = "SUPER";

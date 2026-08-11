@@ -50,10 +50,8 @@
           userFullName = "Olaoluwa Mustapha";
           nixosConfigPath = "/home/${username}/nixos-config";
           desktopProfile = "gnome"; # Can be "hyprland" or "gnome"
-          enableAsusRogKeybindings = true;
           dotfilesRelativePath = "dotfiles/boreas/nixos";
           devDirname = "dev";
-          gpu = "nvidia";
         };
       };
 
@@ -107,6 +105,10 @@
           modules = [
             ./home/${boreas.username}
             nix-flatpak.homeManagerModules.nix-flatpak
+            {
+              local.capabilities.graphics.cuda = true;
+              local.capabilities.input.asusRogKeys = true;
+            }
             # We're getting claude-code from this repo https://github.com/sadjow/claude-code-nix to always have the most up to date version
             # The same guy also has a repo for codex https://github.com/sadjow/codex-cli-nix
             {
