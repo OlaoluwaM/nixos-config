@@ -52,7 +52,11 @@ On a fresh install this order is mandatory: standalone Home Manager can only run
 ## TODOs
 
 - [ ] Make hosts/boreas a bit more modular. Move out stuff like the nvidia configuration into a separate module to allow for better composition moving forward
-- [ ] Add shell aliases for the `nixos-rebuild` and `home-manager switch` flake commands
+- [x] Add shell aliases for the `nixos-rebuild` and `home-manager switch` flake commands
+- [x] Break apart Gnome home-manager module into sub-modules
+- [ ] Break apart hyprland home-manager module into sub-modules
+- [ ] Break apart user home-manager module into sub-modules
+- [ ] Delete old Hyprland QML and Caffyne OS plumbing code
 - [ ] Look into declaratively setting up a wallpaper (**Optional**)
 
 ## Troubleshooting
