@@ -151,6 +151,7 @@ in
       DEV = dev;
       GIT_PAGER = "delta";
       COMPOSE_BAKE = "true";
+      NIX_FLAKE_PATH = hostConfig.nixosConfigPath;
     };
   };
 
