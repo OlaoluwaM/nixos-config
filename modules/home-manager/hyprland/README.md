@@ -44,7 +44,8 @@ keyboard backlight) are bound directly to `wpctl`/`brightnessctl` since there
 is no shell OSD to own them. Super+Shift+W opens the "Random Wallpaper"
 Vicinae script command (see Wallpaper Pipeline below). A handful of other
 chords that used to open shell surfaces (settings, wifi, bluetooth, session
-menu) are intentionally unbound until the new shell lands.
+menu) are intentionally unbound until the shell's design-build phase wires
+their new targets.
 
 ## Helper Scripts
 
