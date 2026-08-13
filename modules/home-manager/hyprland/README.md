@@ -1,10 +1,9 @@
 # Minimal Hyprland Rice
 
-This module is the `hyprland` desktop profile. It is currently **stock
-Hyprland**: compositor config, keybinds, hyprlock, hypridle, hyprsunset,
-Vicinae, portals, and a few helper scripts. There is no bar and no shell UI
-right now -- the previous desktop shell stack was torn down as a clean slate,
-and a new `silere-shell` integration is in progress on this branch.
+This module is the `hyprland` desktop profile: compositor config, keybinds,
+hyprlock, hypridle, hyprsunset, Vicinae, portals, a few helper scripts, and
+the `silere-shell` bar. The shell now runs as the session's sole shell with
+stock upstream defaults; theming and config generation are upcoming work.
 
 ## Entry Points
 
@@ -13,6 +12,7 @@ and a new `silere-shell` integration is in progress on this branch.
 - `modules/home-manager/hyprland/keybindings.nix`: every Hyprland key chord.
 - `modules/home-manager/hyprland/hyprlock.nix`: lock screen.
 - `modules/home-manager/hyprland/hypridle.nix`: idle lock and display-off behavior.
+- `modules/home-manager/hyprland/silere.nix`: the `silere-shell` Quickshell bar -- packaging and the user service.
 - `modules/home-manager/vicinae.nix`: generic Vicinae program config, imported and targeted at `hyprland-session.target` by this profile.
 - `modules/home-manager/hyprland/scripts/`: keybind helper scripts (caffeine, screenshot, screenrecord).
 
@@ -27,9 +27,10 @@ greetd -> tuigreet -> Hyprland -> Home Manager hyprland.lua -> hyprland-session.
 Home Manager writes `~/.config/hypr/hyprland.lua`. Hyprland's generated
 startup hook imports the Wayland session environment into systemd and starts
 `hyprland-session.target`, which the following user services attach to:
-`vicinae.service`, `hypr-shell-media-idle-inhibit.service`,
-`hypr-shell-caffeine.service`, `hypridle.service`, `hyprpolkitagent.service`,
-`hyprsunset.service`, `udiskie.service`.
+`silere-shell.service`, `vicinae.service`,
+`hypr-shell-media-idle-inhibit.service`, `hypr-shell-caffeine.service`,
+`hypridle.service`, `hyprpolkitagent.service`, `hyprsunset.service`,
+`udiskie.service`.
 
 The setup deliberately avoids UWSM.
 
@@ -79,6 +80,7 @@ nixfmt modules/home-manager/hyprland/default.nix \
   modules/home-manager/hyprland/hypridle.nix \
   modules/home-manager/hyprland/hyprlock.nix \
   modules/home-manager/hyprland/keybindings.nix \
+  modules/home-manager/hyprland/silere.nix \
   modules/nixos/hyprland.nix
 
 shfmt -w modules/home-manager/hyprland/scripts/*.sh

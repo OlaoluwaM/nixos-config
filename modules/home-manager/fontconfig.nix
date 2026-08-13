@@ -74,21 +74,37 @@ let
   # (hyprlock, GTK, a future shell UI), not just the generic serif/sans/monospace
   # aliases handled by defaultFonts.
   familyAlias =
-    family:
+    family: fallbacks:
     lib.concatStringsSep "\n" (
       [
         "  <alias>"
         "    <family>${family}</family>"
         "    <prefer>"
       ]
-      ++ map (f: "      <family>${f}</family>") (fallbacksFor family)
+      ++ map (f: "      <family>${f}</family>") fallbacks
       ++ [
         "    </prefer>"
         "  </alias>"
       ]
     );
 
-  namedFamilyFallbacks = lib.concatMapStringsSep "\n" familyAlias aliasFamilies;
+  namedFamilyFallbacks = lib.concatMapStringsSep "\n" (
+    family: familyAlias family (fallbacksFor family)
+  ) aliasFamilies;
+
+  # silere-shell requests "JetBrainsMono Nerd Font" by name for its default
+  # bar font; this profile deliberately substitutes its own mono stack
+  # instead of shipping a second Nerd Font alongside Berkeley Mono. Reuse the
+  # same weak-binding alias machinery as namedFamilyFallbacks above, keyed on
+  # the exact name the shell asks for rather than one of the local.fonts
+  # roles. "Symbols Nerd Font" is appended after Berkeley Mono so the
+  # private-use-area glyphs the shell's Nerd-Font icons rely on still
+  # render -- Berkeley Mono itself carries none of them, and the symbols-only
+  # package is already installed by the Hyprland profile.
+  jetbrainsMonoNerdFontFallback = familyAlias "JetBrainsMono Nerd Font" [
+    cfg.mono.family
+    "Symbols Nerd Font"
+  ];
 in
 {
   options.local.fonts = {
@@ -164,6 +180,7 @@ in
           <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
           <fontconfig>
           ${namedFamilyFallbacks}
+          ${jetbrainsMonoNerdFontFallback}
           </fontconfig>
         '';
       };
