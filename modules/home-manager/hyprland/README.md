@@ -9,7 +9,8 @@ and a new `silere-shell` integration is in progress on this branch.
 ## Entry Points
 
 - `modules/nixos/hyprland.nix`: system-level Hyprland, greetd/tuigreet, PAM, dconf, GVfs, and UDisks.
-- `modules/home-manager/hyprland/default.nix`: Home Manager Hyprland config, `hyprland-session.target`, keybinds, portals, wallpaper/session plumbing, shared packages, fonts, Nautilus, and udiskie.
+- `modules/home-manager/hyprland/default.nix`: Home Manager Hyprland config, `hyprland-session.target`, portals, wallpaper/session plumbing, shared packages, fonts, Nautilus, and udiskie.
+- `modules/home-manager/hyprland/keybindings.nix`: every Hyprland key chord.
 - `modules/home-manager/hyprland/hyprlock.nix`: lock screen.
 - `modules/home-manager/hyprland/hypridle.nix`: idle lock and display-off behavior.
 - `modules/home-manager/vicinae.nix`: generic Vicinae program config, imported and targeted at `hyprland-session.target` by this profile.
@@ -34,7 +35,7 @@ The setup deliberately avoids UWSM.
 
 ## Keybinds
 
-See `./default.nix`. Hardware media/brightness keys (volume, brightness,
+See `./keybindings.nix`. Hardware media/brightness keys (volume, brightness,
 keyboard backlight) are bound directly to `wpctl`/`brightnessctl` since there
 is no shell OSD to own them. A handful of chords that used to open shell
 surfaces (wallpaper picker, settings, wifi, bluetooth, session menu) are
@@ -77,6 +78,7 @@ Fonts: `noto-fonts`, `noto-fonts-color-emoji`, `nerd-fonts.symbols-only`, `font-
 nixfmt modules/home-manager/hyprland/default.nix \
   modules/home-manager/hyprland/hypridle.nix \
   modules/home-manager/hyprland/hyprlock.nix \
+  modules/home-manager/hyprland/keybindings.nix \
   modules/nixos/hyprland.nix
 
 shfmt -w modules/home-manager/hyprland/scripts/*.sh
