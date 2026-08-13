@@ -49,7 +49,7 @@
           username = "olaolu";
           userFullName = "Olaoluwa Mustapha";
           nixosConfigPath = "/home/${username}/nixos-config";
-          desktopProfile = "gnome"; # Can be "hyprland" or "gnome"
+          desktopProfile = "hyprland"; # Can be "hyprland" or "gnome"
           dotfilesRelativePath = "dotfiles/boreas/nixos";
           devDirname = "dev";
         };
