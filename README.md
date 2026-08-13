@@ -98,7 +98,7 @@ active.
 - [ ] Make hosts/boreas a bit more modular. Move out stuff like the nvidia configuration into a separate module to allow for better composition moving forward
 - [x] Add shell aliases for the `nixos-rebuild` and `home-manager switch` flake commands
 - [x] Break apart Gnome home-manager module into sub-modules
-- [ ] Break apart hyprland home-manager module into sub-modules
+- [x] Break apart hyprland home-manager module into sub-modules
 - [ ] Break apart user home-manager module into sub-modules
 - [x] Delete old Hyprland QML and legacy desktop shell plumbing code
 - [ ] Look into declaratively setting up a wallpaper (**Optional**)
