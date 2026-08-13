@@ -64,6 +64,18 @@ in
           execDispatcher "${vicinaeCommand} 'vicinae://launch/clipboard/history?toggle=true'"
         ))
 
+        # "random-wallpaper" is a Vicinae script command (wallpaper.nix,
+        # installed under ~/.local/share/vicinae/scripts) that picks a random
+        # image from $WALLPAPERS_DIR and calls wallpaper-set. Its installed
+        # filename is also its deeplink id -- renaming that script without
+        # updating this bind would silently break it. Picking a *specific*
+        # wallpaper stays inside Vicinae's own search ("Set Wallpaper") or the
+        # CLI (wallpaper-set <path>): Vicinae's script-command argument types
+        # have no live-directory picker to bind a chord to.
+        (mkBind "${mod} + SHIFT + W" (
+          execDispatcher "${vicinaeCommand} 'vicinae://launch/scripts/random-wallpaper'"
+        ))
+
         (mkBind "F6" (execDispatcher "${commands.screenshotScript}/bin/hypr-shell-screenshot area"))
         (mkBind "SHIFT + F6" (execDispatcher "${commands.screenshotScript}/bin/hypr-shell-screenshot full"))
         (mkBind "CTRL + F6" (
@@ -161,10 +173,11 @@ in
           }
         )
       ]
-      # Super+Shift+W (wallpapers), Super+Q (settings), Super+Alt+W (wifi),
-      # Super+B (bluetooth), Super+Escape/XF86PowerOff (session) are
-      # intentionally unbound: their old shell targets are gone. They come
-      # back once the new silere shell lands.
+      # Super+Q (settings), Super+Alt+W (wifi), Super+B (bluetooth),
+      # Super+Escape/XF86PowerOff (session) are intentionally unbound: their
+      # old shell targets are gone. They come back once the new silere shell
+      # lands. Super+Shift+W (wallpapers) is bound above -- the wallpaper
+      # pipeline doesn't depend on the rest of the shell surfacing them.
       ++ lib.optionals enableAsusRogKeybindings [
         (mkBind "XF86Launch1" (execDispatcher (lib.getExe' unstable.asusctl "rog-control-center")))
         (mkBind "F5" (execDispatcher "${lib.getExe' unstable.asusctl "asusctl"} profile -n"))
