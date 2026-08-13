@@ -18,7 +18,7 @@ Prefer changing the narrowest module that owns the behavior. Do not push host-sp
 
 The Hyprland session's shell is **silere-shell**, a Quickshell/QML bar maintained as a fork of `s3rven/silere-shell`:
 
-- Consumed as the `silere-shell` flake input — `github:OlaoluwaM/silere-shell/custom-branch` with `flake = false`. It is a plain pinned source tree; packaging happens here, in `modules/home-manager/hyprland/silere.nix`. The fork ships a dev-shell-only `flake.nix` for hacking on it; it must never grow `packages`/overlay outputs, because the build-time defaults substitution needs configuration knowledge only this repo has.
+- Consumed as the `silere-shell` flake input — `github:OlaoluwaM/silere-shell/custom-branch` with `flake = false`. It is a plain pinned source tree; packaging happens here, in `modules/home-manager/hyprland/modules/silere.nix`. The fork ships a dev-shell-only `flake.nix` for hacking on it; it must never grow `packages`/overlay outputs, because the build-time defaults substitution needs configuration knowledge only this repo has.
 - The local checkout lives at `~/Desktop/dev/silere-shell`, branch `custom-branch`. Shell/UI work happens **there**, not in this repo. After pushing fork commits, re-lock deliberately with `nix flake update silere-shell`.
 - **GeneratedDefaults.qml is generated output.** In the built package it is rendered from the `local.hyprland.silere.*` options in `silere.nix` — change the options or the render template, never the packaged file. In the fork, the checked-in copy holds upstream-identical defaults so non-Nix users see no change; keep that invariant.
 - Nix-declared default values must stay inside the fork's `_schema` clamp table (`services/ShellSettings.qml`) — the loader silently clamps out-of-bounds values.
@@ -69,7 +69,7 @@ greetd -> tuigreet -> Hyprland -> Home Manager hyprland.lua -> hyprland-session.
 
 Do not casually switch only one Hyprland ecosystem package to unstable. If Hyprland itself moves, verify the compositor, portal, lock, idle, and shell stack coherently.
 
-Keybindings live in `modules/home-manager/hyprland/keybindings.nix` — the single definition site for every chord. Keep equivalent GNOME and Hyprland keybindings on the same chord wherever practical; before changing a binding in either profile, inspect the other profile and preserve parity unless a desktop-specific constraint requires an intentional difference.
+Keybindings live in `modules/home-manager/hyprland/modules/keybindings.nix` — the single definition site for every chord. Keep equivalent GNOME and Hyprland keybindings on the same chord wherever practical; before changing a binding in either profile, inspect the other profile and preserve parity unless a desktop-specific constraint requires an intentional difference.
 
 The stable wallpaper path (`local.hyprland.wallpaper`) is a **seeded user-writable file**, not a store symlink — `wallpaper-set` overwrites it in place. Do not convert it back to an `xdg.configFile` entry.
 
