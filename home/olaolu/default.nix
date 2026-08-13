@@ -106,6 +106,17 @@ let
     ];
   };
 
+  slackDesktopEntry = overrideDesktopEntry {
+    package = pkgs.slack;
+    desktopFile = "slack.desktop";
+    replacements = [
+      {
+        from = "Exec=slack";
+        to = "Exec=${gtkThemeEnv} slack";
+      }
+    ];
+  };
+
 in
 {
   # You can import other home-manager modules here
@@ -232,6 +243,7 @@ in
 
     service-wrapper
     slack
+    slackDesktopEntry
     spotify
 
     texliveFull
