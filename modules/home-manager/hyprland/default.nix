@@ -21,11 +21,13 @@
 # - hyprlock.nix: lock-screen look and behavior
 # - hypridle.nix: idle locking behavior
 # - silere.nix: the silere-shell Quickshell bar (packaging + user service)
+# - wallpaper.nix: the wallpaper pipeline (awww + matugen + hyprlock's
+#   stable path) and the Vicinae wallpaper commands
 #
 # silere-shell is the sole shell for this profile -- there is no backend
-# option, unlike the old Caffyne/Quickshell split this profile tore down. It
-# currently runs with stock upstream defaults; theming/config generation is
-# upcoming work.
+# option, unlike the old Caffyne/Quickshell split this profile tore down.
+# silere.nix declares its first-generation defaults; the shell's own
+# Settings UI can still override any of them per-key at runtime.
 #
 # Home Manager source/options:
 # https://nix-community.github.io/home-manager/options.xhtml
@@ -41,9 +43,9 @@ let
   lua = lib.generators.mkLuaInline;
   luaString = builtins.toJSON;
 
-  # Wallpaper folder for the (future) wallpaper pipeline. If WALLPAPERS_DIR is
-  # set in the session environment, use that. Otherwise fall back to
-  # ~/Pictures/wallpapers.
+  # Wallpaper folder read by wallpaper.nix's wallpaper-set and the Vicinae
+  # wallpaper commands. If WALLPAPERS_DIR is set in the session environment,
+  # use that. Otherwise fall back to ~/Pictures/wallpapers.
   wallpapersDir =
     config.home.sessionVariables.WALLPAPERS_DIR or "${config.xdg.userDirs.pictures}/wallpapers";
 
@@ -100,6 +102,7 @@ in
     ./hyprlock.nix
     ./keybindings.nix
     ./silere.nix
+    ./wallpaper.nix
     ../vicinae.nix
   ];
 
@@ -152,6 +155,17 @@ in
         internal = true;
         description = "Packaged screen recording helper used by Hyprland keybinds.";
       };
+
+      silereShellPackage = lib.mkOption {
+        type = lib.types.package;
+        internal = true;
+        description = ''
+          Packaged silere-shell derivation (see silere.nix), exposed so other
+          Hyprland module files can reach its bundled assets -- e.g.
+          wallpaper.nix's matugen template, which ships under this
+          package's share/silere-shell/assets/.
+        '';
+      };
     };
   };
 
@@ -185,10 +199,9 @@ in
     #
     # Setting it here instead makes Home Manager write it into
     # ~/.config/environment.d/, which every unit the systemd user manager
-    # starts inherits, without needing a per-unit Environment= line. The
-    # variable is not consumed by anything yet -- there is no shell UI in this
-    # profile right now -- but it stays set because the upcoming wallpaper
-    # pipeline stage reads it.
+    # starts inherits, without needing a per-unit Environment= line. Read by
+    # the Vicinae wallpaper commands (wallpaper.nix), which resolve a bare
+    # filename against this directory before handing it to wallpaper-set.
     #
     # Caveat: environment.d is only read when the systemd user manager itself
     # starts, not on every `home-manager switch`. An already-running session
@@ -229,7 +242,7 @@ in
           "XDG_CURRENT_DESKTOP"
           "XDG_SESSION_DESKTOP"
           "XDG_SESSION_TYPE"
-          # Repo-specific: reserved for the upcoming wallpaper pipeline stage.
+          # Repo-specific: read by the wallpaper pipeline (wallpaper.nix).
           "WALLPAPERS_DIR"
         ];
       };
@@ -468,18 +481,6 @@ in
     home.sessionVariables = {
       # Helps Chromium/Electron apps prefer Wayland behavior under NixOS.
       NIXOS_OZONE_WL = "1";
-    };
-
-    xdg.configFile = {
-      # Provision a default image even in a clean VM: hyprlock requires a real
-      # image at this stable path even on first boot, before any shell or
-      # wallpaper picker has run. This nixos-artwork wallpaper is an interim
-      # placeholder until the wallpaper pipeline stage lands. The public
-      # option points at this stable link by default; users can override it
-      # with another durable path without changing the modules that consume
-      # the wallpaper.
-      ${defaultWallpaperConfigPath}.source =
-        pkgs.nixos-artwork.wallpapers.nineish-dark-gray.gnomeFilePath;
     };
 
     # udiskie watches removable drives. automount=true means USB drives can show
