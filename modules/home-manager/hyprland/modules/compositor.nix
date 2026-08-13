@@ -1,0 +1,225 @@
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+
+# Beginner orientation:
+#
+# This module owns the compositor config itself: monitors, env vars, input,
+# general/decoration/animation settings, curves, and window rules -- the
+# `wayland.windowManager.hyprland` block. It does NOT own key chords:
+# keybindings.nix merges its own `settings.bind` list into this same option
+# tree from outside, so the two modules combine into one hyprland.lua without
+# either needing to import the other.
+let
+  cfg = config.local.hyprland;
+  theme = config.local.theme.colors;
+  stripHash = s: lib.removePrefix "#" s;
+  # Local copies used only by the `on = hyprland.shutdown` handler below.
+  # keybindings.nix keeps its own copies for its binds; small duplication
+  # between sibling modules is fine, cross-module coupling is not.
+  lua = lib.generators.mkLuaInline;
+  luaString = builtins.toJSON;
+in
+{
+  config = lib.mkIf cfg.enable {
+    wayland.windowManager.hyprland = {
+      enable = true;
+
+      # The NixOS module already installs Hyprland and its portal package. Home
+      # Manager's wayland.windowManager.hyprland.package docs say to set this
+      # to null when the NixOS module installs Hyprland:
+      # https://nix-community.github.io/home-manager/options.xhtml#opt-wayland.windowManager.hyprland.package
+      #
+      # Home Manager owns the user config and hyprland-session.target here. The
+      # Home Manager module also contributes the Hyprland portal to xdg.portal;
+      # the GTK portal fallback is configured below.
+      package = null;
+
+      # Hyprland 0.55+ and Home Manager 26.05 support Lua config generation.
+      # Keep this explicit so the profile writes ~/.config/hypr/hyprland.lua
+      # regardless of future Home Manager default changes.
+      configType = "lua";
+
+      # When Hyprland starts, Home Manager can copy important session variables
+      # into the environment inherited by services run through `systemctl --user`
+      # before starting hyprland-session.target. Services started this way, such
+      # as hypridle, hyprsunset, and Vicinae, need these values to know which
+      # Wayland/Hyprland session they belong to. Without them, those services
+      # can start but fail to talk to the compositor, portals, or the right
+      # display.
+      systemd = {
+        enable = true;
+        variables = [
+          "DISPLAY"
+          "HYPRLAND_INSTANCE_SIGNATURE"
+          "WAYLAND_DISPLAY"
+          "XDG_CURRENT_DESKTOP"
+          "XDG_SESSION_DESKTOP"
+          "XDG_SESSION_TYPE"
+          # Repo-specific: read by the wallpaper pipeline (wallpaper.nix).
+          "WALLPAPERS_DIR"
+        ];
+      };
+
+      settings = {
+        # Monitor rule. Blank monitor name means "apply to all monitors".
+        # preferred = use the monitor's preferred resolution/refresh rate.
+        # auto = let Hyprland choose the position. 1 = scale factor.
+        monitor = {
+          output = "";
+          mode = "preferred";
+          position = "auto";
+          scale = 1;
+        };
+
+        env = [
+          {
+            _args = [
+              "XDG_CURRENT_DESKTOP"
+              "Hyprland"
+            ];
+          }
+          {
+            _args = [
+              "XDG_SESSION_DESKTOP"
+              "Hyprland"
+            ];
+          }
+          {
+            _args = [
+              "NIXOS_OZONE_WL"
+              "1"
+            ];
+          }
+        ];
+
+        # Runs when Hyprland is already shutting down so no need for hyprshutdown.
+        on = {
+          _args = [
+            "hyprland.shutdown"
+            (lua ''
+              function()
+                hl.exec_cmd(${luaString "${pkgs.systemd}/bin/systemctl --user stop ${config.wayland.systemd.target}"})
+              end
+            '')
+          ];
+        };
+
+        config = {
+          input = {
+            kb_layout = "us";
+            follow_mouse = 1;
+            touchpad.natural_scroll = true;
+          };
+
+          general = {
+            gaps_in = 4;
+            gaps_out = 8;
+            border_size = 2;
+            "col.active_border" = "rgb(${stripHash theme.primary})";
+            "col.inactive_border" = "rgb(${stripHash theme.outline})";
+            layout = "dwindle";
+          };
+
+          decoration = {
+            rounding = 14;
+            rounding_power = 3.5;
+            blur = {
+              enabled = true;
+              size = 5;
+              passes = 2;
+            };
+            shadow = {
+              enabled = true;
+              range = 12;
+              render_power = 2;
+              color = "rgba(${stripHash theme.shadowColor})";
+            };
+          };
+
+          animations = {
+            enabled = true;
+          };
+
+          dwindle = {
+            preserve_split = true;
+          };
+
+          misc = {
+            disable_hyprland_logo = true;
+            disable_splash_rendering = true;
+            focus_on_activate = true;
+          };
+        };
+
+        curve = {
+          _args = [
+            "easeOut"
+            {
+              type = "bezier";
+              points = [
+                [
+                  0.22
+                  1
+                ]
+                [
+                  0.36
+                  1
+                ]
+              ];
+            }
+          ];
+        };
+
+        animation = [
+          {
+            leaf = "windows";
+            enabled = true;
+            speed = 3;
+            bezier = "easeOut";
+          }
+          {
+            leaf = "border";
+            enabled = true;
+            speed = 4;
+            bezier = "default";
+          }
+          {
+            leaf = "fade";
+            enabled = true;
+            speed = 3;
+            bezier = "easeOut";
+          }
+          {
+            leaf = "workspaces";
+            enabled = true;
+            speed = 3;
+            bezier = "easeOut";
+          }
+        ];
+
+        window_rule = [
+          {
+            match.class = "^(vicinae)$";
+            float = true;
+          }
+          {
+            match.class = "^(vicinae)$";
+            center = true;
+          }
+          {
+            match.class = "^(vicinae)$";
+            size = "42% 48%";
+          }
+          {
+            match.class = "^(mission-center)$";
+            float = true;
+          }
+        ];
+      };
+    };
+  };
+}

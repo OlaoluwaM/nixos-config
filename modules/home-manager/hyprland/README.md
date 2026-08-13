@@ -9,12 +9,16 @@ shell's own Settings UI can still override per-key at runtime.
 ## Entry Points
 
 - `modules/nixos/hyprland.nix`: system-level Hyprland, greetd/tuigreet, PAM, dconf, GVfs, and UDisks.
-- `modules/home-manager/hyprland/default.nix`: Home Manager Hyprland config, `hyprland-session.target`, session plumbing, shared packages, fonts, Nautilus, and udiskie.
-- `modules/home-manager/hyprland/keybindings.nix`: every Hyprland key chord.
-- `modules/home-manager/hyprland/hyprlock.nix`: lock screen.
-- `modules/home-manager/hyprland/hypridle.nix`: idle lock and display-off behavior.
-- `modules/home-manager/hyprland/silere.nix`: the `silere-shell` Quickshell bar -- packaging, declared defaults, and the user service.
-- `modules/home-manager/hyprland/wallpaper.nix`: the wallpaper pipeline (`wallpaper-set`, awww, matugen retinting, hyprlock's stable path) and the Vicinae wallpaper commands.
+- `modules/home-manager/hyprland/default.nix`: thin entry point -- `enable`/`wallpaper` options, imports, `hyprland-session.target`, session plumbing, shared packages, fonts, Nautilus, mime defaults, udiskie, and portals.
+- `modules/home-manager/hyprland/modules/commands.nix`: shared helper-script packages (screenshot, screenrecord, caffeine) and the `local.hyprland.commands` option tree other modules read from.
+- `modules/home-manager/hyprland/modules/compositor.nix`: compositor config (monitors, input, decoration, animations, window rules) -- everything in `wayland.windowManager.hyprland` except key chords.
+- `modules/home-manager/hyprland/modules/keybindings.nix`: every Hyprland key chord.
+- `modules/home-manager/hyprland/modules/hyprlock.nix`: lock screen.
+- `modules/home-manager/hyprland/modules/hypridle.nix`: idle lock and display-off behavior.
+- `modules/home-manager/hyprland/modules/hyprsunset.nix`: display color temperature schedule.
+- `modules/home-manager/hyprland/modules/session-services.nix`: extra Hyprland-session user services (media idle-inhibit, manual caffeine inhibitor).
+- `modules/home-manager/hyprland/modules/silere.nix`: the `silere-shell` Quickshell bar -- packaging, declared defaults, and the user service.
+- `modules/home-manager/hyprland/modules/wallpaper.nix`: the wallpaper pipeline (`wallpaper-set`, awww, matugen retinting, hyprlock's stable path) and the Vicinae wallpaper commands.
 - `modules/home-manager/vicinae.nix`: generic Vicinae program config, imported and targeted at `hyprland-session.target` by this profile.
 - `modules/home-manager/hyprland/scripts/`: keybind and Vicinae helper scripts (caffeine, screenshot, screenrecord, wallpaper commands).
 
@@ -39,7 +43,7 @@ The setup deliberately avoids UWSM.
 
 ## Keybinds
 
-See `./keybindings.nix`. Hardware media/brightness keys (volume, brightness,
+See `./modules/keybindings.nix`. Hardware media/brightness keys (volume, brightness,
 keyboard backlight) are bound directly to `wpctl`/`brightnessctl` since there
 is no shell OSD to own them. Super+Shift+W opens the "Random Wallpaper"
 Vicinae script command (see Wallpaper Pipeline below). A handful of other
@@ -109,11 +113,15 @@ Fonts: `noto-fonts`, `noto-fonts-color-emoji`, `nerd-fonts.symbols-only`, `font-
 
 ```sh
 nixfmt modules/home-manager/hyprland/default.nix \
-  modules/home-manager/hyprland/hypridle.nix \
-  modules/home-manager/hyprland/hyprlock.nix \
-  modules/home-manager/hyprland/keybindings.nix \
-  modules/home-manager/hyprland/silere.nix \
-  modules/home-manager/hyprland/wallpaper.nix \
+  modules/home-manager/hyprland/modules/commands.nix \
+  modules/home-manager/hyprland/modules/compositor.nix \
+  modules/home-manager/hyprland/modules/hypridle.nix \
+  modules/home-manager/hyprland/modules/hyprlock.nix \
+  modules/home-manager/hyprland/modules/hyprsunset.nix \
+  modules/home-manager/hyprland/modules/keybindings.nix \
+  modules/home-manager/hyprland/modules/session-services.nix \
+  modules/home-manager/hyprland/modules/silere.nix \
+  modules/home-manager/hyprland/modules/wallpaper.nix \
   modules/nixos/hyprland.nix
 
 shfmt -w modules/home-manager/hyprland/scripts/*.sh

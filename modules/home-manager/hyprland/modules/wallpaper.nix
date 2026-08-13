@@ -30,7 +30,7 @@ let
 
   # The single entry point the rest of this pipeline funnels through. Only
   # this script needs a Nix-level value (the stable wallpaper path), so it
-  # stays inline here instead of living under ./scripts/ with the other
+  # stays inline here instead of living under ../scripts/ with the other
   # helper scripts, which are pure bash parameterized by args/env only.
   wallpaperSetScript = pkgs.writeShellApplication {
     name = "wallpaper-set";
@@ -91,7 +91,7 @@ let
       pkgs.coreutils
       pkgs.findutils
     ];
-    text = builtins.readFile ./scripts/vicinae-random-wallpaper.sh;
+    text = builtins.readFile ../scripts/vicinae-random-wallpaper.sh;
   };
 
   # Takes one argument: a filename inside $WALLPAPERS_DIR, or an absolute
@@ -105,7 +105,7 @@ let
       wallpaperSetScript
       pkgs.coreutils
     ];
-    text = builtins.readFile ./scripts/vicinae-set-wallpaper.sh;
+    text = builtins.readFile ../scripts/vicinae-set-wallpaper.sh;
   };
 in
 {
