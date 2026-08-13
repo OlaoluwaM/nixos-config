@@ -14,9 +14,6 @@
     nix-flatpak.url = "github:gmodena/nix-flatpak/?ref=latest";
 
     # Other stuff
-    # Keep Caffyne on its tested GTK/Python package set. Fabric currently fails
-    # at import time against the PyGObject version in this flake's Nixpkgs.
-    caffyne.url = "github:caffyne-org/caffyne-shell";
     claude-code.url = "github:sadjow/claude-code-nix";
     codex-cli.url = "github:sadjow/codex-cli-nix";
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";

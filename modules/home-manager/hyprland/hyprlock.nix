@@ -44,8 +44,9 @@ in
 
         background = [
           {
-            # Use the same Nix-owned wallpaper that is written into Caffyne's
-            # durable config. A stable Home Manager link makes this work in a
+            # The wallpaper is a Nix-owned stable path shared with the rest of
+            # the Hyprland session (see local.hyprland.wallpaper in
+            # default.nix). A stable Home Manager link makes this work in a
             # clean VM and avoids capturing readable window contents at lock
             # time. The solid color is shown while immediate rendering loads
             # the image, and remains as the fallback if the path is unreadable.
@@ -88,8 +89,8 @@ in
             inner_color = "rgba(00000033)";
             font_color = "rgba(ffffffff)";
             # Hyprlock replaces font_color with these colors while checking or
-            # reporting a failure. Caffyne calls this semantic role
-            # `on_surface`; local.theme.colors.text is the shared Nix token.
+            # reporting a failure. local.theme.colors.text is the shared Nix
+            # token for this semantic `on_surface` role.
             check_color = "rgb(${stripHash theme.text})";
             fail_color = "rgb(${stripHash theme.text})";
             font_family = fonts.shell.family;

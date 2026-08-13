@@ -71,7 +71,7 @@ let
   # asked for keeps strong binding — and fontconfig ranks strong family matches
   # ahead of weak ones, so the preferred font still wins whenever it is
   # installed. This covers every app that requests these families by name
-  # (Quickshell, hyprlock, GTK), not just the generic serif/sans/monospace
+  # (hyprlock, GTK, a future shell UI), not just the generic serif/sans/monospace
   # aliases handled by defaultFonts.
   familyAlias =
     family:

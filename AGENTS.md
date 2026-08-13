@@ -10,7 +10,6 @@ This is a NixOS/Home Manager flake for the `boreas` (and other) machine.
 - `modules/nixos/`: reusable NixOS modules.
 - `modules/home-manager/`: reusable Home Manager modules.
 - `modules/home-manager/hyprland/`: Hyprland desktop profile.
-- `modules/home-manager/hyprland/quickshell/`: Quickshell QML shell.
 - `pkgs/`: local package definitions.
 
 Prefer changing the narrowest module that owns the behavior. Do not push host-specific choices into reusable modules unless the module already takes that host data as an argument.
@@ -44,45 +43,12 @@ Do not run `nixos-rebuild switch` or `home-manager switch` unless Olaolu explici
 
 For all UI work in this repo, first inspect and follow the existing design system and local visual conventions. Prefer established components, spacing, typography, colors, interaction patterns, icons, and file organization over introducing new one-off styles.
 
-For Quickshell UI, start with `modules/home-manager/hyprland/quickshell/Theme.qml`, `GeneratedTheme.qml`, `BarCapsule.qml`, `IconButton.qml`, `ActionButton.qml`, `StyledText.qml`, `StyledSlider.qml`, `HoverTooltip.qml`, and nearby panel/capsule implementations before creating new visual patterns.
-
-When a change genuinely needs a new pattern, keep it consistent with adjacent Quickshell/QML surfaces and explain the tradeoff before implementing it.
-
-## Quickshell QML
-
-This repo uses QML for the Hyprland Quickshell shell in:
-
-- `modules/home-manager/hyprland/quickshell/**/*.qml`
-
-When editing those files, use the `qt-qml` skill if available.
-
-Before finalizing substantial QML changes, use the `qt-qml-review` skill if available and address correctness, layout, binding, and maintainability findings.
-
-If either skill is missing, ask the user before installing it with:
-
-```sh
-python /home/olaolu/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
-  --repo TheQtCompanyRnD/agent-skills \
-  --path skills/qt-qml \
-  --path skills/qt-qml-review
-```
-
-After installation, tell the user to restart Codex so the skills are picked up.
-
-Every new QML file in `modules/home-manager/hyprland/quickshell/` must be added to `qmldir`; Qt does not auto-discover files there.
-
-Treat `GeneratedTheme.qml` and `GeneratedCommands.qml` as generated outputs. Update `modules/home-manager/hyprland/quickshell.nix` or the source template logic instead of hand-editing generated values.
-
-Prefer native Quickshell services over shell commands when Quickshell exposes the domain directly, especially PipeWire audio, MPRIS media, UPower battery state, notifications, tray items, and Hyprland integration.
-
-Keep command paths and placeholders centralized through the generated command layer. Child components should call narrow domain objects or action APIs rather than embedding shell commands.
-
 ## Hyprland Profile
 
 The Hyprland profile is intentionally a small, owned desktop setup rather than a copied rice. Keep changes aligned with the existing launch path:
 
 ```text
-greetd -> tuigreet -> Hyprland -> Home Manager hyprland.conf -> hyprland-session.target -> user services -> Quickshell QML
+greetd -> tuigreet -> Hyprland -> Home Manager hyprland.conf -> hyprland-session.target -> user services
 ```
 
 Do not casually switch only one Hyprland ecosystem package to unstable. If Hyprland itself moves, verify the compositor, portal, lock, idle, and shell stack coherently.
