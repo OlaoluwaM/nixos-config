@@ -100,7 +100,7 @@ active.
 - [x] Break apart Gnome home-manager module into sub-modules
 - [ ] Break apart hyprland home-manager module into sub-modules
 - [ ] Break apart user home-manager module into sub-modules
-- [ ] Delete old Hyprland QML and Caffyne OS plumbing code
+- [x] Delete old Hyprland QML and legacy desktop shell plumbing code
 - [ ] Look into declaratively setting up a wallpaper (**Optional**)
 
 ## Troubleshooting
