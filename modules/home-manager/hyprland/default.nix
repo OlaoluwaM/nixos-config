@@ -20,10 +20,12 @@
 # - keybindings.nix: every Hyprland key chord
 # - hyprlock.nix: lock-screen look and behavior
 # - hypridle.nix: idle locking behavior
+# - silere.nix: the silere-shell Quickshell bar (packaging + user service)
 #
-# This is currently a stock Hyprland profile: no bar, no shell UI. The
-# previous desktop shell stack was removed as a clean-slate teardown ahead of
-# a new silere-shell integration.
+# silere-shell is the sole shell for this profile -- there is no backend
+# option, unlike the old Caffyne/Quickshell split this profile tore down. It
+# currently runs with stock upstream defaults; theming/config generation is
+# upcoming work.
 #
 # Home Manager source/options:
 # https://nix-community.github.io/home-manager/options.xhtml
@@ -97,6 +99,7 @@ in
     ./hypridle.nix
     ./hyprlock.nix
     ./keybindings.nix
+    ./silere.nix
     ../vicinae.nix
   ];
 

@@ -230,7 +230,25 @@
         "nix-flatpak": "nix-flatpak",
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs_5",
-        "nixpkgs-unstable": "nixpkgs-unstable"
+        "nixpkgs-unstable": "nixpkgs-unstable",
+        "silere-shell": "silere-shell"
+      }
+    },
+    "silere-shell": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1786628140,
+        "narHash": "sha256-OnkJOkSFHjRsMQKEu99Gl2aDKcaJ0EiOEGujRQCv1SI=",
+        "owner": "OlaoluwaM",
+        "repo": "silere-shell",
+        "rev": "7317e04d959f03c9e92523b57010c29790afb712",
+        "type": "github"
+      },
+      "original": {
+        "owner": "OlaoluwaM",
+        "ref": "custom-branch",
+        "repo": "silere-shell",
+        "type": "github"
       }
     },
     "systems": {

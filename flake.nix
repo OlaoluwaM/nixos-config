@@ -18,6 +18,14 @@
     codex-cli.url = "github:sadjow/codex-cli-nix";
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
     catppuccin.url = "github:catppuccin/nix/release-26.05";
+
+    # My fork of s3rven/silere-shell, the Quickshell/QML bar for the Hyprland
+    # profile. Fork-side NixOS-compat commits land on custom-branch. Upstream
+    # ships no flake and its packaging/ directory is AUR-only, so this is
+    # pulled in as a plain source tree and packaged by
+    # modules/home-manager/hyprland/silere.nix instead.
+    silere-shell.url = "github:OlaoluwaM/silere-shell/custom-branch";
+    silere-shell.flake = false;
   };
 
   outputs =
