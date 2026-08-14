@@ -164,7 +164,6 @@ in
   # Setup docker with nvidia & nvidia-container-toolkit.
   hardware.nvidia-container-toolkit = {
     enable = true;
-    package = pkgs.nvidia-container-toolkit;
   };
 
   # Use nvidia proprietary drivers
