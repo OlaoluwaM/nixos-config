@@ -211,92 +211,44 @@ in
   # guest. Skip the unit cleanly there instead of letting it restart-loop.
   systemd.services.asusd.unitConfig.ConditionVirtualization = false;
 
+  # Start one tray process in either supported desktop session. GNOME starts
+  # graphical-session.target, while the Home Manager Hyprland profile starts
+  # hyprland-session.target after importing its Wayland environment.
+  systemd.user.services.rog-control-center = {
+    description = "ROG Control Center";
+    wantedBy = [
+      "graphical-session.target"
+      "hyprland-session.target"
+    ];
+    partOf = [
+      "graphical-session.target"
+      "hyprland-session.target"
+    ];
+    after = [
+      "graphical-session.target"
+      "hyprland-session.target"
+    ];
+
+    serviceConfig = {
+      ExecStart = "${config.services.asusd.package}/bin/rog-control-center --autostart --background";
+      Restart = "on-failure";
+      RestartSec = 2;
+    };
+  };
+
   # Setup asusctl and rog-control-center (https://asus-linux.org/guides/nixos/)
   services = {
     asusd = {
       enable = true;
 
-      asusdConfig.text = ''
-        (
-            // Keep long-term battery charging capped at 80%.
-            charge_control_end_threshold: 80,
+      # Hardware defaults captured from this GU604VI. Custom curves stay
+      # disabled, so the embedded controller keeps automatic fan control.
+      fanCurvesConfig.source = ./asusd/fan_curves.ron;
 
-            // 0 means "do not restore a separate base limit" on shutdown/power events.
-            // This keeps the 80% limit persistent instead of treating it like a temporary
-            // one-shot charge limit.
-            base_charge_control_end_threshold: 0,
+      # Product ID 19b6 is the GU604VI keyboard Aura controller.
+      auraConfigs."19b6".source = ./asusd/aura_19b6.ron;
 
-            // Replaces the old Fedora udev script that stopped nvidia-powerd on battery
-            // and restarted it on AC. Dynamic Boost is useful on wall power, but it can
-            // burn battery when unplugged.
-            // Keep the compatibility setting, but use the explicit hooks below
-            // as the source of truth for nvidia-powerd on AC and battery.
-            disable_nvidia_powerd_on_battery: true,
-
-            // Keep the existing NVIDIA Dynamic Boost hooks on power-source
-            // changes. They do not select an ASUS platform profile.
-            ac_command: "systemctl start nvidia-powerd.service",
-            bat_command: "systemctl stop nvidia-powerd.service",
-
-            // When asusd changes the ASUS platform profile, also update the CPU
-            // energy_performance_preference. Without this, switching to Quiet/Performance
-            // changes the firmware profile but leaves CPU energy bias untouched.
-            platform_profile_linked_epp: true,
-
-            // The battery-profile-threshold service below owns the custom
-            // percentage policy and asks asusd to apply each selected profile.
-            // Keep asusd's simpler AC/battery switching disabled so the two
-            // policy loops cannot fight. The udev rule still reacts immediately
-            // to plug/unplug events, and the timer catches threshold crossings.
-            // These baseline values document the desired simple policy if the
-            // custom threshold service is ever removed.
-            platform_profile_on_battery: Balanced,
-            change_platform_profile_on_battery: false,
-            platform_profile_on_ac: Performance,
-            change_platform_profile_on_ac: false,
-
-            // EPP mapping used when platform_profile_linked_epp is true.
-            profile_quiet_epp: Power,
-            profile_balanced_epp: BalancePower,
-            profile_custom_epp: Performance,
-            profile_performance_epp: Performance,
-
-            // Leave per-profile ASUS firmware tunings at stock defaults for now. The old
-            // Fedora setup changed profiles, not wattage/fan tuning tables.
-            ac_profile_tunings: {
-                Balanced: (
-                    enabled: false,
-                    group: {},
-                ),
-                Performance: (
-                    enabled: false,
-                    group: {},
-                ),
-                Quiet: (
-                    enabled: false,
-                    group: {},
-                ),
-            },
-            dc_profile_tunings: {
-                Balanced: (
-                    enabled: false,
-                    group: {},
-                ),
-                Quiet: (
-                    enabled: false,
-                    group: {},
-                ),
-                Performance: (
-                    enabled: false,
-                    group: {},
-                ),
-            },
-
-            // Armoury firmware settings such as MUX mode, panel overdrive, Dynamic Boost,
-            // and NVIDIA temp target are left imperative until we choose explicit policies.
-            armoury_settings: {},
-        )
-      '';
+      asusdConfig.source = ./asusd/asusd.ron;
     };
   };
 
@@ -332,110 +284,7 @@ in
         Type = "oneshot";
       };
 
-      script = ''
-        set -eu
-
-        battery_dir=
-        for candidate in /sys/class/power_supply/BAT*; do
-          if [ -f "$candidate/capacity" ] && [ -f "$candidate/status" ]; then
-            battery_dir="$candidate"
-            break
-          fi
-        done
-
-        if [ -z "$battery_dir" ]; then
-          systemd-cat -t battery-profile-threshold -p warning echo "No battery found; skipping profile update"
-          exit 0
-        fi
-
-        capacity="$(cat "$battery_dir/capacity")"
-        status="$(cat "$battery_dir/status")"
-
-        choices="$(cat /sys/firmware/acpi/platform_profile_choices 2>/dev/null || true)"
-
-        has_choice() {
-          case " $choices " in
-            *" $1 "*) return 0 ;;
-            *) return 1 ;;
-          esac
-        }
-
-        case "$status" in
-          Charging|Full|Not\ charging)
-            requested=performance
-            ;;
-          Discharging)
-            if [ "$capacity" -le 35 ]; then
-              requested=low-power
-            elif [ "$capacity" -le 65 ]; then
-              requested=balanced
-            else
-              requested=performance
-            fi
-            ;;
-          *)
-            systemd-cat -t battery-profile-threshold -p warning echo "Unknown battery status '$status'; skipping profile update"
-            exit 0
-            ;;
-        esac
-
-        case "$requested" in
-          performance)
-            if has_choice performance; then
-              target_cli=Performance
-              target_sysfs=performance
-            else
-              systemd-cat -t battery-profile-threshold -p warning echo "Performance profile unavailable; falling back to Balanced"
-              target_cli=Balanced
-              target_sysfs=balanced
-            fi
-            ;;
-          balanced)
-            target_cli=Balanced
-            target_sysfs=balanced
-            ;;
-          low-power)
-            if has_choice quiet; then
-              target_cli=Quiet
-              target_sysfs=quiet
-            elif has_choice low-power; then
-              target_cli=LowPower
-              target_sysfs=low-power
-            else
-              systemd-cat -t battery-profile-threshold -p warning echo "Quiet/LowPower profile unavailable; falling back to Balanced"
-              target_cli=Balanced
-              target_sysfs=balanced
-            fi
-            ;;
-        esac
-
-        current="$(cat /sys/firmware/acpi/platform_profile 2>/dev/null || true)"
-        if [ "$requested" = low-power ] && { [ "$current" = quiet ] || [ "$current" = low-power ]; }; then
-          systemd-cat -t battery-profile-threshold echo "ASUS platform profile already $current ($status, ''${capacity}%)"
-          exit 0
-        fi
-
-        if [ -n "$current" ] && [ "$current" = "$target_sysfs" ]; then
-          systemd-cat -t battery-profile-threshold echo "ASUS platform profile already $target_cli ($status, ''${capacity}%)"
-          exit 0
-        fi
-
-        if asusctl profile set "$target_cli"; then
-          systemd-cat -t battery-profile-threshold echo "Set ASUS platform profile to $target_cli ($status, ''${capacity}%)"
-          exit 0
-        fi
-
-        if [ "$target_cli" != Balanced ]; then
-          systemd-cat -t battery-profile-threshold -p warning echo "Profile $target_cli failed; falling back to Balanced"
-          if asusctl profile set Balanced; then
-            systemd-cat -t battery-profile-threshold echo "Set ASUS platform profile to Balanced ($status, ''${capacity}%)"
-            exit 0
-          fi
-        fi
-
-        systemd-cat -t battery-profile-threshold -p err echo "Could not set an ASUS platform profile ($status, ''${capacity}%)"
-        exit 1
-      '';
+      script = builtins.readFile ./scripts/battery-profile-threshold.sh;
     };
 
   systemd.timers.battery-profile-threshold = {

@@ -1,0 +1,67 @@
+// GU604VI firmware fan curves captured from asusd 6.3.11.
+// enabled: false keeps each fan under firmware automatic control.
+(
+    profiles: (
+        balanced: [
+            (
+                fan: CPU,
+                pwm: (25, 45, 61, 79, 117, 137, 137, 137),
+                temp: (30, 62, 66, 70, 74, 78, 78, 78),
+                enabled: false,
+            ),
+            (
+                fan: GPU,
+                pwm: (25, 43, 58, 76, 114, 132, 132, 132),
+                temp: (30, 62, 66, 70, 74, 78, 78, 78),
+                enabled: false,
+            ),
+            (
+                fan: MID,
+                pwm: (2, 2, 2, 2, 2, 206, 206, 206),
+                temp: (30, 62, 66, 70, 74, 78, 78, 78),
+                enabled: false,
+            ),
+        ],
+        performance: [
+            (
+                fan: CPU,
+                pwm: (45, 79, 117, 137, 175, 234, 234, 234),
+                temp: (30, 64, 68, 72, 76, 80, 80, 80),
+                enabled: false,
+            ),
+            (
+                fan: GPU,
+                pwm: (45, 79, 117, 137, 175, 242, 242, 242),
+                temp: (30, 64, 68, 72, 76, 80, 80, 80),
+                enabled: false,
+            ),
+            (
+                fan: MID,
+                pwm: (2, 2, 2, 2, 206, 206, 206, 206),
+                temp: (30, 64, 68, 72, 76, 80, 80, 80),
+                enabled: false,
+            ),
+        ],
+        quiet: [
+            (
+                fan: CPU,
+                pwm: (2, 25, 45, 61, 79, 79, 79, 79),
+                temp: (65, 68, 71, 75, 80, 80, 80, 80),
+                enabled: false,
+            ),
+            (
+                fan: GPU,
+                pwm: (2, 25, 43, 58, 76, 76, 76, 76),
+                temp: (65, 68, 71, 75, 80, 80, 80, 80),
+                enabled: false,
+            ),
+            (
+                fan: MID,
+                pwm: (2, 2, 2, 2, 2, 2, 2, 2),
+                temp: (65, 68, 71, 75, 80, 80, 80, 80),
+                enabled: false,
+            ),
+        ],
+        custom: [],
+    ),
+)

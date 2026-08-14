@@ -1,0 +1,78 @@
+(
+    // Keep long-term battery charging capped at 80%.
+    charge_control_end_threshold: 80,
+
+    // 0 means "do not restore a separate base limit" on shutdown/power events.
+    // This keeps the 80% limit persistent instead of treating it like a temporary
+    // one-shot charge limit.
+    base_charge_control_end_threshold: 0,
+
+    // Replaces the old Fedora udev script that stopped nvidia-powerd on battery
+    // and restarted it on AC. Dynamic Boost is useful on wall power, but it can
+    // burn battery when unplugged.
+    // Keep the compatibility setting, but use the explicit hooks below
+    // as the source of truth for nvidia-powerd on AC and battery.
+    disable_nvidia_powerd_on_battery: true,
+
+    // Keep the existing NVIDIA Dynamic Boost hooks on power-source
+    // changes. They do not select an ASUS platform profile.
+    ac_command: "systemctl start nvidia-powerd.service",
+    bat_command: "systemctl stop nvidia-powerd.service",
+
+    // When asusd changes the ASUS platform profile, also update the CPU
+    // energy_performance_preference. Without this, switching to Quiet/Performance
+    // changes the firmware profile but leaves CPU energy bias untouched.
+    platform_profile_linked_epp: true,
+
+    // The battery-profile-threshold service owns the custom percentage policy
+    // and asks asusd to apply each selected profile. Keep asusd's simpler
+    // AC/battery switching disabled so the two policy loops cannot fight. The
+    // udev rule still reacts immediately to plug/unplug events, and the timer
+    // catches threshold crossings. These baseline values document the desired
+    // simple policy if the custom threshold service is ever removed.
+    platform_profile_on_battery: Balanced,
+    change_platform_profile_on_battery: false,
+    platform_profile_on_ac: Performance,
+    change_platform_profile_on_ac: false,
+
+    // EPP mapping used when platform_profile_linked_epp is true.
+    profile_quiet_epp: Power,
+    profile_balanced_epp: BalancePower,
+    profile_custom_epp: Performance,
+    profile_performance_epp: Performance,
+
+    // Leave per-profile ASUS firmware tunings at stock defaults for now. The old
+    // Fedora setup changed profiles, not wattage/fan tuning tables.
+    ac_profile_tunings: {
+        Balanced: (
+            enabled: false,
+            group: {},
+        ),
+        Performance: (
+            enabled: false,
+            group: {},
+        ),
+        Quiet: (
+            enabled: false,
+            group: {},
+        ),
+    },
+    dc_profile_tunings: {
+        Balanced: (
+            enabled: false,
+            group: {},
+        ),
+        Quiet: (
+            enabled: false,
+            group: {},
+        ),
+        Performance: (
+            enabled: false,
+            group: {},
+        ),
+    },
+
+    // Armoury firmware settings such as MUX mode, panel overdrive, Dynamic
+    // Boost, and NVIDIA temp target stay imperative until we choose policies.
+    armoury_settings: {},
+)
