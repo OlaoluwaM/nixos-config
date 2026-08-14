@@ -295,6 +295,7 @@ in
     unstable.libva
     unstable.libva-utils
     unstable.lld
+    lm_sensors
     unstable.lsof
 
     unstable.navi
