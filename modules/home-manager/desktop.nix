@@ -10,7 +10,9 @@ let
 
   fontSpec = font: "${font.name} ${toString font.size}";
 
-  useCatppuccin = config.local.catppuccin.enable;
+  # Keep GNOME on its stock Adwaita dark theme. The Catppuccin desktop theme
+  # remains available to the Hyprland profile when its preset is active.
+  useCatppuccin = cfg.profile == "hyprland" && config.local.catppuccin.enable;
   useCatppuccinForQt = useCatppuccin && cfg.catppuccinQt.enable;
 
   gtkTheme =
