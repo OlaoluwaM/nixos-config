@@ -42,7 +42,7 @@ in
 
   nixpkgs = {
     overlays = import ../../modules/nixos/overlays {
-      inherit unstable;
+      inherit ;
     };
 
     # Configure your nixpkgs instance
@@ -164,7 +164,7 @@ in
   # Setup docker with nvidia & nvidia-container-toolkit.
   hardware.nvidia-container-toolkit = {
     enable = true;
-    package = unstable.nvidia-container-toolkit;
+    package = pkgs.nvidia-container-toolkit;
   };
 
   # Use nvidia proprietary drivers
@@ -182,23 +182,11 @@ in
     vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is installed by default.
     wget
     curl
-    memtest86plus
-    spice-vdagent
-    virt-viewer
-    unstable.nvidia-container-toolkit
   ];
-
-  # All this spice stuff is to make this config viable on a VM guest. Specifically to allow for copy-pasting between host and guest
-  # Though it looks like we still need to run spice-vdagent in the foreground for this all to work
-  # Some of these are from https://nixos.wiki/wiki/Virt-manager
-  services.spice-webdavd.enable = true;
-  services.spice-vdagentd.enable = true;
-  services.qemuGuest.enable = true;
 
   # Enable virt-manager
   programs.virt-manager.enable = true;
   virtualisation.libvirtd.enable = true;
-  virtualisation.spiceUSBRedirection.enable = true;
 
   environment = {
     # Necessary as described here: https://nix-community.github.io/home-manager/options.xhtml#opt-programs.zsh.enableCompletion
