@@ -2,7 +2,7 @@
 set -euo pipefail
 
 repo_root="$(git rev-parse --show-toplevel)"
-host="$(hostname)"
+host="${1:-$(hostname)}"
 
 host_dir="$repo_root/hosts/$host"
 hardware_config="$host_dir/hardware-configuration.nix"
