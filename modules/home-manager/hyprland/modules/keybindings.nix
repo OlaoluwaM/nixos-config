@@ -53,9 +53,11 @@ in
       bind = [
         (mkBind "${mod} + T" (execDispatcher terminal))
         (mkBind "${mod} + W" (execDispatcher (lib.getExe pkgs.firefox)))
-        (mkBind "${mod} + O" (execDispatcher (lib.getExe unstable.obsidian)))
+        (mkBind "ALT + O" (execDispatcher (lib.getExe unstable.obsidian)))
         (mkBind "CTRL + ALT + T" (execDispatcher (lib.getExe' pkgs.ticktick "ticktick")))
-        (mkBind "${mod} + S" (execDispatcher (lib.getExe pkgs.slack)))
+        # Launch through the desktop entry so the themed override from
+        # home/olaolu/default.nix (dark-mode env) applies, matching GNOME.
+        (mkBind "${mod} + S" (execDispatcher "gtk-launch slack"))
         (mkBind "ALT + S" (execDispatcher (lib.getExe pkgs.spotify)))
         (mkBind "${mod} + D" (execDispatcher (lib.getExe' unstable.discord "Discord")))
 
@@ -179,8 +181,8 @@ in
       # lands. Super+Shift+W (wallpapers) is bound above -- the wallpaper
       # pipeline doesn't depend on the rest of the shell surfacing them.
       ++ lib.optionals enableAsusRogKeybindings [
-        (mkBind "XF86Launch1" (execDispatcher (lib.getExe' unstable.asusctl "rog-control-center")))
-        (mkBind "F5" (execDispatcher "${lib.getExe' unstable.asusctl "asusctl"} profile -n"))
+        (mkBind "XF86Launch1" (execDispatcher (lib.getExe' pkgs.asusctl "rog-control-center")))
+        (mkBind "F5" (execDispatcher "${lib.getExe' pkgs.asusctl "asusctl"} profile -n"))
       ];
     };
   };
