@@ -4,16 +4,37 @@ Based off the minimal startup config in [this repo](https://github.com/Misterio7
 
 ## Usage
 
+> [!note]
+> All `nixos-rebuild` or `home-manager` commands must reference the flake (using `--flake`) to work as you'd expect.
+
 Clone this repo in the `$HOME` directory.
 
-Run any one of the following to apply our system configuration:
+**Then for the first time only, following a fresh installation of NixOS, run the script `scripts/fresh-install-first-rebuild-switch.sh`. It will do two things:**
+
+1. Refresh the `hardware-configuration.nix` module in `hosts/$HOST` so it aligns with what NixOS expects
+2. Runs a `nixos-rebuild switch --flake ...`.
+
+After that, run any one of the following to apply the system configuration from this repo moving forward:
 
 - `sudo nixos-rebuild switch --flake $HOME/nixos-config#hostname`
 - `sudo nixos-rebuild switch --flake "$HOME/nixos-config#hostname"`
 - `sudo nixos-rebuild switch --flake ~/nixos-config#hostname`
 - `cd ~/nixos-config` then run `sudo nixos-rebuild switch --flake .#hostname`
 
-After we must setup/initialize home-manager using the following command (the flake path can be specified in the same manner as above). We run this only once. Once this is done we should be able to just use `home-manager switch --flake ...` (<https://nix-community.github.io/home-manager/index.xhtml#sec-flakes-prerequisites>)
+Make sure, regardless of the command you use, the nixos switch passes successfully.
+
+If the above command was successful, we must then setup/initialize home-manager using the following command (the flake path can be specified in the same manner as with the `nixos-rebuild`). We run this only once. 
+
+```bash
+# Version used here must match the version of the Home Manager branch pinned in flake.nix.
+nix run github:nix-community/home-manager/release-26.05 -- switch -b backup --flake ~/nixos-config#$USER@$HOST
+```
+
+Once this is done we should be able to just use home-manager directly (<https://nix-community.github.io/home-manager/index.xhtml#sec-flakes-prerequisites>)
+
+```bash
+home-manager switch --flake .#username@hostname
+```
 
 This repo intentionally uses a stable base with selected unstable packages:
 
@@ -23,31 +44,17 @@ This repo intentionally uses a stable base with selected unstable packages:
 
 That keeps the NixOS and Home Manager module systems aligned while still allowing newer user packages where needed. This is the safer default for a daily-driver machine and is friendlier while learning Nix than running the whole config on unstable.
 
-If we want to move Home Manager to `master`, then we'd need to have Home Manager track nixpkgs-unstable. In `flake.nix`, change `home-manager.url` to `github:nix-community/home-manager/master` and strongly consider changing `home-manager.inputs.nixpkgs.follows` from `nixpkgs` to `nixpkgs-unstable`. For a fully unstable setup, also make the standalone Home Manager `pkgs` come from `nixpkgs-unstable`. Do not change `home.stateVersion` just because the branch changes; that value is a compatibility pin for migration defaults, not the active Home Manager version. In the command below, we'd also replace `release-26.05` with `master` too.
+If we wanted to move Home Manager to `master`, we'd need to have Home Manager track nixpkgs-unstable. In `flake.nix`, this means changing `home-manager.url` to `github:nix-community/home-manager/master` and changing `home-manager.inputs.nixpkgs.follows` from `nixpkgs` to `nixpkgs-unstable`. For a fully unstable setup, we'd also make the standalone Home Manager `pkgs` come from `nixpkgs-unstable`.
 
-But the current setup is fine for now. It seems to be the ideal/standard setup. No need to switch it unless there is a compelling reason and if one does arise, it should be documented.
-
-```bash
-# Match the Home Manager branch pinned in flake.nix.
-nix run github:nix-community/home-manager/release-26.05 -- switch -b backup --flake ~/nixos-config#olaolu@boreas
-```
-
-Finally, after the above command completes successfully we should be able to just run `home-manager` as a standalone tool like so to apply your home configuration.
-
-```bash
-home-manager switch --flake .#username@hostname
-```
-
-NOTE: All `nixos-rebuild` or `home-manager` commands must reference the flake (using `--flake`) to work as you'd expect.
 
 ### Apply order: system first, then home
 
 ```bash
-sudo nixos-rebuild switch --flake ~/nixos-config#boreas
-home-manager switch --flake ~/nixos-config#olaolu@boreas
+sudo nixos-rebuild switch --flake ~/nixos-config#$HOST
+home-manager switch --flake ~/nixos-config#$USER@$HOST
 ```
 
-On a fresh install this order is mandatory: standalone Home Manager can only run once `nixos-rebuild` has produced what it needs (our user account, the nix daemon, `allowed-users`). Afterwards the two are independent — if only one layer changed, running just that layer's `switch` is fine — but for changes spanning both, keep system first: the home config usually assumes system plumbing (sessions, groups, dbus services) that should land before it. Cross-layer changes may also need a re-login for `hm-session-vars.sh` to take effect.
+On a fresh install this order is mandatory: standalone Home Manager can only run once `nixos-rebuild` has produced what it needs (our user account, the nix daemon, `allowed-users`). Afterwards the two are independent. If only one layer changed, running just that layer's `switch` is fine, but for changes spanning both, keep system first: the home config usually assumes system plumbing (sessions, groups, dbus services) that should land before it. Cross-layer changes may also need a re-login for `hm-session-vars.sh` to take effect.
 
 ## Using ROG Control Center on Boreas
 
@@ -122,6 +129,3 @@ On real hardware this must be replaced before the first `nixos-rebuild`:
 - BIOS machines: keep GRUB but point `boot.loader.grub.device` at the actual disk
   (e.g. `/dev/nvme0n1` / `/dev/sda`), not `/dev/vda`.
 
-### Boreas keyboard color
-
-It's #cdd6f4
