@@ -47,7 +47,8 @@ let
   # Obsidian tells GNOME its name is "md.Obsidian" through the
   # "md.Obsidian.desktop" value below. GNOME then looks for a matching desktop
   # file, but Nixpkgs only installs "obsidian.desktop", so GNOME shows a generic
-  # icon. Change the name to "obsidian" so GNOME can find the installed file.
+  # icon. Change the name to "obsidian.desktop" so GNOME can find the installed
+  # file and xdg-settings receives a valid desktop application name.
   # https://github.com/NixOS/nixpkgs/issues/505078
   # https://github.com/NixOS/nixpkgs/pull/505535
   patchedObsidian = unstable.obsidian.overrideAttrs (oldAttrs: {
@@ -55,7 +56,7 @@ let
       ${pkgs.lib.getExe pkgs.asar} extract resources/app.asar desktop-name-patch
       substituteInPlace desktop-name-patch/package.json \
         --replace-fail '"desktopName": "md.Obsidian.desktop"' \
-        '"desktopName": "obsidian"'
+        '"desktopName": "obsidian.desktop"'
       ${pkgs.lib.getExe pkgs.asar} pack desktop-name-patch resources/app.asar
     '';
   });

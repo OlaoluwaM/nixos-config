@@ -61,7 +61,7 @@ in
       };
 
       "${mkCustomKeybindingKey 0}" = {
-        binding = "<Super>o";
+        binding = "<Alt>o";
         command = "obsidian";
         name = "Obsidian";
       };

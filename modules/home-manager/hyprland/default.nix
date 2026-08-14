@@ -467,7 +467,7 @@ in
         bind = [
           (mkBind "${mod} + T" (execDispatcher terminal))
           (mkBind "${mod} + W" (execDispatcher (lib.getExe pkgs.firefox)))
-          (mkBind "${mod} + O" (execDispatcher (lib.getExe unstable.obsidian)))
+          (mkBind "ALT + O" (execDispatcher (lib.getExe unstable.obsidian)))
           (mkBind "CTRL + ALT + T" (execDispatcher (lib.getExe' pkgs.ticktick "ticktick")))
           (mkBind "${mod} + S" (execDispatcher (lib.getExe pkgs.slack)))
           (mkBind "ALT + S" (execDispatcher (lib.getExe pkgs.spotify)))
