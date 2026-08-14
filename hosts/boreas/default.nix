@@ -15,6 +15,15 @@ let
     userFullName
     ;
 
+  waitForStatusNotifier = pkgs.writeShellApplication {
+    name = "wait-for-status-notifier";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.systemd
+    ];
+    text = builtins.readFile ./scripts/wait-for-status-notifier.sh;
+  };
+
 in
 {
   # You can import other NixOS modules here
@@ -213,7 +222,10 @@ in
 
   # Start one tray process in either supported desktop session. GNOME starts
   # graphical-session.target, while the Home Manager Hyprland profile starts
-  # hyprland-session.target after importing its Wayland environment.
+  # hyprland-session.target after importing its Wayland environment. Both tray
+  # hosts can register after their session target starts, and rog-control-center
+  # does not retry tray setup. Wait for the shared StatusNotifier service so a
+  # startup race cannot leave the app running without its icon.
   systemd.user.services.rog-control-center = {
     description = "ROG Control Center";
     wantedBy = [
@@ -230,6 +242,7 @@ in
     ];
 
     serviceConfig = {
+      ExecStartPre = "${waitForStatusNotifier}/bin/wait-for-status-notifier";
       ExecStart = "${config.services.asusd.package}/bin/rog-control-center --autostart --background";
       Restart = "on-failure";
       RestartSec = 2;
