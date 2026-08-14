@@ -42,7 +42,7 @@ in
 
   nixpkgs = {
     overlays = import ../../modules/nixos/overlays {
-      inherit ;
+      inherit unstable;
     };
 
     # Configure your nixpkgs instance
