@@ -80,7 +80,7 @@ in
 
       "${mkCustomKeybindingKey 3}" = {
         binding = "<Super>s";
-        command = "slack";
+        command = "gtk-launch slack";
         name = "Slack";
       };
 

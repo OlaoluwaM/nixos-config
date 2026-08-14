@@ -469,7 +469,7 @@ in
           (mkBind "${mod} + W" (execDispatcher (lib.getExe pkgs.firefox)))
           (mkBind "ALT + O" (execDispatcher (lib.getExe unstable.obsidian)))
           (mkBind "CTRL + ALT + T" (execDispatcher (lib.getExe' pkgs.ticktick "ticktick")))
-          (mkBind "${mod} + S" (execDispatcher (lib.getExe pkgs.slack)))
+          (mkBind "${mod} + S" (execDispatcher "gtk-launch slack"))
           (mkBind "ALT + S" (execDispatcher (lib.getExe pkgs.spotify)))
           (mkBind "${mod} + D" (execDispatcher (lib.getExe' unstable.discord "Discord")))
 

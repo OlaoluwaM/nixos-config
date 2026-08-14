@@ -112,8 +112,8 @@ let
     desktopFile = "slack.desktop";
     replacements = [
       {
-        from = "Exec=slack";
-        to = "Exec=${gtkThemeEnv} slack";
+        from = "Exec=${pkgs.lib.getExe' pkgs.slack "slack"} -s %U";
+        to = "Exec=${gtkThemeEnv} ${pkgs.lib.getExe' pkgs.slack "slack"} -s %U";
       }
     ];
   };
