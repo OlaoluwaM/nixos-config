@@ -49,6 +49,50 @@ home-manager switch --flake ~/nixos-config#olaolu@boreas
 
 On a fresh install this order is mandatory: standalone Home Manager can only run once `nixos-rebuild` has produced what it needs (our user account, the nix daemon, `allowed-users`). Afterwards the two are independent — if only one layer changed, running just that layer's `switch` is fine — but for changes spanning both, keep system first: the home config usually assumes system plumbing (sessions, groups, dbus services) that should land before it. Cross-layer changes may also need a re-login for `hm-session-vars.sh` to take effect.
 
+## Using ROG Control Center on Boreas
+
+ROG Control Center is the window for the `asusd` service. It starts in the
+background when you sign in to GNOME or Hyprland.
+
+Open it in one of these ways:
+
+- press the ROG key;
+- search for **ROG Control Center** in the app launcher;
+- run `rog-control-center` in a terminal.
+
+Closing the window leaves the app running in the tray. **Quit App** closes the
+window and tray app, but `asusd` keeps running. Run `rog-control-center` again
+to reopen it.
+
+### What to change
+
+| Page | What to use it for | Boreas rule |
+| --- | --- | --- |
+| System Control | Check temperatures, fan speeds, and the current power profile. | A manual profile change is temporary. The battery policy checks again every three minutes and when AC power changes. |
+| Keyboard Aura | Preview or change keyboard lighting. | Permanent settings live in [`hosts/boreas/asusd/aura_19b6.ron`](hosts/boreas/asusd/aura_19b6.ron). |
+| Fan Curves | Set a custom curve for one fan in one power profile. | Leave **Enabled** off. The firmware controls all three fans. The graph still shows the stored firmware curve while the box is off. |
+| GPU Configuration | Change firmware GPU options. | Change these only when you mean to. Some changes need a reboot and can stay set outside Nix. |
+| Battery Info | Check battery health, charge state, and power use. | The charge limit is set to 80% in [`hosts/boreas/asusd/asusd.ron`](hosts/boreas/asusd/asusd.ron). |
+| App Settings | Control the window, tray, and notifications. | Leave **Start app on system startup** off. NixOS already starts it. |
+
+### Fan curves
+
+The **Enabled** box does not turn the physical fan on or off. It tells `asusd`
+to replace the firmware's automatic curve with the curve shown in the graph.
+Each fan and each power profile has its own box.
+
+All boxes are off by design. This keeps the ASUS firmware in charge of the
+CPU, GPU, and middle fans. If we choose custom curves later, change
+[`hosts/boreas/asusd/fan_curves.ron`](hosts/boreas/asusd/fan_curves.ron) so the
+setting survives a rebuild and reboot. Use **Factory Default (all fans)** to
+load the laptop's factory curves for the selected power profile.
+
+The upstream [asusctl 6.3.11 manual](https://github.com/OpenGamingCollective/asusctl/blob/6.3.11/MANUAL.md#fan-curves)
+has the full fan-curve format. The
+[6.3.11 fan-control code](https://github.com/OpenGamingCollective/asusctl/blob/6.3.11/asusd/src/ctrl_fancurves.rs)
+shows that enabling a curve applies it immediately when its power profile is
+active.
+
 ## TODOs
 
 - [ ] Make hosts/boreas a bit more modular. Move out stuff like the nvidia configuration into a separate module to allow for better composition moving forward
