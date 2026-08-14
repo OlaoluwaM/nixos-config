@@ -48,7 +48,7 @@ let
 
       # ASUS laptops expose extra platform-profile controls through asusctl.
       # The helper tries powerprofilesctl first, then asusctl as a fallback.
-      unstable.asusctl
+      pkgs.asusctl
     ];
     text = ''
       export HYPR_SHELL_POWER_PROFILE_LIB_DIR="${powerProfileAdapterLib}/lib/hypr-shell-power-profile"

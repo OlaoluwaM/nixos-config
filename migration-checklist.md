@@ -81,4 +81,4 @@
 
 ## Optional
 
-- [x] Configure a non-asus auto power profile management solution: the `battery-profile-threshold` timer in `hosts/boreas/default.nix` drives `powerprofilesctl`, which works on any host running power-profiles-daemon, and owns power-source switching outright (asusd's own auto-switching is disabled on both edges). On ASUS hardware, asusd links platform profiles to power-profiles-daemon, so the firmware profile follows; the asusd unit itself is skipped under virtualization (`ConditionVirtualization = false`), which keeps the VM dry-run quiet.
+- [x] Configure automatic power-profile management: the `battery-profile-threshold` timer in `hosts/boreas/default.nix` asks `asusd` to apply the selected ASUS profile through `asusctl`. It owns the custom percentage policy while asusd's built-in AC/battery switching remains disabled. The asusd unit is skipped under virtualization (`ConditionVirtualization = false`), which keeps the VM dry-run quiet.

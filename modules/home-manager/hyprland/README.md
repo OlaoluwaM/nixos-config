@@ -282,7 +282,10 @@ Backend-specific behavior lives in ordered adapter scripts under
 adapters, selects the first available backend, and exposes normalized profiles
 to QML: `performance`, `balanced`, `power-saver`, or `Unavailable`.
 
-This keeps Quickshell decoupled from host-specific ASUS policy. On Boreas, the system profile already enables `power-profiles-daemon` and `asusd`, with ASUS power behavior defined in `hosts/boreas/default.nix`.
+This keeps Quickshell decoupled from host-specific ASUS policy. On Boreas,
+`asusd` is the sole active profile daemon, with ASUS power behavior defined in
+`hosts/boreas/default.nix`. The generic PPD adapter remains available for other
+hosts, but Boreas falls through to the `asusctl` adapter because PPD is disabled.
 
 Useful commands:
 
