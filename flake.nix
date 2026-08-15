@@ -67,12 +67,39 @@
       # transitively by unstable.bitwarden-desktop; permit it here so the config
       # evaluates without --impure / NIXPKGS_ALLOW_INSECURE.
       unstable = import nixpkgs-unstable {
-        system = boreas.system; # NOTE: replace x86_64-linux with your architecture if necessary
+        system = boreas.system; # replace x86_64-linux with your architecture if necessary
         config = {
           allowUnfree = true;
           permittedInsecurePackages = [ "electron-39.8.10" ];
         };
       };
+
+      # All of these will be passed to every imported HM module
+      homeSpecialArgs = {
+        inherit inputs unstable;
+        hostConfig = boreas;
+      };
+
+      # > Our main home-manager configuration modules <
+      # Keeping these in one place lets both the NixOS-integrated and standalone
+      # Home Manager entrypoints use the exact same configuration.
+      homeModules = [
+        ./home/${boreas.username}
+        nix-flatpak.homeManagerModules.nix-flatpak
+        {
+          local.capabilities.graphics.cuda = true;
+          local.capabilities.input.asusRogKeys = true;
+        }
+        # We're getting claude-code from this repo https://github.com/sadjow/claude-code-nix to always have the most up to date version
+        # The same guy also has a repo for codex https://github.com/sadjow/codex-cli-nix
+        {
+          nixpkgs.overlays = [
+            claude-code.overlays.default
+            codex-cli.overlays.default
+          ];
+        }
+        catppuccin.homeModules.catppuccin
+      ];
     in
     {
       # NixOS configuration entrypoint
@@ -84,11 +111,38 @@
             inherit inputs unstable;
             hostConfig = boreas;
           };
+
           # > Our main nixos configuration file <
           # For another system config, you'd want to replace this too, to match the new system name
           modules = [
             nixos-hardware.nixosModules.asus-zephyrus-gu603h
             ./hosts/boreas
+
+            # Integrate Home Manager into the NixOS configuration so a normal
+            # nixos-rebuild also activates the user's Home Manager configuration.
+            home-manager.nixosModules.home-manager
+
+            {
+              home-manager = {
+                # Install Home Manager packages into the user's profile.
+                useUserPackages = true;
+
+                # We intentionally don't use useGlobalPkgs because the Home
+                # Manager config has its own nixpkgs configuration and overlays.
+                extraSpecialArgs = homeSpecialArgs;
+
+                # Equivalent to '-b backup' when doing a standalone home-manager switch
+                # but in this case the suffix will be 'nixos-hm-backup' instead of just 'backup'
+                backupFileExtension = "nixos-hm-backup";
+                # If a backup already exists `nixos-rebuild switch` will still fail. This option controls
+                # whether nixos is allowed to overwrite the backups. Leave it as false for now
+                overwriteBackup = false;
+
+                users.${boreas.username} = {
+                  imports = homeModules;
+                };
+              };
+            }
           ];
         };
       };
@@ -99,31 +153,14 @@
         # For a new profile/user, just add a new entry like "olaolu@boreas" but with the name set to olaolu@<new-hostname>. You may want to replace the system arch if necessary username@hostname
         "${boreas.username}@boreas" = home-manager.lib.homeManagerConfiguration {
           # Home-manager requires 'pkgs' instance
-          pkgs = nixpkgs.legacyPackages.${boreas.system}; # NOTE: replace x86_64-linux with your architecture if necessary
+          pkgs = nixpkgs.legacyPackages.${boreas.system}; # replace x86_64-linux with your architecture if necessary
+
           # All of these will be passed to every imported HM module
-          extraSpecialArgs = {
-            inherit inputs unstable;
-            hostConfig = boreas;
-          };
+          extraSpecialArgs = homeSpecialArgs;
+
           # > Our main home-manager configuration file <
           # For a new user profile, you'd need a new entry and replace `./home/olaolu` with whatever the new profile user name is
-          modules = [
-            ./home/${boreas.username}
-            nix-flatpak.homeManagerModules.nix-flatpak
-            {
-              local.capabilities.graphics.cuda = true;
-              local.capabilities.input.asusRogKeys = true;
-            }
-            # We're getting claude-code from this repo https://github.com/sadjow/claude-code-nix to always have the most up to date version
-            # The same guy also has a repo for codex https://github.com/sadjow/codex-cli-nix
-            {
-              nixpkgs.overlays = [
-                claude-code.overlays.default
-                codex-cli.overlays.default
-              ];
-            }
-            catppuccin.homeModules.catppuccin
-          ];
+          modules = homeModules;
         };
       };
     };
