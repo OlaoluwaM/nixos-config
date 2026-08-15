@@ -66,6 +66,13 @@ in
       };
 
       settings = {
+        # Enable switching workspaces with a three finger swipe
+        gesture = {
+          fingers = 3;
+          direction = "horizontal";
+          action = "workspace";
+        };
+
         # Monitor rule. Blank monitor name means "apply to all monitors".
         # preferred = use the monitor's preferred resolution/refresh rate.
         # auto = let Hyprland choose the position. 1 = scale factor.
@@ -73,7 +80,7 @@ in
           output = "";
           mode = "preferred";
           position = "auto";
-          scale = 1;
+          scale = "auto";
         };
 
         env = [

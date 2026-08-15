@@ -38,6 +38,7 @@ let
       (lua dispatcher)
     ];
   };
+
   mkBindWithFlags = keys: dispatcher: flags: {
     _args = [
       keys
@@ -45,6 +46,20 @@ let
       flags
     ];
   };
+
+  # Match Hyprland's standard workspace bindings:
+  # Super+1..9 selects workspaces 1..9, Super+0 selects workspace 10.
+  # Adding Shift moves the focused window to that workspace.
+  workspaceBinds = lib.concatMap (
+    workspace:
+    let
+      key = if workspace == 10 then "0" else toString workspace;
+    in
+    [
+      (mkBind "${mod} + ${key}" "hl.dsp.focus({ workspace = ${toString workspace} })")
+      (mkBind "${mod} + SHIFT + ${key}" "hl.dsp.window.move({ workspace = ${toString workspace} })")
+    ]
+  ) (lib.range 1 10);
 in
 {
   config = lib.mkIf cfg.enable {
@@ -108,18 +123,12 @@ in
         (mkBind "${mod} + Down" "hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"unset\" })")
         (mkBind "ALT + F5" "hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"unset\" })")
         (mkBind "${mod} + SHIFT + V" "hl.dsp.window.float()")
-
-        (mkBind "${mod} + 1" "hl.dsp.focus({ workspace = 1 })")
-        (mkBind "${mod} + 2" "hl.dsp.focus({ workspace = 2 })")
-        (mkBind "${mod} + 3" "hl.dsp.focus({ workspace = 3 })")
-        (mkBind "${mod} + 4" "hl.dsp.focus({ workspace = 4 })")
-        (mkBind "${mod} + 5" "hl.dsp.focus({ workspace = 5 })")
-
-        (mkBind "${mod} + SHIFT + 1" "hl.dsp.window.move({ workspace = 1 })")
-        (mkBind "${mod} + SHIFT + 2" "hl.dsp.window.move({ workspace = 2 })")
-        (mkBind "${mod} + SHIFT + 3" "hl.dsp.window.move({ workspace = 3 })")
-        (mkBind "${mod} + SHIFT + 4" "hl.dsp.window.move({ workspace = 4 })")
-        (mkBind "${mod} + SHIFT + 5" "hl.dsp.window.move({ workspace = 5 })")
+      ]
+      ++ workspaceBinds
+      ++ [
+        # Scroll through existing workspaces with Super + scroll.
+        (mkBind "${mod} + mouse_down" "hl.dsp.focus({ workspace = \"e+1\" })")
+        (mkBind "${mod} + mouse_up" "hl.dsp.focus({ workspace = \"e-1\" })")
 
         # Release binds are useful for "press Super by itself" behavior because
         # they avoid firing before Hyprland knows whether Super is part of a combo.
