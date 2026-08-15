@@ -42,11 +42,32 @@ in
     # This does not install hyprlock or hypridle. It only allows a PAM service
     # named `hyprlock` to authenticate the user at the lock screen. The actual
     # lock/idle programs are configured in Home Manager.
-    security.pam.services.hyprlock = { };
+    security.pam.services = {
+      hyprlock = { };
+
+      greetd.enableGnomeKeyring = true;
+    };
 
     # Nautilus uses GVfs for trash, removable devices, and common virtual file
     # systems. GNOME enables this for us; Hyprland does not.
     services.gvfs.enable = true;
     services.udisks2.enable = true;
+
+    xdg.portal = {
+      extraPortals = with pkgs; [
+        xdg-desktop-portal-gtk
+      ];
+
+      config.hyprland = {
+        default = [
+          "hyprland"
+          "gtk"
+        ];
+
+        "org.freedesktop.impl.portal.Secret" = [
+          "gnome-keyring"
+        ];
+      };
+    };
   };
 }

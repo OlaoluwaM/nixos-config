@@ -34,9 +34,10 @@ in
       # https://nix-community.github.io/home-manager/options.xhtml#opt-wayland.windowManager.hyprland.package
       #
       # Home Manager owns the user config and hyprland-session.target here. The
-      # Home Manager module also contributes the Hyprland portal to xdg.portal;
-      # the GTK portal fallback is configured below.
+      # NixOS Hyprland module owns both portal packages, so disable Home
+      # Manager's duplicate portal contribution as well.
       package = null;
+      portalPackage = null;
 
       # Hyprland 0.55+ and Home Manager 26.05 support Lua config generation.
       # Keep this explicit so the profile writes ~/.config/hypr/hyprland.lua

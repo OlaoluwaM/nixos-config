@@ -99,6 +99,22 @@ in
     # rules and they could drift out of sync.
     wayland.systemd.target = hyprlandSessionTarget;
 
+    # PAM unlocks the login keyring through greetd. This service keeps the
+    # GNOME Keyring Secret Service running for the Hyprland session so apps
+    # such as VS Code can store credentials through org.freedesktop.secrets.
+    services.gnome-keyring = {
+      enable = true;
+      components = [ "secrets" ];
+    };
+
+    # Home Manager normally attaches its GNOME Keyring service to
+    # graphical-session-pre.target. This profile uses its own
+    # hyprland-session.target, so attach the service there as well.
+    systemd.user.services.gnome-keyring = {
+      Unit.PartOf = [ hyprlandSessionTarget ];
+      Install.WantedBy = [ hyprlandSessionTarget ];
+    };
+
     # WALLPAPERS_DIR is set via home.sessionVariables (modules/home-manager/
     # dotfiles.nix), which only lands in
     # ~/.nix-profile/etc/profile.d/hm-session-vars.sh. Nothing sources that
@@ -207,25 +223,5 @@ in
     services.hypridle.systemdTarget = hyprlandSessionTarget;
 
     services.hyprpolkitagent.enable = true;
-
-    # xdg-desktop-portal 1.17+ requires an explicit backend selection when
-    # portals are enabled. The Home Manager Hyprland module already adds the
-    # Hyprland portal, which handles compositor-specific requests such as screen
-    # sharing. This block only adds the GTK portal fallback for generic desktop
-    # requests Hyprland does not implement, such as the file picker.
-    #
-    # Plain English: portals are the bridge apps use to ask the desktop for
-    # things like screen sharing, screenshots, and file pickers in a Wayland
-    # session.
-    xdg.portal = {
-      enable = true;
-      extraPortals = with pkgs; [
-        xdg-desktop-portal-gtk
-      ];
-      config.common.default = [
-        "hyprland"
-        "gtk"
-      ];
-    };
   };
 }
