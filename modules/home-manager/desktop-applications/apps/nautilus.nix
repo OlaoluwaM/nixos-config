@@ -1,14 +1,15 @@
 { config, lib, ... }:
 
 let
-  cfg = config.local.gnome;
+  cfg = config.local.desktop;
   xdgDirs = config.xdg.userDirs;
   documents = xdgDirs.documents;
   downloads = xdgDirs.download;
   music = xdgDirs.music;
   pictures = xdgDirs.pictures;
   videos = xdgDirs.videos;
-  # Upper case because that is how Gnome has it and changing it isn't easy and we want it to be unified across desktop profiles, that is all screenshots and screencasts should be stored in the same place
+  # Keep GNOME's capitalized directory names so screenshots and screencasts use
+  # the same locations in both desktop profiles.
   screenshots = "${pictures}/Screenshots";
   screencasts = "${videos}/Screencasts";
   wallpapers = "${pictures}/wallpapers";
@@ -28,7 +29,7 @@ let
   '';
 in
 {
-  config = lib.mkIf cfg.enable {
+  config = lib.mkIf (cfg.profile != "none") {
     xdg.configFile = {
       "gtk-3.0/bookmarks".text = gtkBookmarks;
       "gtk-4.0/bookmarks".text = gtkBookmarks;

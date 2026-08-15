@@ -6,7 +6,6 @@
     ./modules/desktop.nix
     ./modules/extensions.nix
     ./modules/keybindings.nix
-    ./modules/nautilus.nix
     ./modules/shell.nix
   ];
 
