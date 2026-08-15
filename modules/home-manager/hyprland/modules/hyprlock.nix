@@ -12,10 +12,6 @@ let
 in
 {
   config = lib.mkIf cfg.enable {
-    # Keep Catppuccin from injecting accent variables or its example layout.
-    # This lock screen deliberately uses only neutral white, translucent white,
-    # and black so the wallpaper supplies all visible color.
-    catppuccin.hyprlock.enable = false;
     # Beginner orientation:
     #
     # hyprlock is the lock screen. It is what you see after pressing SUPER+L or

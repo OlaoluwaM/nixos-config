@@ -25,10 +25,6 @@ in
       enable = false;
       flavor = "mocha";
 
-      # kvantum is owned by desktop.nix via local.desktop.catppuccinQt.enable,
-      # which sets catppuccin.kvantum.enable per profile. Defining it here too
-      # would conflict (bool options take one value) the moment that knob is
-      # turned off — the two modules would assert true vs false.
       obs.enable = true;
 
       # Some items would require too much work to port to nix for catppuccin-nix theming so just disable them
