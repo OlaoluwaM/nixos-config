@@ -146,6 +146,7 @@ in
     ../../modules/home-manager/lsd.nix
     ../../modules/home-manager/neovim.nix
     ../../modules/home-manager/ssh.nix
+    ../../modules/home-manager/vscode.nix
     ../../modules/home-manager/yazi.nix
     ../../modules/home-manager/zsh.nix
   ];
@@ -341,10 +342,6 @@ in
 
     unstable.uv
 
-    # vscode-fhs uses a user namespace that maps only this user's UID.
-    # Unmapped Nix store owners appear as nobody, so OpenSSH rejects Home
-    # Manager's Nix-store-backed ~/.ssh/config.
-    unstable.vscode
     vscodeDesktopEntry
 
     unstable.w3m
