@@ -31,7 +31,7 @@ in
         ];
         search_mode = "daemon-fuzzy";
 
-        sync.records = true;
+        sync.records = false;
         ai.enabled = true;
 
         daemon = {
