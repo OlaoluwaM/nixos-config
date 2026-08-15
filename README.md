@@ -117,7 +117,7 @@ active.
 You probably need to update the `hosts/<hostname>/hardware-configuration.nix` file with what's in `/etc/nixos/hardware-configuration.nix`. Run
 
 ```shell
-cp /etc/nixos/hardware-configuration.nix ~/nixos-config/hosts/<hostname>/
+./scripts/regenerate-hardware-configuration.sh <hostname>
 ```
 
 The bootloader is configured separately, in `hosts/<hostname>/default.nix`, and
