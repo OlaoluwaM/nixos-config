@@ -123,6 +123,13 @@
             home-manager.nixosModules.home-manager
 
             {
+              # The NixOS Home Manager submodule intentionally does not install
+              # the standalone CLI through programs.home-manager.enable. Add the
+              # CLI from the same pinned flake input to this user's NixOS profile.
+              users.users.${boreas.username}.packages = [
+                home-manager.packages.${boreas.system}.default
+              ];
+
               home-manager = {
                 # Install Home Manager packages into the user's profile.
                 useUserPackages = true;

@@ -12,28 +12,24 @@ Clone this repo in the `$HOME` directory.
 **Then for the first time only, following a fresh installation of NixOS, run the script `scripts/fresh-install-first-rebuild-switch.sh`. It will do two things:**
 
 1. Refresh the `hardware-configuration.nix` module in `hosts/$HOST` so it aligns with what NixOS expects
-2. Runs a `nixos-rebuild switch --flake ...`.
+2. Run `nixos-rebuild switch --flake ...`, which activates both the NixOS and Home Manager configurations.
 
-After that, run any one of the following to apply the system configuration from this repo moving forward:
+Home Manager is integrated into the NixOS configuration, so every subsequent
+`nixos-rebuild switch` also applies the user's Home Manager configuration:
 
 - `sudo nixos-rebuild switch --flake $HOME/nixos-config#hostname`
 - `sudo nixos-rebuild switch --flake "$HOME/nixos-config#hostname"`
 - `sudo nixos-rebuild switch --flake ~/nixos-config#hostname`
 - `cd ~/nixos-config` then run `sudo nixos-rebuild switch --flake .#hostname`
 
-Make sure, regardless of the command you use, the nixos switch passes successfully.
+Make sure, regardless of the command you use, the NixOS switch passes successfully.
 
-If the above command was successful, we must then setup/initialize home-manager using the following command (the flake path can be specified in the same manner as with the `nixos-rebuild`). We run this only once. 
-
-```bash
-# Version used here must match the version of the Home Manager branch pinned in flake.nix.
-nix run github:nix-community/home-manager/release-26.05 -- switch -b backup --flake ~/nixos-config#$USER@$HOST
-```
-
-Once this is done we should be able to just use home-manager directly (<https://nix-community.github.io/home-manager/index.xhtml#sec-flakes-prerequisites>)
+The first NixOS switch also installs the flake-pinned `home-manager` CLI in the
+user's NixOS profile; no separate Home Manager initialization is required.
+In other words, you can immediately start using the standalone home-manager cli to apply user-configuration changes if necessary:
 
 ```bash
-home-manager switch --flake .#username@hostname
+home-manager switch -b hm-standalone-backup --flake .#$USER@$HOST
 ```
 
 This repo intentionally uses a stable base with selected unstable packages:
@@ -46,15 +42,17 @@ That keeps the NixOS and Home Manager module systems aligned while still allowin
 
 If we wanted to move Home Manager to `master`, we'd need to have Home Manager track nixpkgs-unstable. In `flake.nix`, this means changing `home-manager.url` to `github:nix-community/home-manager/master` and changing `home-manager.inputs.nixpkgs.follows` from `nixpkgs` to `nixpkgs-unstable`. For a fully unstable setup, we'd also make the standalone Home Manager `pkgs` come from `nixpkgs-unstable`.
 
-
-### Apply order: system first, then home
+### Applying changes
 
 ```bash
 sudo nixos-rebuild switch --flake ~/nixos-config#$HOST
-home-manager switch --flake ~/nixos-config#$USER@$HOST
 ```
 
-On a fresh install this order is mandatory: standalone Home Manager can only run once `nixos-rebuild` has produced what it needs (our user account, the nix daemon, `allowed-users`). Afterwards the two are independent. If only one layer changed, running just that layer's `switch` is fine, but for changes spanning both, keep system first: the home config usually assumes system plumbing (sessions, groups, dbus services) that should land before it. Cross-layer changes may also need a re-login for `hm-session-vars.sh` to take effect.
+This single command applies both layers in the correct order. Changes to session
+environment variables may still require logging out and back in.
+
+To apply only the user configuration, use the standalone Home Manager command
+above.
 
 ## Using ROG Control Center on Boreas
 
@@ -128,4 +126,3 @@ On real hardware this must be replaced before the first `nixos-rebuild`:
   with `boot.loader.efi.canTouchEfiVariables = true`, and drop the GRUB block.
 - BIOS machines: keep GRUB but point `boot.loader.grub.device` at the actual disk
   (e.g. `/dev/nvme0n1` / `/dev/sda`), not `/dev/vda`.
-
