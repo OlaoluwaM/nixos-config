@@ -298,17 +298,16 @@ in
 
     barWidgetOrderCenter = lib.mkOption {
       type = lib.types.strMatching "^[a-zA-Z]*(,[a-zA-Z]+)*$";
-      # design-locked: the clock sits alone at the true center of the bar,
-      # GNOME-style, instead of capping the right cluster.
-      default = "clock";
+      # A centered clock was tried live and rolled back the same evening --
+      # the empty center matches the fork's own default. The option stays so
+      # the layout remains declarable without another contract change.
+      default = "";
       description = "Bar widgets in the center zone, comma-separated in order.";
     };
 
     barWidgetOrderRight = lib.mkOption {
       type = lib.types.strMatching "^[a-zA-Z]*(,[a-zA-Z]+)*$";
-      # the fork's default right cluster minus the clock, which moved to
-      # the center zone above.
-      default = "tray,updates,network,bluetooth,volume,brightness,battery";
+      default = "tray,updates,network,bluetooth,volume,brightness,battery,clock";
       description = "Bar widgets in the right zone, comma-separated in order.";
     };
 
