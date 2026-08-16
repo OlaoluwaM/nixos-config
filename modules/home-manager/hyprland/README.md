@@ -59,6 +59,13 @@ hyprshell registers it with Hyprland itself at runtime from its own config
 (see `./modules/hyprshell.nix`), the one exception to "every key chord lives
 in keybindings.nix" in this profile.
 
+The switcher's GTK4 stylesheet (`~/.config/hyprshell/styles.css`, also
+declared in `./modules/hyprshell.nix`) reproduces GNOME Shell's real
+app-switcher look -- a near-opaque dark panel with a large corner radius and
+soft drop shadow, and a white-at-20%-alpha rounded highlight on the selected
+window -- with the numbers sourced from GNOME's own
+`gnome-shell-sass/widgets/_switcher-popup.scss` and `_osd.scss`.
+
 ## Helper Scripts
 
 Scripts under `scripts/` are **not** standalone executables; the Home Manager

@@ -53,6 +53,87 @@ let
       filter_by = [ ];
     };
   };
+
+  # GNOME Shell app-switcher look, reproduced (not reinvented) from GNOME's
+  # own theme: gnome-shell-sass/widgets/_switcher-popup.scss supplies the
+  # selected-item highlight (white at 20% alpha, ~12-16px radius) and
+  # _osd.scss supplies the modal popup panel (near-opaque dark charcoal,
+  # ~28px corner radius, soft drop shadow).
+  #
+  # Selector vocabulary is hyprshell 4.10.4's, not guessed: read straight
+  # from crates/windows-lib/src/switch/{root,clients}.rs and the built-in
+  # crates/windows-lib/src/styles.css at the v4.10.4 tag (the 4.11-alpha
+  # line reworks the CSS surface, so main/HEAD isn't a safe reference).
+  # `.window` is the switcher's top-level ApplicationWindow; `.monitor` is
+  # the FlowBox panel both switch sub-modes share (root.rs sets it on
+  # whichever FlowBox is active); `.client`/`.client.active` are each
+  # window's Button (`filter_by: []` above leaves `switch_workspaces` at
+  # its config-lib default of `false`, so this profile always renders the
+  # flat clients_only FlowBox -- `.workspace` never appears here);
+  # `.client-image` is the icon; the unclassed `label` inside each Frame is
+  # the title GtkFrame draws as a label-widget (clients.rs's
+  # `set_label_widget`).
+  #
+  # src/root.rs's `apply_css` loads default_styles.css, then windows-lib's
+  # built-in styles.css, then this file last -- all at
+  # STYLE_PROVIDER_PRIORITY_USER, and GTK breaks same-priority ties by
+  # insertion order, so equal-specificity rules here win over the built-ins
+  # without needing `!important`.
+  #
+  # GtkFrame always draws its label-widget at the frame's top edge, so
+  # unlike GNOME's real switcher (one caption below the whole strip) each
+  # tile gets its own title slot; hiding it except on `.active` reproduces
+  # GNOME's "only the current selection is captioned" behavior within that
+  # constraint. Icon pixel size is out of CSS's reach -- clients.rs computes
+  # it in Rust from window/monitor geometry via `set_pixel_size`, which
+  # CSS's `-gtk-icon-size` (icon-name icons only) can't override.
+  hyprshellStyles = ''
+    .window {
+      color: #eeeeee;
+    }
+
+    .monitor {
+      background: rgba(30, 30, 30, 0.95);
+      border: none;
+      border-radius: 28px;
+      box-shadow: 0 8px 8px rgba(0, 0, 0, 0.3);
+      padding: 12px;
+    }
+
+    .client {
+      background: transparent;
+      border: none;
+      border-radius: 16px;
+      margin: 12px;
+      padding: 12px;
+      min-width: 128px;
+      min-height: 128px;
+      transition: background 150ms ease;
+    }
+
+    .client:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .client.active {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .client.active:hover {
+      background: rgba(255, 255, 255, 0.28);
+    }
+
+    .client label {
+      opacity: 0;
+      color: #eeeeee;
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    .client.active label {
+      opacity: 1;
+    }
+  '';
 in
 {
   config = lib.mkIf cfg.enable {
@@ -65,6 +146,12 @@ in
     # with no `-c` picks this file up. This is the same shape upstream's own
     # home-manager module (nix/module.nix) writes.
     xdg.configFile."hyprshell/config.json".text = hyprshellConfig;
+
+    # Same default-path probe as config.json above (crates/core-lib/src/
+    # path.rs's `get_default_css_file`): a bare `hyprshell run` with no `-s`
+    # reads $XDG_CONFIG_HOME/hyprshell/styles.css, so no ExecStart change is
+    # needed to pick this up.
+    xdg.configFile."hyprshell/styles.css".text = hyprshellStyles;
 
     systemd.user.services.hyprshell = {
       Unit = {
