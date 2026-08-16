@@ -22,6 +22,7 @@
 #   screenrecord, caffeine) and the local.hyprland.commands option tree
 # - modules/compositor.nix: compositor config (monitors, input, decoration,
 #   animations, window rules)
+# - modules/hyprshell.nix: the hyprshell Alt-Tab window switcher daemon
 # - modules/keybindings.nix: every Hyprland key chord
 # - modules/hyprlock.nix: lock-screen look and behavior
 # - modules/hypridle.nix: idle locking behavior
@@ -63,6 +64,7 @@ in
     ./modules/compositor.nix
     ./modules/hypridle.nix
     ./modules/hyprlock.nix
+    ./modules/hyprshell.nix
     ./modules/hyprsunset.nix
     ./modules/keybindings.nix
     ./modules/session-services.nix

@@ -15,6 +15,7 @@ shell's own Settings UI can still override per-key at runtime.
 - `modules/home-manager/hyprland/modules/keybindings.nix`: every Hyprland key chord.
 - `modules/home-manager/hyprland/modules/hyprlock.nix`: lock screen.
 - `modules/home-manager/hyprland/modules/hypridle.nix`: idle lock and display-off behavior.
+- `modules/home-manager/hyprland/modules/hyprshell.nix`: the hyprshell Alt-Tab window switcher -- packaging, config, and the user service. Launcher/overview mode stays off; Vicinae is the sole launcher.
 - `modules/home-manager/hyprland/modules/hyprsunset.nix`: display color temperature schedule.
 - `modules/home-manager/hyprland/modules/session-services.nix`: extra Hyprland-session user services (media idle-inhibit, manual caffeine inhibitor).
 - `modules/home-manager/hyprland/modules/silere.nix`: the `silere-shell` Quickshell bar -- packaging, declared defaults, and the user service.
@@ -37,7 +38,7 @@ startup hook imports the Wayland session environment into systemd and starts
 `hypr-shell-wallpaper-restore.service`,
 `hypr-shell-media-idle-inhibit.service`, `hypr-shell-caffeine.service`,
 `hypridle.service`, `hyprpolkitagent.service`, `hyprsunset.service`,
-`udiskie.service`.
+`hyprshell.service`, `udiskie.service`.
 
 The setup deliberately avoids UWSM.
 
@@ -50,6 +51,13 @@ Vicinae script command (see Wallpaper Pipeline below). A handful of other
 chords that used to open shell surfaces (settings, wifi, bluetooth, session
 menu) are intentionally unbound until the shell's design-build phase wires
 their new targets.
+
+Alt+Tab (hold Alt, tap Tab to cycle, Shift+Tab or `` Alt+` `` to reverse,
+release Alt to switch) opens hyprshell's GNOME-style window switcher across
+every workspace, MRU-ordered. This chord is **not** in `keybindings.nix`:
+hyprshell registers it with Hyprland itself at runtime from its own config
+(see `./modules/hyprshell.nix`), the one exception to "every key chord lives
+in keybindings.nix" in this profile.
 
 ## Helper Scripts
 
@@ -117,6 +125,7 @@ nixfmt modules/home-manager/hyprland/default.nix \
   modules/home-manager/hyprland/modules/compositor.nix \
   modules/home-manager/hyprland/modules/hypridle.nix \
   modules/home-manager/hyprland/modules/hyprlock.nix \
+  modules/home-manager/hyprland/modules/hyprshell.nix \
   modules/home-manager/hyprland/modules/hyprsunset.nix \
   modules/home-manager/hyprland/modules/keybindings.nix \
   modules/home-manager/hyprland/modules/session-services.nix \
@@ -137,3 +146,4 @@ nix build .#homeConfigurations."olaolu@boreas".activationPackage --no-link
 - Hyprland wiki: <https://wiki.hypr.land/>
 - Vicinae: <https://docs.vicinae.com/>
 - Satty: <https://github.com/Satty-org/Satty>
+- hyprshell: <https://github.com/H3rmt/hyprshell> (config schema: `docs/CONFIGURE.md`; struct source of truth: `crates/config-lib/src/io/config.rs`)
