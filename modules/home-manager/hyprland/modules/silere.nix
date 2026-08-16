@@ -190,7 +190,10 @@ in
 
     barRadius = lib.mkOption {
       type = lib.types.ints.between 0 28;
-      default = 14;
+      # design-locked at 9 after live comparison: at 14 the radius reaches the
+      # surface-height/2 clamp in Bar.qml and the end caps render as a full
+      # pill; 9 keeps the capsule-free rounded-rectangle look this rice wants.
+      default = 9;
       description = "Corner radius of the bar surface, in pixels.";
     };
 
