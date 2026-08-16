@@ -64,7 +64,19 @@ declared in `./modules/hyprshell.nix`) reproduces GNOME Shell's real
 app-switcher look -- a near-opaque dark panel with a large corner radius and
 soft drop shadow, and a white-at-20%-alpha rounded highlight on the selected
 window -- with the numbers sourced from GNOME's own
-`gnome-shell-sass/widgets/_switcher-popup.scss` and `_osd.scss`.
+`gnome-shell-sass/widgets/_switcher-popup.scss` and `_osd.scss`. Tile and icon
+size come from the config's `windows.scale`, not CSS -- hyprshell computes the
+icon's pixel size in Rust from monitor geometry and that one field.
+
+`./modules/hyprshell.nix` also `overrideAttrs`s `pkgs.hyprshell` with
+`./modules/hyprshell-label-below.patch`, applied to
+`crates/windows-lib/src/switch/clients.rs`. Upstream renders each tile's app
+name as a GtkFrame label-widget, which GTK4 always pins to the frame's top
+edge with no CSS escape hatch; the patch swaps that Frame for a plain vertical
+Box (icon, then label) so the name sits below the icon like GNOME's real
+switcher. It's minimal (one `view!` block) but source-level, so it needs
+rebasing by hand on every hyprshell version bump -- check it still applies
+before bumping `pkgs.hyprshell`.
 
 ## Helper Scripts
 

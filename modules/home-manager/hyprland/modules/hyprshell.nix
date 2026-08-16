@@ -46,11 +46,29 @@ let
   # file does not have a version specified" migration warning, since the
   # migration check special-cases a missing version instead of treating it
   # like any other defaulted field.
+  #
+  # `windows.scale` grows the switcher's tiles and icons together. Read
+  # straight from crates/windows-lib/src/switch/clients.rs (v4.10.4):
+  # both the per-tile Button size (`scale(monitor.width/height, scale)`)
+  # and the icon pixel size (`calc_image_size`, which feeds off the same
+  # `scale()` helper) divide the monitor's resolution by `15 - scale`, so
+  # a higher value shrinks that denominator and grows both numbers
+  # together -- there is no separate "icon size" knob. config-lib's
+  # `#[default = 8.5]` on `Windows::scale` (crates/config-lib/src/io/
+  # config.rs) already yields a 133px icon on this machine's 2560x1600
+  # monitor (`(1600 / 6.5).clamp(50, 600) / 1.6 - 20`); 9.5 pushes that to
+  # 161px (`1600 / 5.5 -> 290 -> 290/1.6-20`), noticeably bigger, while
+  # keeping 5 tiles at `items_per_row`'s default comfortably under the
+  # monitor's width (5 * 465px tile request = 2325px, leaving margin
+  # before the panel could overflow the screen at 10+).
   hyprshellConfig = builtins.toJSON {
     version = 4;
-    windows.switch = {
-      modifier = "alt";
-      filter_by = [ ];
+    windows = {
+      scale = 9.5;
+      switch = {
+        modifier = "alt";
+        filter_by = [ ];
+      };
     };
   };
 
@@ -70,9 +88,14 @@ let
   # window's Button (`filter_by: []` above leaves `switch_workspaces` at
   # its config-lib default of `false`, so this profile always renders the
   # flat clients_only FlowBox -- `.workspace` never appears here);
-  # `.client-image` is the icon; the unclassed `label` inside each Frame is
-  # the title GtkFrame draws as a label-widget (clients.rs's
-  # `set_label_widget`).
+  # `.client-image` is the icon; `.client-label` is the title. Upstream
+  # renders that title as a GtkFrame label-widget, which GTK4 always pins
+  # to the frame's TOP edge -- no CSS property moves it, since it isn't a
+  # normal child, it's the frame's border-drawing label. That put the app
+  # name above the icon instead of below it like GNOME's real switcher, so
+  # `hyprshellPackage` below patches clients.rs to swap the Frame for a
+  # plain vertical Box (icon, then label) before this stylesheet ever
+  # runs; `.client-label` is a class this repo's patch adds for that reason.
   #
   # src/root.rs's `apply_css` loads default_styles.css, then windows-lib's
   # built-in styles.css, then this file last -- all at
@@ -80,13 +103,15 @@ let
   # insertion order, so equal-specificity rules here win over the built-ins
   # without needing `!important`.
   #
-  # GtkFrame always draws its label-widget at the frame's top edge, so
-  # unlike GNOME's real switcher (one caption below the whole strip) each
-  # tile gets its own title slot; hiding it except on `.active` reproduces
-  # GNOME's "only the current selection is captioned" behavior within that
-  # constraint. Icon pixel size is out of CSS's reach -- clients.rs computes
-  # it in Rust from window/monitor geometry via `set_pixel_size`, which
-  # CSS's `-gtk-icon-size` (icon-name icons only) can't override.
+  # Icon pixel size is out of CSS's reach -- clients.rs computes it in Rust
+  # from window/monitor geometry via `set_pixel_size` (see `windows.scale`
+  # above), which CSS's `-gtk-icon-size` (icon-name icons only) can't
+  # override. With that Rust-side size now doing more of the work, the
+  # chrome here is trimmed to match: less padding, no min-width/min-height
+  # floor (the tile is already sized by the icon, so the floor was dead
+  # weight), and a smaller panel radius -- tuned against a photo of
+  # GNOME's real switcher so the panel reads as "a touch smaller" overall
+  # even though the icons inside it grew.
   hyprshellStyles = ''
     .window {
       color: #eeeeee;
@@ -95,23 +120,17 @@ let
     .monitor {
       background: rgba(30, 30, 30, 0.95);
       border: none;
-      border-radius: 20px;
+      border-radius: 18px;
       box-shadow: 0 8px 8px rgba(0, 0, 0, 0.3);
-      padding: 8px;
+      padding: 6px;
     }
 
-    /* Compact tiles, tuned twice against a photo of GNOME's real switcher:
-       the panel hugs its content -- small gaps, cells sized by the icon
-       rather than a large floor -- and every tile keeps its app name
-       visible inside the cell like GNOME does. */
     .client {
       background: transparent;
       border: none;
       border-radius: 12px;
       margin: 3px;
-      padding: 6px 8px;
-      min-width: 72px;
-      min-height: 72px;
+      padding: 4px 6px;
       transition: background 150ms ease;
     }
 
@@ -127,16 +146,32 @@ let
       background: rgba(255, 255, 255, 0.28);
     }
 
-    .client label {
+    .client-label {
       color: #eeeeee;
       font-weight: 500;
+      font-size: 0.85em;
       text-decoration: none;
     }
   '';
+
+  # `./hyprshell-label-below.patch` swaps the switcher tile's GtkFrame
+  # (label pinned to the top edge, see the styles comment above) for a
+  # plain vertical Box (icon, then label) in
+  # crates/windows-lib/src/switch/clients.rs. It's a source patch, not a
+  # config/CSS knob, because GtkFrame's label-widget placement isn't
+  # exposed to either -- this is the only way to get the label below the
+  # icon. Keep it minimal: it touches one `view!` block and nothing else,
+  # so it's cheap to rebase across hyprshell version bumps, but it WILL
+  # need rebasing whenever upstream reshapes that block (already true
+  # once for the 4.11-alpha line, which reworks the CSS surface this
+  # module also depends on -- see the styles comment above).
+  hyprshellPackage = pkgs.hyprshell.overrideAttrs (old: {
+    patches = (old.patches or [ ]) ++ [ ./hyprshell-label-below.patch ];
+  });
 in
 {
   config = lib.mkIf cfg.enable {
-    home.packages = [ pkgs.hyprshell ];
+    home.packages = [ hyprshellPackage ];
 
     # Written as config.json rather than the CLI's default config.ron:
     # hyprshell's own default-path probe (crates/core-lib/src/path.rs)
@@ -165,7 +200,7 @@ in
       Install.WantedBy = [ hyprlandSessionTarget ];
 
       Service = {
-        ExecStart = "${lib.getExe pkgs.hyprshell} run";
+        ExecStart = "${lib.getExe hyprshellPackage} run";
         Restart = "on-failure";
       };
     };
