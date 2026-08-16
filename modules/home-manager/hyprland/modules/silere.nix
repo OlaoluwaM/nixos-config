@@ -67,6 +67,7 @@ let
         readonly property string barWidgetOrderCenter: ${qml sc.barWidgetOrderCenter}
         readonly property string barWidgetOrderRight: ${qml sc.barWidgetOrderRight}
         readonly property string caffeineUnit:        ${qml sc.caffeineUnit}
+        readonly property string wifiEditCommand:     ${qml sc.wifiEditCommand}
         readonly property bool   barShowCaffeine:     ${qml sc.barShowCaffeine}
         readonly property bool   trayWidget:          ${qml sc.trayWidget}
         readonly property bool   updatesWidget:       ${qml sc.updatesWidget}
@@ -330,6 +331,21 @@ in
       type = lib.types.bool;
       default = true;
       description = "Show the caffeine pill on the bar while idle is inhibited.";
+    };
+
+    wifiEditCommand = lib.mkOption {
+      type = lib.types.str;
+      # The wifi details view's "Edit connection..." escape hatch. This is a
+      # launch template, not a shell: the shell splits it on whitespace and
+      # substitutes {uuid} (if present) with the active connection's uuid.
+      # Here it opens wifitui -- a NetworkManager TUI -- in a floating kitty
+      # window (see the wifitui-float rules in compositor.nix) instead of the
+      # fork's generic nm-connection-editor default; wifitui takes no target
+      # argument, so no {uuid} placeholder. The --theme points at the
+      # catppuccin mocha theme.toml declared in this profile's default.nix;
+      # an absolute template keeps the launch shell-free.
+      default = "kitty --class wifitui-float wifitui --theme=${config.xdg.configHome}/wifitui/theme.toml";
+      description = "Command template the wifi details view launches for deep connection editing.";
     };
 
     trayWidget = lib.mkOption {

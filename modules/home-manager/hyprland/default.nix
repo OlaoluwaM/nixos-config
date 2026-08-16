@@ -169,7 +169,33 @@ in
       slurp
       wayland-pipewire-idle-inhibit
       wf-recorder
+      # NetworkManager TUI behind the shell's "Edit connection..." row (see
+      # local.hyprland.silere.wifiEditCommand); launched floating via the
+      # wifitui-float rules in compositor.nix, themed by the catppuccin
+      # mocha theme.toml declared below.
+      wifitui
     ];
+
+    # Catppuccin Mocha for wifitui (auto-discovered: wifitui probes
+    # $XDG_CONFIG_HOME via WIFITUI_THEME; we pass --theme explicitly from
+    # wifiEditCommand's template instead of a session variable so the theme
+    # rides along however the TUI is launched from the shell). Role mapping:
+    # lavender selection to match the rice's accent direction, green/red for
+    # success/error, peach-to-green signal gradient, blue for saved profiles.
+    xdg.configFile."wifitui/theme.toml".text = ''
+      # Catppuccin Mocha (https://catppuccin.com/palette) -- single dark
+      # variant, so both halves of each [light, dark] pair are identical.
+      Primary = ["#b4befe", "#b4befe"] # Lavender
+      Subtle = ["#7f849c", "#7f849c"] # Overlay1
+      Success = ["#a6e3a1", "#a6e3a1"] # Green
+      Error = ["#f38ba8", "#f38ba8"] # Red
+      Normal = ["#cdd6f4", "#cdd6f4"] # Text
+      Disabled = ["#6c7086", "#6c7086"] # Overlay0
+      Border = ["#585b70", "#585b70"] # Surface2
+      SignalHigh = ["#a6e3a1", "#a6e3a1"] # Green
+      SignalLow = ["#fab387", "#fab387"] # Peach
+      Saved = ["#89b4fa", "#89b4fa"] # Blue
+    '';
 
     # Everyday file-type defaults for the Hyprland session, merged into the
     # xdg.mimeApps set that desktop.nix enables. GNOME gets these as stock
