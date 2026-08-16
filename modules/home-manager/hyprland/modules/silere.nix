@@ -63,6 +63,9 @@ let
         readonly property bool   barShowBattery:      ${qml sc.barShowBattery}
         readonly property bool   barShowVolume:       ${qml sc.barShowVolume}
         readonly property bool   barShowBrightness:   ${qml sc.barShowBrightness}
+        readonly property string barWidgetOrderLeft:  ${qml sc.barWidgetOrderLeft}
+        readonly property string barWidgetOrderCenter: ${qml sc.barWidgetOrderCenter}
+        readonly property string barWidgetOrderRight: ${qml sc.barWidgetOrderRight}
         readonly property bool   trayWidget:          ${qml sc.trayWidget}
         readonly property bool   updatesWidget:       ${qml sc.updatesWidget}
         readonly property bool   neutralTheme:        ${qml sc.neutralTheme}
@@ -279,6 +282,34 @@ in
       default = false;
       # Same reasoning as barShowVolume: hardware keys + OSD cover it.
       description = "Show an inline brightness widget on the bar. Off by design -- see the comment on this option in silere.nix.";
+    };
+
+    # The three zone-order strings are comma-separated lists of the fork's
+    # barWidgetKeys (services/ShellSettings.qml). The runtime layout
+    # normalizer is forgiving -- unknown keys are dropped and missing valid
+    # keys are appended to their default zone -- and the Settings UI's drag
+    # editor still owns per-user rearrangement at runtime. The type regex
+    # mirrors the fork's own _schema validation for these keys.
+    barWidgetOrderLeft = lib.mkOption {
+      type = lib.types.strMatching "^[a-zA-Z]*(,[a-zA-Z]+)*$";
+      default = "workspaces,media";
+      description = "Bar widgets in the left zone, comma-separated in order.";
+    };
+
+    barWidgetOrderCenter = lib.mkOption {
+      type = lib.types.strMatching "^[a-zA-Z]*(,[a-zA-Z]+)*$";
+      # design-locked: the clock sits alone at the true center of the bar,
+      # GNOME-style, instead of capping the right cluster.
+      default = "clock";
+      description = "Bar widgets in the center zone, comma-separated in order.";
+    };
+
+    barWidgetOrderRight = lib.mkOption {
+      type = lib.types.strMatching "^[a-zA-Z]*(,[a-zA-Z]+)*$";
+      # the fork's default right cluster minus the clock, which moved to
+      # the center zone above.
+      default = "tray,updates,network,bluetooth,volume,brightness,battery";
+      description = "Bar widgets in the right zone, comma-separated in order.";
     };
 
     trayWidget = lib.mkOption {
