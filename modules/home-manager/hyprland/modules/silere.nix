@@ -160,7 +160,12 @@ let
     # default PATH. Environment= below fully replaces this unit's PATH rather
     # than extending it, so that directory has to be appended explicitly to
     # keep hyprctl reachable.
-    + ":/run/current-system/sw/bin";
+    + ":/run/current-system/sw/bin"
+    # The shell also launches user-profile apps (wifiEditCommand's kitty +
+    # wifitui, both Home Manager packages) and probes their availability on
+    # this same PATH before showing the launch row -- without the per-user
+    # profile bin the probe fails and the row silently hides.
+    + ":${config.home.profileDirectory}/bin";
 in
 {
   # Nix-owned defaults rendered into GeneratedDefaults.qml (see
