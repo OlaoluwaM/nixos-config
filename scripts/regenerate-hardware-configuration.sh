@@ -5,8 +5,8 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(git -C "$script_dir/.." rev-parse --show-toplevel)"
 host="${1:-$(hostname)}"
 
-if [[ "$host" == */* ]]; then
-  echo "error: host name must not contain '/'" >&2
+if [[ "$host" == "." || "$host" == ".." || "$host" == */* ]]; then
+  echo "error: host name must identify a direct child of '$repo_root/hosts'" >&2
   exit 1
 fi
 
