@@ -95,19 +95,22 @@ let
     .monitor {
       background: rgba(30, 30, 30, 0.95);
       border: none;
-      border-radius: 28px;
+      border-radius: 24px;
       box-shadow: 0 8px 8px rgba(0, 0, 0, 0.3);
-      padding: 12px;
+      padding: 10px;
     }
 
+    /* Compact tiles, tuned against a photo of GNOME's real switcher: tight
+       4px gaps between cells rather than the airy first cut, and every
+       tile keeps its app name visible inside the cell like GNOME does. */
     .client {
       background: transparent;
       border: none;
-      border-radius: 16px;
-      margin: 12px;
-      padding: 12px;
-      min-width: 128px;
-      min-height: 128px;
+      border-radius: 14px;
+      margin: 4px;
+      padding: 8px 10px;
+      min-width: 96px;
+      min-height: 96px;
       transition: background 150ms ease;
     }
 
@@ -124,14 +127,9 @@ let
     }
 
     .client label {
-      opacity: 0;
       color: #eeeeee;
       font-weight: 500;
       text-decoration: none;
-    }
-
-    .client.active label {
-      opacity: 1;
     }
   '';
 in
