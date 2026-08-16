@@ -53,6 +53,12 @@ in
     services.gvfs.enable = true;
     services.udisks2.enable = true;
 
+    # silere-shell's battery widget reads Quickshell.Services.UPower, which
+    # talks to the system UPower daemon over D-Bus. GNOME pulls UPower in
+    # implicitly; without it here, the shell sees no battery at all and the
+    # bar pill never renders, on AC or on battery.
+    services.upower.enable = true;
+
     xdg.portal = {
       extraPortals = with pkgs; [
         xdg-desktop-portal-gtk
