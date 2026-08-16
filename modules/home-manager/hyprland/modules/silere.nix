@@ -66,6 +66,8 @@ let
         readonly property string barWidgetOrderLeft:  ${qml sc.barWidgetOrderLeft}
         readonly property string barWidgetOrderCenter: ${qml sc.barWidgetOrderCenter}
         readonly property string barWidgetOrderRight: ${qml sc.barWidgetOrderRight}
+        readonly property string caffeineUnit:        ${qml sc.caffeineUnit}
+        readonly property bool   barShowCaffeine:     ${qml sc.barShowCaffeine}
         readonly property bool   trayWidget:          ${qml sc.trayWidget}
         readonly property bool   updatesWidget:       ${qml sc.updatesWidget}
         readonly property bool   neutralTheme:        ${qml sc.neutralTheme}
@@ -307,8 +309,27 @@ in
 
     barWidgetOrderRight = lib.mkOption {
       type = lib.types.strMatching "^[a-zA-Z]*(,[a-zA-Z]+)*$";
-      default = "tray,updates,network,bluetooth,volume,brightness,battery,clock";
+      # caffeine sits last in the connectivity cluster (after bluetooth) by
+      # request -- the divider logic groups it with wifi/bluetooth there.
+      default = "tray,updates,network,bluetooth,caffeine,volume,brightness,battery,clock";
       description = "Bar widgets in the right zone, comma-separated in order.";
+    };
+
+    caffeineUnit = lib.mkOption {
+      type = lib.types.strMatching "^[A-Za-z0-9_.@:-]*$";
+      # The shell's Caffeine service is a thin systemd control (same pattern
+      # as its NightLight/hyprsunset split): this unit's active state IS the
+      # manual inhibit. The unit itself lives in session-services.nix; the
+      # fork ships this key empty, which keeps the whole feature dormant on
+      # non-Nix installs.
+      default = "hypr-shell-caffeine.service";
+      description = "systemd user unit whose active state is the manual idle inhibit.";
+    };
+
+    barShowCaffeine = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Show the caffeine pill on the bar while idle is inhibited.";
     };
 
     trayWidget = lib.mkOption {
