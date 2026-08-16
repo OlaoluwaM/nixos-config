@@ -95,22 +95,23 @@ let
     .monitor {
       background: rgba(30, 30, 30, 0.95);
       border: none;
-      border-radius: 24px;
+      border-radius: 20px;
       box-shadow: 0 8px 8px rgba(0, 0, 0, 0.3);
-      padding: 10px;
+      padding: 8px;
     }
 
-    /* Compact tiles, tuned against a photo of GNOME's real switcher: tight
-       4px gaps between cells rather than the airy first cut, and every
-       tile keeps its app name visible inside the cell like GNOME does. */
+    /* Compact tiles, tuned twice against a photo of GNOME's real switcher:
+       the panel hugs its content -- small gaps, cells sized by the icon
+       rather than a large floor -- and every tile keeps its app name
+       visible inside the cell like GNOME does. */
     .client {
       background: transparent;
       border: none;
-      border-radius: 14px;
-      margin: 4px;
-      padding: 8px 10px;
-      min-width: 96px;
-      min-height: 96px;
+      border-radius: 12px;
+      margin: 3px;
+      padding: 6px 8px;
+      min-width: 72px;
+      min-height: 72px;
       transition: background 150ms ease;
     }
 
