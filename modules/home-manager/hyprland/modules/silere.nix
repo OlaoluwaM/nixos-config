@@ -55,7 +55,6 @@ let
         readonly property int    barHeight:           ${qml sc.barHeight}
         readonly property bool   barShadow:           ${qml sc.barShadow}
         readonly property bool   barBorderVisible:    ${qml sc.barBorderVisible}
-        readonly property bool   barShowWorkspaces:   ${qml sc.barShowWorkspaces}
         readonly property bool   barShowMedia:        ${qml sc.barShowMedia}
         readonly property bool   barShowClock:        ${qml sc.barShowClock}
         readonly property bool   barShowNetwork:      ${qml sc.barShowNetwork}
@@ -218,12 +217,8 @@ in
     };
 
     # -- Bar widgets --------------------------------------------------------
-    barShowWorkspaces = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Show the workspace switcher widget on the bar.";
-    };
-
+    # No barShowWorkspaces: upstream removed the setting (the workspaces pill
+    # is the only way into the menu, so it can no longer be hidden).
     barShowMedia = lib.mkOption {
       type = lib.types.bool;
       default = true;
