@@ -59,6 +59,12 @@ in
     # bar pill never renders, on AC or on battery.
     services.upower.enable = true;
 
+    # Same story for the shell's bluetooth pill and menu controls: they speak
+    # to BlueZ over D-Bus via Quickshell.Bluetooth, and nothing else in this
+    # profile pulls BlueZ in. Without it the adapter never appears and the
+    # widget's availability gate keeps it hidden.
+    hardware.bluetooth.enable = true;
+
     xdg.portal = {
       extraPortals = with pkgs; [
         xdg-desktop-portal-gtk

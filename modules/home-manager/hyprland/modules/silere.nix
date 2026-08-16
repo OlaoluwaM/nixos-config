@@ -52,12 +52,14 @@ let
         readonly property int    barGap:              ${qml sc.barGap}
         readonly property int    barRadius:           ${qml sc.barRadius}
         readonly property real   barWidth:            ${qml sc.barWidth}
+        readonly property bool   barFitGaps:          ${qml sc.barFitGaps}
         readonly property int    barHeight:           ${qml sc.barHeight}
         readonly property bool   barShadow:           ${qml sc.barShadow}
         readonly property bool   barBorderVisible:    ${qml sc.barBorderVisible}
         readonly property bool   barShowMedia:        ${qml sc.barShowMedia}
         readonly property bool   barShowClock:        ${qml sc.barShowClock}
         readonly property bool   barShowNetwork:      ${qml sc.barShowNetwork}
+        readonly property bool   barShowBluetooth:    ${qml sc.barShowBluetooth}
         readonly property bool   barShowBattery:      ${qml sc.barShowBattery}
         readonly property bool   barShowVolume:       ${qml sc.barShowVolume}
         readonly property bool   barShowBrightness:   ${qml sc.barShowBrightness}
@@ -198,6 +200,17 @@ in
       description = "Bar width as a fraction of the screen width.";
     };
 
+    barFitGaps = lib.mkOption {
+      type = lib.types.bool;
+      # Aligns the floating bar's edges with tiled windows: the shell asks
+      # hyprctl for general:gaps_out at runtime and uses it as the side
+      # margins, so retuning gaps in compositor.nix needs no change here.
+      # When on, barWidth above is inert (it remains the fallback if the
+      # gap query fails, e.g. under a non-Hyprland compositor).
+      default = true;
+      description = "Fit the floating bar to the compositor's window gaps instead of barWidth.";
+    };
+
     barHeight = lib.mkOption {
       type = lib.types.ints.between 24 60;
       default = 36;
@@ -235,6 +248,12 @@ in
       type = lib.types.bool;
       default = true;
       description = "Show the network status widget on the bar.";
+    };
+
+    barShowBluetooth = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Show the bluetooth status widget on the bar.";
     };
 
     barShowBattery = lib.mkOption {
