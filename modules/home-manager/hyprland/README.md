@@ -59,7 +59,7 @@ modules read them with `builtins.readFile` and embed them into
 and `runtimeInputs` PATH. Each script starts with `# shellcheck shell=bash`
 and omits its own shebang/`set` line for that reason.
 
-- `hypr-shell-screenshot`: grim/slurp/Satty, saves to `~/Pictures/Screenshots/`.
+- `hypr-shell-screenshot`: grim/slurp/Satty; copies the raw capture to the clipboard instantly, with Satty as an optional annotate/save step to `~/Pictures/Screenshots/`.
 - `hypr-shell-record`: wf-recorder, saves to `~/Videos/Screencasts/`.
 - `hypr-shell-caffeine`: manual systemd idle inhibitor toggle.
 - `vicinae-random-wallpaper`, `vicinae-set-wallpaper`: the two Vicinae wallpaper script commands (see Wallpaper Pipeline below). `wallpaper-set` itself is inlined in `wallpaper.nix` rather than kept here, since it is the one script that needs a Nix-level value (the stable wallpaper path).

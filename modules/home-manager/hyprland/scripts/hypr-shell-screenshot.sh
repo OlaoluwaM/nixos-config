@@ -7,13 +7,23 @@
 # - full: capture the whole current screen
 # - window: capture the active Hyprland window
 #
+# Flow: grim's raw capture is copied to the clipboard immediately, before
+# satty ever opens. satty is then just an optional annotate/save step -- it
+# reads the same capture from stdin. Pressing Enter in satty re-copies the
+# annotated version (replacing the raw one on the clipboard) and saves it to
+# the screenshots folder; pressing Escape simply closes satty and leaves the
+# raw capture already sitting on the clipboard untouched. Either way nothing
+# is ever silently lost the way it was when the clipboard copy only happened
+# on explicit confirm inside satty.
+#
 # Tools involved:
 # - grim captures pixels on Wayland.
 # - slurp lets you select an area with the mouse.
 # - hyprctl asks Hyprland for window geometry.
 # - jq extracts values from Hyprland's JSON.
-# - satty opens the screenshot editor/annotator.
-# - wl-copy copies the result to the Wayland clipboard.
+# - satty opens the screenshot editor/annotator (optional, for annotating/saving).
+# - wl-copy copies the raw capture to the Wayland clipboard immediately, and
+#   also copies satty's annotated output if the user confirms.
 # - notify-send shows a short completion message after Satty closes.
 # - xdg-open opens the screenshots folder when the notification action is used.
 #
@@ -86,14 +96,20 @@ window_geometry() {
     '
 }
 
-# Capture a region and pipe the image into satty. Empty geometry means the user
-# cancelled selection, so exit quietly.
+# Capture a region, copy the raw capture to the clipboard immediately, and
+# pipe the same image into satty for optional annotation/saving. Empty
+# geometry means the user cancelled selection, so exit quietly.
+#
+# grim defaults to png here (no -t ppm): wl-copy has to advertise a
+# paste-friendly image type, and a single png capture can feed both the
+# clipboard and satty from the same tee, at the cost of a slightly slower
+# encode than ppm.
 capture_region() {
 	local geometry="$1"
 
 	[[ -n "$geometry" ]] || exit 0
-	grim -g "$geometry" -t ppm - | satty "${satty_args[@]}"
-	notify_location "Screenshot saved" "$screenshot_dir" "$screenshot_dir"
+	grim -g "$geometry" - | tee >(wl-copy --type image/png) | satty "${satty_args[@]}"
+	notify_location "Screenshot captured" "On the clipboard now; annotated saves go to $screenshot_dir" "$screenshot_dir"
 }
 
 case "$mode" in
@@ -101,8 +117,8 @@ area)
 	capture_region "$(area_geometry || true)"
 	;;
 full)
-	grim -t ppm - | satty "${satty_args[@]}"
-	notify_location "Screenshot saved" "$screenshot_dir" "$screenshot_dir"
+	grim - | tee >(wl-copy --type image/png) | satty "${satty_args[@]}"
+	notify_location "Screenshot captured" "On the clipboard now; annotated saves go to $screenshot_dir" "$screenshot_dir"
 	;;
 window)
 	capture_region "$(window_geometry || true)"
