@@ -309,9 +309,9 @@ in
 
     barWidgetOrderRight = lib.mkOption {
       type = lib.types.strMatching "^[a-zA-Z]*(,[a-zA-Z]+)*$";
-      # caffeine sits last in the connectivity cluster (after bluetooth) by
-      # request -- the divider logic groups it with wifi/bluetooth there.
-      default = "tray,updates,network,bluetooth,caffeine,volume,brightness,battery,clock";
+      # caffeine leads the connectivity cluster (left of wifi) by request --
+      # it shares the cluster's meta group, so no divider splits it off.
+      default = "tray,updates,caffeine,network,bluetooth,volume,brightness,battery,clock";
       description = "Bar widgets in the right zone, comma-separated in order.";
     };
 
