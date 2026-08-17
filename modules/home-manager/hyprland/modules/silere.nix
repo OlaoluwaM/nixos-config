@@ -86,6 +86,7 @@ let
         readonly property bool   glassSurfaces:       ${qml sc.glassSurfaces}
         readonly property real   glassOpacity:        ${qml sc.glassOpacity}
         readonly property real   barOpacity:          ${qml sc.barOpacity}
+        readonly property bool   wsDynamic:           ${qml sc.wsDynamic}
         readonly property int    tempHotThreshold:    ${qml sc.tempHotThreshold}
         readonly property int    cpuHotPercent:       ${qml sc.cpuHotPercent}
         readonly property int    memHotPercent:       ${qml sc.memHotPercent}
@@ -389,6 +390,17 @@ in
       # fork's generic default is blueman-manager.
       default = "kitty --class bluetui-tile bluetui";
       description = "Command template the bluetooth details view launches for deep device management.";
+    };
+
+    wsDynamic = lib.mkOption {
+      type = lib.types.bool;
+      # The widget half of GNOME-style dynamic workspaces: the bar renders
+      # exactly the occupied workspaces plus one trailing empty slot instead
+      # of a fixed page. The other half -- the compositor-side compactor
+      # that keeps occupied workspaces contiguous -- lives in
+      # compositor.nix (wsCompact); the two only make sense together.
+      default = true;
+      description = "Render occupied workspaces plus one trailing empty slot, GNOME-style.";
     };
 
     recordingStateFile = lib.mkOption {
