@@ -169,10 +169,11 @@ in
       slurp
       wayland-pipewire-idle-inhibit
       wf-recorder
-      # NetworkManager TUI behind the shell's "Edit connection..." row (see
-      # local.hyprland.silere.wifiEditCommand); launched floating via the
-      # wifitui-float rules in compositor.nix, themed by the catppuccin
-      # mocha theme.toml declared below.
+      # TUIs behind the shell's escape-hatch rows: wifitui for the wifi
+      # details view (local.hyprland.silere.wifiEditCommand, themed by the
+      # catppuccin mocha theme.toml declared below), bluetui for the
+      # bluetooth details view (btEditCommand). Both open as normal tiles.
+      bluetui
       wifitui
     ];
 

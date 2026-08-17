@@ -68,6 +68,7 @@ let
         readonly property string barWidgetOrderRight: ${qml sc.barWidgetOrderRight}
         readonly property string caffeineUnit:        ${qml sc.caffeineUnit}
         readonly property string wifiEditCommand:     ${qml sc.wifiEditCommand}
+        readonly property string btEditCommand:       ${qml sc.btEditCommand}
         readonly property bool   barShowCaffeine:     ${qml sc.barShowCaffeine}
         readonly property bool   trayWidget:          ${qml sc.trayWidget}
         readonly property bool   updatesWidget:       ${qml sc.updatesWidget}
@@ -351,6 +352,18 @@ in
       # an absolute template keeps the launch shell-free.
       default = "kitty --class wifitui-float wifitui --theme=${config.xdg.configHome}/wifitui/theme.toml";
       description = "Command template the wifi details view launches for deep connection editing.";
+    };
+
+    btEditCommand = lib.mkOption {
+      type = lib.types.str;
+      # Same launch-template mechanism as wifiEditCommand, driving the
+      # bluetooth details view's "Open bluetooth manager..." row. bluetui is
+      # a BlueZ ratatui manager; it tiles like a normal window on purpose --
+      # the wifitui float covered the workspace and was reverted, so the
+      # class here is targeting-only, no compositor rule attached. The
+      # fork's generic default is blueman-manager.
+      default = "kitty --class bluetui-tile bluetui";
+      description = "Command template the bluetooth details view launches for deep device management.";
     };
 
     trayWidget = lib.mkOption {
