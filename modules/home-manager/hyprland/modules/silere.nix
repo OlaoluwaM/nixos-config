@@ -382,10 +382,11 @@ in
 
     glassOpacity = lib.mkOption {
       type = lib.types.numbers.between 0.5 0.95;
-      # Starting point for the live design loop; the Settings UI slider
-      # (Layout -> GLASS) overrides it at runtime per-user. Slightly below
-      # the fork's 0.85 so the frost is clearly visible on first boot.
-      default = 0.78;
+      # Landed by the live design loop (2026-08-17) once the layerrule blur
+      # actually applied: with real frost behind the panes, 0.70 keeps text
+      # legible while letting the wallpaper tint glow through. The Settings
+      # UI slider (Layout -> GLASS) still overrides it at runtime per-user.
+      default = 0.70;
       description = "Alpha of glass popup surfaces (0.5-0.95); lower shows more frost.";
     };
 
