@@ -111,6 +111,10 @@ in
 
         (mkBind "${mod} + N" (execDispatcher "${pkgs.nautilus}/bin/nautilus"))
         (mkBind "${mod} + L" (execDispatcher "${pkgs.systemd}/bin/loginctl lock-session"))
+        # Same hypr-shell-caffeine.service the shell's menu row and mug pill
+        # control -- one unit, so chord and UI can never disagree. The pill
+        # catches the flip on its next inhibitor poll rather than instantly.
+        (mkBind "${mod} + C" (execDispatcher "${commands.caffeineScript}/bin/hypr-shell-caffeine toggle"))
 
         (mkBind "${mod} + M" (execDispatcher (lib.getExe unstable.protonmail-desktop)))
         (mkBind "${mod} + SHIFT + M" (execDispatcher "${pkgs.mission-center}/bin/missioncenter"))
