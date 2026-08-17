@@ -224,12 +224,15 @@ in
         # applies to windows, so translucency alone just dims the surface
         # instead of frosting it. One prefix regex instead of a rule per
         # namespace so future shell surfaces inherit the glass automatically.
+        # Hyprland FULL-matches rule regexes (regex_match, not search), so the
+        # pattern must consume the whole namespace -- a bare "^silere-" prefix
+        # silently matches nothing.
         # ignore_alpha keeps the blur from haloing the fully transparent
         # regions around rounded corners and floating margins -- pixels at or
         # below the threshold are left unblurred.
         layer_rule = [
           {
-            match.namespace = "^silere-";
+            match.namespace = "^silere-.*$";
             blur = true;
             ignore_alpha = 0.2;
           }
