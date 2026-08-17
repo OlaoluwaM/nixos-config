@@ -226,22 +226,10 @@ in
             match.class = "^(mission-center)$";
             float = true;
           }
-          # The wifi details view's "Edit connection..." row launches wifitui
-          # in a kitty window with this class (local.hyprland.silere.
-          # wifiEditCommand) -- a small centered float reads as a dialog
-          # rather than a tiled terminal.
-          {
-            match.class = "^(wifitui-float)$";
-            float = true;
-          }
-          {
-            match.class = "^(wifitui-float)$";
-            center = true;
-          }
-          {
-            match.class = "^(wifitui-float)$";
-            size = "42% 48%";
-          }
+          # No float rule for wifitui's kitty window (wifiEditCommand still
+          # launches it with a wifitui-float class for targeting): a centered
+          # float covered the whole workspace, and live use preferred it
+          # tiling like any other window.
         ];
       };
     };
