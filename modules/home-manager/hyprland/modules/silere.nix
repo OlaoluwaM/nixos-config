@@ -322,7 +322,10 @@ in
       type = lib.types.strMatching "^[a-zA-Z]*(,[a-zA-Z]+)*$";
       # caffeine leads the connectivity cluster (left of wifi) by request --
       # it shares the cluster's meta group, so no divider splits it off.
-      default = "tray,updates,caffeine,network,bluetooth,volume,brightness,battery,clock";
+      # traypopup sits ahead of it: the collapsed tray pill only exists while
+      # SNI items exist, so most of the time it costs nothing. The inline
+      # "tray" key stays listed but dormant (trayWidget=false).
+      default = "tray,updates,traypopup,caffeine,network,bluetooth,volume,brightness,battery,clock";
       description = "Bar widgets in the right zone, comma-separated in order.";
     };
 
