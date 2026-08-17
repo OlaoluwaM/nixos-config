@@ -120,7 +120,12 @@ in
           input = {
             kb_layout = "us";
             follow_mouse = 1;
-            touchpad.natural_scroll = true;
+            touchpad = {
+              natural_scroll = true;
+              # GNOME's clickfinger model instead of corner areas: a
+              # two-finger tap/click is right-click, three fingers middle.
+              clickfinger_behavior = true;
+            };
           };
 
           general = {
