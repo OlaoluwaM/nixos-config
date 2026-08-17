@@ -137,8 +137,16 @@ in
             rounding_power = 3.5;
             blur = {
               enabled = true;
-              size = 5;
-              passes = 2;
+              # Frosted-glass tuning for the shell's layer surfaces (the only
+              # translucent surfaces in this profile -- windows are opaque, so
+              # these globals cost nothing elsewhere). 8/3 gives a wide, soft
+              # frost instead of the tight smear 5/2 produced; vibrancy pulls
+              # the wallpaper's saturation up through the blur, which is what
+              # makes the glass read as tinted by the wallpaper rather than
+              # gray.
+              size = 8;
+              passes = 3;
+              vibrancy = 0.4;
             };
             shadow = {
               enabled = true;
@@ -209,20 +217,19 @@ in
           }
         ];
 
-        # Blur behind the silere bar's layer surface. The shell already paints
-        # its bar background at Theme.panel = withAlpha(background, barOpacity)
-        # (a runtime Settings key), but without a layerrule Hyprland's blur
-        # only applies to windows, so lowering barOpacity just dims the bar
-        # instead of frosting it. ignore_alpha keeps the blur from haloing the
-        # transparent margins around the floating bar's rounded corners --
-        # pixels at or below the threshold are left unblurred.
-        #
-        # Popup namespaces (silere-menu, silere-calendar, ...) are left alone
-        # on purpose: their surfaces are fully opaque in the fork's Theme, so
-        # a blur rule there would be dead config until we decide to glass them.
+        # Blur behind every silere layer surface (bar, menu, calendar,
+        # quickactions, osd, notifications, traymenu). The shell paints these
+        # translucently (bar via barOpacity, popups via the fork's
+        # glassSurfaces mode), but without a layerrule Hyprland's blur only
+        # applies to windows, so translucency alone just dims the surface
+        # instead of frosting it. One prefix regex instead of a rule per
+        # namespace so future shell surfaces inherit the glass automatically.
+        # ignore_alpha keeps the blur from haloing the fully transparent
+        # regions around rounded corners and floating margins -- pixels at or
+        # below the threshold are left unblurred.
         layer_rule = [
           {
-            match.namespace = "^silere-bar$";
+            match.namespace = "^silere-";
             blur = true;
             ignore_alpha = 0.2;
           }
