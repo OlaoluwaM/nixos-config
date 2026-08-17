@@ -209,6 +209,25 @@ in
           }
         ];
 
+        # Blur behind the silere bar's layer surface. The shell already paints
+        # its bar background at Theme.panel = withAlpha(background, barOpacity)
+        # (a runtime Settings key), but without a layerrule Hyprland's blur
+        # only applies to windows, so lowering barOpacity just dims the bar
+        # instead of frosting it. ignore_alpha keeps the blur from haloing the
+        # transparent margins around the floating bar's rounded corners --
+        # pixels at or below the threshold are left unblurred.
+        #
+        # Popup namespaces (silere-menu, silere-calendar, ...) are left alone
+        # on purpose: their surfaces are fully opaque in the fork's Theme, so
+        # a blur rule there would be dead config until we decide to glass them.
+        layer_rule = [
+          {
+            match.namespace = "^silere-bar$";
+            blur = true;
+            ignore_alpha = 0.2;
+          }
+        ];
+
         window_rule = [
           {
             match.class = "^(vicinae)$";
