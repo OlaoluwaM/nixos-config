@@ -65,7 +65,10 @@ let
   hyprshellConfig = builtins.toJSON {
     version = 4;
     windows = {
-      scale = 9.5;
+      # 10.0 after live comparison: 9.5's 161px icon read a touch small once
+      # the tiles stopped being monitor-sized; 1600/5 -> 320 -> 320/1.6-20 =
+      # 180px.
+      scale = 10.0;
       switch = {
         modifier = "alt";
         filter_by = [ ];
@@ -135,7 +138,10 @@ let
       border: none;
       border-radius: 10px;
       margin: 3px;
-      padding: 3px 5px;
+      /* wider horizontal padding on purpose: the content stack (icon over
+         label) is taller than it is wide, so the extra width squares the
+         tile up instead of leaving a portrait rectangle */
+      padding: 4px 14px;
       transition: background 150ms ease;
     }
 
