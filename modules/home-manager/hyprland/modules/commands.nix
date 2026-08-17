@@ -51,6 +51,10 @@ let
     runtimeInputs = [
       pkgs.coreutils
       pkgs.systemd
+      # `qs ipc` for the preset-aware toggle path. Same package silere.nix's
+      # service runs the shell with, so the CLI can never skew from the
+      # instance it is calling into.
+      pkgs.quickshell
     ];
     text = builtins.readFile ../scripts/hypr-shell-caffeine.sh;
   };

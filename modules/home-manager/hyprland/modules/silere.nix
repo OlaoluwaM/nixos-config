@@ -67,6 +67,7 @@ let
         readonly property string barWidgetOrderCenter: ${qml sc.barWidgetOrderCenter}
         readonly property string barWidgetOrderRight: ${qml sc.barWidgetOrderRight}
         readonly property string caffeineUnit:        ${qml sc.caffeineUnit}
+        readonly property string caffeinePresets:     ${qml sc.caffeinePresets}
         readonly property string wifiEditCommand:     ${qml sc.wifiEditCommand}
         readonly property string btEditCommand:       ${qml sc.btEditCommand}
         readonly property bool   barShowCaffeine:     ${qml sc.barShowCaffeine}
@@ -334,6 +335,17 @@ in
       # non-Nix installs.
       default = "hypr-shell-caffeine.service";
       description = "systemd user unit whose active state is the manual idle inhibit.";
+    };
+
+    caffeinePresets = lib.mkOption {
+      type = lib.types.strMatching "^[0-9]+(,[0-9]+)*$";
+      # Minutes per entry in the shell's caffeine duration picker; 0 means
+      # "until turned off" and the shell appends it if omitted. Which preset
+      # is active is a runtime choice the shell persists, and Super+C honors
+      # it too -- the caffeine script's toggle goes through `qs ipc` into
+      # the same preset-aware code path (see scripts/hypr-shell-caffeine.sh).
+      default = "15,30,60,0";
+      description = "Comma-separated minutes for the caffeine timed presets (0 = until turned off).";
     };
 
     barShowCaffeine = lib.mkOption {
