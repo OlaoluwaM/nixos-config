@@ -82,6 +82,8 @@ let
         readonly property bool   showSeconds:         ${qml sc.showSeconds}
         readonly property bool   osdEnabled:          ${qml sc.osdEnabled}
         readonly property int    osdTimeout:          ${qml sc.osdTimeout}
+        readonly property bool   glassSurfaces:       ${qml sc.glassSurfaces}
+        readonly property real   glassOpacity:        ${qml sc.glassOpacity}
     }
   '';
 
@@ -364,6 +366,27 @@ in
       # fork's generic default is blueman-manager.
       default = "kitty --class bluetui-tile bluetui";
       description = "Command template the bluetooth details view launches for deep device management.";
+    };
+
+    glassSurfaces = lib.mkOption {
+      type = lib.types.bool;
+      # The fork's glassmorphism mode: popups and menu panes paint a
+      # wallpaper-tinted translucent surface into the blur the compositor
+      # puts behind every silere-* layer (see the layer_rule + blur
+      # vibrancy tuning in compositor.nix -- the two halves only work
+      # together). The fork ships this off so non-Nix installs, which have
+      # no blur rules, don't get dim unfrosted popups.
+      default = true;
+      description = "Frosted-glass popup surfaces tinted by the matugen wallpaper palette.";
+    };
+
+    glassOpacity = lib.mkOption {
+      type = lib.types.numbers.between 0.5 0.95;
+      # Starting point for the live design loop; the Settings UI slider
+      # (Layout -> GLASS) overrides it at runtime per-user. Slightly below
+      # the fork's 0.85 so the frost is clearly visible on first boot.
+      default = 0.78;
+      description = "Alpha of glass popup surfaces (0.5-0.95); lower shows more frost.";
     };
 
     trayWidget = lib.mkOption {
