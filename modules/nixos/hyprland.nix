@@ -65,6 +65,14 @@ in
     # widget's availability gate keeps it hidden.
     hardware.bluetooth.enable = true;
 
+    # Installs KDE Connect and opens its discovery/transfer port range
+    # (1714-1764 TCP+UDP) in the firewall -- phone pairing is dead in the
+    # water without the ports, and this module is the one place that owns
+    # both halves. The session side (indicator + daemon on the Hyprland
+    # session target) lives in home-manager/hyprland/modules/
+    # session-services.nix; its SNI item surfaces in the shell's tray popup.
+    programs.kdeconnect.enable = true;
+
     xdg.portal = {
       extraPortals = with pkgs; [
         xdg-desktop-portal-gtk
