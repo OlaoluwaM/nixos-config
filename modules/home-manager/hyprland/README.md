@@ -69,14 +69,19 @@ size come from the config's `windows.scale`, not CSS -- hyprshell computes the
 icon's pixel size in Rust from monitor geometry and that one field.
 
 `./modules/hyprshell.nix` also `overrideAttrs`s `pkgs.hyprshell` with
-`./modules/hyprshell-label-below.patch`, applied to
-`crates/windows-lib/src/switch/clients.rs`. Upstream renders each tile's app
-name as a GtkFrame label-widget, which GTK4 always pins to the frame's top
-edge with no CSS escape hatch; the patch swaps that Frame for a plain vertical
-Box (icon, then label) so the name sits below the icon like GNOME's real
-switcher. It's minimal (one `view!` block) but source-level, so it needs
-rebasing by hand on every hyprshell version bump -- check it still applies
-before bumping `pkgs.hyprshell`.
+`./modules/hyprshell-switcher-tiles.patch`, applied to
+`crates/windows-lib/src/switch/clients.rs`. It fixes two things neither
+config nor CSS can reach: upstream renders each tile's app name as a GtkFrame
+label-widget, which GTK4 always pins to the frame's top edge with no CSS
+escape hatch, so the patch swaps that Frame for a plain vertical Box (icon,
+then label) so the name sits below the icon like GNOME's real switcher; and
+upstream sizes each tile's Button from raw monitor width/height regardless of
+content (~465x290px on a 2560x1600 monitor), which the patch deletes so the
+tile sizes to its icon+label Box instead, capping the label's width to the
+icon's so a long window title ellipsizes rather than stretching the tile.
+It's minimal (one `view!` block) but source-level, so it needs rebasing by
+hand on every hyprshell version bump -- check it still applies before
+bumping `pkgs.hyprshell`.
 
 ## Helper Scripts
 

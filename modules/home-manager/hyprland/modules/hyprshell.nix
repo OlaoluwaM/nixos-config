@@ -47,20 +47,21 @@ let
   # migration check special-cases a missing version instead of treating it
   # like any other defaulted field.
   #
-  # `windows.scale` grows the switcher's tiles and icons together. Read
-  # straight from crates/windows-lib/src/switch/clients.rs (v4.10.4):
-  # both the per-tile Button size (`scale(monitor.width/height, scale)`)
-  # and the icon pixel size (`calc_image_size`, which feeds off the same
-  # `scale()` helper) divide the monitor's resolution by `15 - scale`, so
-  # a higher value shrinks that denominator and grows both numbers
-  # together -- there is no separate "icon size" knob. config-lib's
+  # `windows.scale` grows the switcher's icons (and, downstream of them,
+  # the tiles). Read straight from crates/windows-lib/src/switch/
+  # clients.rs (v4.10.4, as patched by `./hyprshell-switcher-tiles.patch`
+  # below): `calc_image_size` divides the monitor's resolution by
+  # `15 - scale`, so a higher value shrinks that denominator and grows the
+  # icon -- there is no separate "icon size" knob. config-lib's
   # `#[default = 8.5]` on `Windows::scale` (crates/config-lib/src/io/
   # config.rs) already yields a 133px icon on this machine's 2560x1600
   # monitor (`(1600 / 6.5).clamp(50, 600) / 1.6 - 20`); 9.5 pushes that to
-  # 161px (`1600 / 5.5 -> 290 -> 290/1.6-20`), noticeably bigger, while
-  # keeping 5 tiles at `items_per_row`'s default comfortably under the
-  # monitor's width (5 * 465px tile request = 2325px, leaving margin
-  # before the panel could overflow the screen at 10+).
+  # 161px (`1600 / 5.5 -> 290 -> 290/1.6-20`), noticeably bigger. Upstream
+  # additionally sized each tile's Button from raw monitor width/height
+  # (`scale(monitor.width/height, scale)`, ~465x290px here) regardless of
+  # icon size; the patch below deletes that pair of requests, so tile size
+  # is no longer coupled to `windows.scale` at all -- it now falls out of
+  # icon size, label width, and CSS padding, per the patch comment.
   hyprshellConfig = builtins.toJSON {
     version = 4;
     windows = {
@@ -106,12 +107,16 @@ let
   # Icon pixel size is out of CSS's reach -- clients.rs computes it in Rust
   # from window/monitor geometry via `set_pixel_size` (see `windows.scale`
   # above), which CSS's `-gtk-icon-size` (icon-name icons only) can't
-  # override. With that Rust-side size now doing more of the work, the
-  # chrome here is trimmed to match: less padding, no min-width/min-height
-  # floor (the tile is already sized by the icon, so the floor was dead
-  # weight), and a smaller panel radius -- tuned against a photo of
-  # GNOME's real switcher so the panel reads as "a touch smaller" overall
-  # even though the icons inside it grew.
+  # override. Tile size used to be out of CSS's reach too, pinned to a
+  # monitor-derived Button request regardless of content; now that
+  # `hyprshell-switcher-tiles.patch` deletes that request and the Button
+  # sizes to its icon+label Box (see the patch comment below), `.client`'s
+  # padding is the only thing standing between "hugs the icon" and "still
+  # looks bloated" -- trimmed from 4px 6px to 3px 5px (radius 12px to
+  # 10px to match) now that the tile is genuinely content-sized. `.monitor`
+  # padding is left at 6px: it wraps the whole FlowBox, not a single tile,
+  # and 6px already read as tight against a photo of GNOME's real
+  # switcher.
   hyprshellStyles = ''
     .window {
       color: #eeeeee;
@@ -128,9 +133,9 @@ let
     .client {
       background: transparent;
       border: none;
-      border-radius: 12px;
+      border-radius: 10px;
       margin: 3px;
-      padding: 4px 6px;
+      padding: 3px 5px;
       transition: background 150ms ease;
     }
 
@@ -154,19 +159,34 @@ let
     }
   '';
 
-  # `./hyprshell-label-below.patch` swaps the switcher tile's GtkFrame
-  # (label pinned to the top edge, see the styles comment above) for a
-  # plain vertical Box (icon, then label) in
-  # crates/windows-lib/src/switch/clients.rs. It's a source patch, not a
-  # config/CSS knob, because GtkFrame's label-widget placement isn't
-  # exposed to either -- this is the only way to get the label below the
-  # icon. Keep it minimal: it touches one `view!` block and nothing else,
-  # so it's cheap to rebase across hyprshell version bumps, but it WILL
-  # need rebasing whenever upstream reshapes that block (already true
-  # once for the 4.11-alpha line, which reworks the CSS surface this
-  # module also depends on -- see the styles comment above).
+  # `./hyprshell-switcher-tiles.patch` reshapes the switcher tile's
+  # `view!` block in crates/windows-lib/src/switch/clients.rs, for two
+  # things neither config nor CSS can reach:
+  #
+  # 1. Label placement: upstream renders the app name as a GtkFrame
+  #    label-widget, which GTK4 always pins to the frame's TOP edge -- no
+  #    CSS property moves it, since it isn't a normal child, it's the
+  #    frame's border-drawing label. The patch swaps that Frame for a
+  #    plain vertical Box (icon, then label) so the name sits below the
+  #    icon like GNOME's real switcher (see the styles comment above).
+  # 2. Tile size: upstream also gives the tile's Button a fixed
+  #    `set_width_request`/`set_height_request` derived from raw monitor
+  #    width/height (`scale(monitor.width/height, windows.scale)`, ~465x
+  #    290px on this machine) -- enormous compared to the icon, and the
+  #    reason the switcher read as oversized even after the icon/label
+  #    fix above. The patch deletes both requests so the Button sizes to
+  #    its Box's content instead, and gives the Label a `set_width_request`
+  #    of `calc_image_size(...)` (the same expression that sizes the icon)
+  #    so one long window title can't stretch its tile past the icon's
+  #    width -- it ellipsizes instead, same as GNOME's own switcher.
+  #
+  # Keep it minimal: it touches one `view!` block and nothing else, so
+  # it's cheap to rebase across hyprshell version bumps, but it WILL need
+  # rebasing whenever upstream reshapes that block (already true once for
+  # the 4.11-alpha line, which reworks the CSS surface this module also
+  # depends on -- see the styles comment above).
   hyprshellPackage = pkgs.hyprshell.overrideAttrs (old: {
-    patches = (old.patches or [ ]) ++ [ ./hyprshell-label-below.patch ];
+    patches = (old.patches or [ ]) ++ [ ./hyprshell-switcher-tiles.patch ];
   });
 in
 {
