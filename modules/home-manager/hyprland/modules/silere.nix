@@ -89,6 +89,7 @@ let
         readonly property int    tempHotThreshold:    ${qml sc.tempHotThreshold}
         readonly property int    cpuHotPercent:       ${qml sc.cpuHotPercent}
         readonly property int    memHotPercent:       ${qml sc.memHotPercent}
+        readonly property string recordingStateFile:  ${qml sc.recordingStateFile}
     }
   '';
 
@@ -329,8 +330,9 @@ in
       # SNI items exist, so most of the time it costs nothing. The inline
       # "tray" key stays listed but dormant (trayWidget=false). vitals leads
       # the zone: its chips are transient alerts that should not shuffle the
-      # steady cluster when they appear.
-      default = "tray,updates,vitals,traypopup,caffeine,network,bluetooth,volume,brightness,battery,clock";
+      # steady cluster when they appear. privacy (REC/mic) outranks even
+      # vitals -- it goes furthest left.
+      default = "tray,updates,privacy,vitals,traypopup,caffeine,network,bluetooth,volume,brightness,battery,clock";
       description = "Bar widgets in the right zone, comma-separated in order.";
     };
 
@@ -387,6 +389,21 @@ in
       # fork's generic default is blueman-manager.
       default = "kitty --class bluetui-tile bluetui";
       description = "Command template the bluetooth details view launches for deep device management.";
+    };
+
+    recordingStateFile = lib.mkOption {
+      type = lib.types.str;
+      # Presence file hypr-shell-screenrecord touches while wf-recorder runs
+      # (see that script); the shell's Recording service watches it for the
+      # bar's REC privacy chip. Under the runtime dir on purpose: its tmpfs
+      # dies with the boot, so a crash or power loss can never leave a stale
+      # file falsely showing "recording" -- the one failure mode a privacy
+      # indicator must not have. The uid is spelled out because this key is
+      # rendered at build time where $XDG_RUNTIME_DIR does not exist yet;
+      # 1000 is NixOS's first-normal-user default and this is a single-user
+      # machine. Revisit if that ever changes.
+      default = "/run/user/1000/hypr-shell/recording";
+      description = "Path whose existence means a screen recording is running.";
     };
 
     # -- Vitals thresholds ---------------------------------------------------

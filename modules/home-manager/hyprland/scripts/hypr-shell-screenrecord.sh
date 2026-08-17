@@ -4,6 +4,14 @@ mode="${1:-area}"
 screenrecord_dir="${XDG_VIDEOS_DIR:-"$HOME/Videos"}/Screencasts"
 output_file="$screenrecord_dir/screencast-from-$(date +%Y%m%d-%H%M%S).mp4"
 
+# Presence file the shell's Recording service watches (silere.nix points its
+# recordingStateFile key here): exists exactly while wf-recorder runs, so the
+# bar's REC privacy chip tracks the actual recording, not this script's
+# lifetime. Same runtime state dir convention as hypr-shell-caffeine.
+state_dir="${XDG_RUNTIME_DIR:-/tmp}/hypr-shell"
+mkdir -p "$state_dir" 2>/dev/null || true
+state_file="$state_dir/recording"
+
 mkdir -p "$screenrecord_dir"
 
 notify_location() {
@@ -30,6 +38,11 @@ record() {
 	# a failing notify-send (daemon down, e.g. during a shell restart) would
 	# otherwise abort before wf-recorder ever starts, or mask the real exit code.
 	notify-send "Recording started" "$output_file" || true
+
+	# The trap, not paired rm lines, owns cleanup: wf-recorder can end via
+	# saved/failed/signal, and the chip must never stay lit on any of them.
+	touch "$state_file" 2>/dev/null || true
+	trap 'rm -f "$state_file"' EXIT
 
 	if wf-recorder "$@" -f "$output_file"; then
 		notify_location "Recording saved" "$output_file" "$screenrecord_dir"
