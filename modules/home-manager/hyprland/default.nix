@@ -238,6 +238,11 @@ in
     home.sessionVariables = {
       # Helps Chromium/Electron apps prefer Wayland behavior under NixOS.
       NIXOS_OZONE_WL = "1";
+      # wifitui probes this itself, so a bare `wifitui` in any terminal picks
+      # up the catppuccin mocha theme declared above -- the --theme flag in
+      # wifiEditCommand stays as belt-and-braces for the shell's launch path,
+      # whose service environment doesn't source login-session variables.
+      WIFITUI_THEME = "${config.xdg.configHome}/wifitui/theme.toml";
     };
 
     # udiskie watches removable drives. automount=true means USB drives can show
