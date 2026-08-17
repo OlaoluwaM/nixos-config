@@ -86,6 +86,9 @@ let
         readonly property bool   glassSurfaces:       ${qml sc.glassSurfaces}
         readonly property real   glassOpacity:        ${qml sc.glassOpacity}
         readonly property real   barOpacity:          ${qml sc.barOpacity}
+        readonly property int    tempHotThreshold:    ${qml sc.tempHotThreshold}
+        readonly property int    cpuHotPercent:       ${qml sc.cpuHotPercent}
+        readonly property int    memHotPercent:       ${qml sc.memHotPercent}
     }
   '';
 
@@ -324,8 +327,10 @@ in
       # it shares the cluster's meta group, so no divider splits it off.
       # traypopup sits ahead of it: the collapsed tray pill only exists while
       # SNI items exist, so most of the time it costs nothing. The inline
-      # "tray" key stays listed but dormant (trayWidget=false).
-      default = "tray,updates,traypopup,caffeine,network,bluetooth,volume,brightness,battery,clock";
+      # "tray" key stays listed but dormant (trayWidget=false). vitals leads
+      # the zone: its chips are transient alerts that should not shuffle the
+      # steady cluster when they appear.
+      default = "tray,updates,vitals,traypopup,caffeine,network,bluetooth,volume,brightness,battery,clock";
       description = "Bar widgets in the right zone, comma-separated in order.";
     };
 
@@ -382,6 +387,30 @@ in
       # fork's generic default is blueman-manager.
       default = "kitty --class bluetui-tile bluetui";
       description = "Command template the bluetooth details view launches for deep device management.";
+    };
+
+    # -- Vitals thresholds ---------------------------------------------------
+    # The bar's vitals chips exist only while a metric is over its threshold
+    # (with clear-at-minus-5 hysteresis fork-side), so these numbers decide
+    # how loud the bar is on a stressed machine, not whether monitoring runs.
+    tempHotThreshold = lib.mkOption {
+      type = lib.types.ints.between 50 105;
+      # Well below the fork's 90: this laptop throttles late, and the point
+      # is early awareness, not shutdown protection.
+      default = 65;
+      description = "CPU temperature (deg C) above which the bar's temp chip appears.";
+    };
+
+    cpuHotPercent = lib.mkOption {
+      type = lib.types.ints.between 30 100;
+      default = 70;
+      description = "CPU usage percent above which the bar's CPU chip appears.";
+    };
+
+    memHotPercent = lib.mkOption {
+      type = lib.types.ints.between 30 100;
+      default = 70;
+      description = "Memory usage percent above which the bar's memory chip appears.";
     };
 
     glassSurfaces = lib.mkOption {
