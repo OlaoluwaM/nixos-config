@@ -73,6 +73,11 @@ in
           action = "workspace";
         };
 
+        # GNOME lets a swipe continue past the last workspace into a fresh
+        # empty one; with the wsCompact collapser below, that swipe-created
+        # workspace IS the dynamic model's trailing empty slot.
+        config.gestures.workspace_swipe_create_new = true;
+
         # Monitor rule. Blank monitor name means "apply to all monitors".
         # preferred = use the monitor's preferred resolution/refresh rate.
         # auto = let Hyprland choose the position. 1 = scale factor.
@@ -104,17 +109,110 @@ in
           }
         ];
 
-        # Runs when Hyprland is already shutting down so no need for hyprshutdown.
-        on = {
-          _args = [
-            "hyprland.shutdown"
-            (lua ''
-              function()
-                hl.exec_cmd(${luaString "${pkgs.systemd}/bin/systemctl --user stop ${config.wayland.systemd.target}"})
+        # GNOME-style dynamic workspaces, compositor half (the bar's widget
+        # half reads the same state through the shell's wsDynamic mode).
+        # Keeps occupied workspaces contiguous from 1: when a middle
+        # workspace empties, everything above shifts down -- so like GNOME,
+        # closing the last window on a workspace collapses it and the
+        # workspace you are looking at inherits the next one's windows.
+        # Runs in-process via hl.dispatch (verified live: dispatcher objects
+        # are invocable through hl.dispatch even though binds are their usual
+        # home), so no hyprctl child processes and no external daemon.
+        #
+        # Deliberately inert with more than one monitor showing normal
+        # workspaces: Hyprland gives every monitor its own global workspace
+        # ids, so a global 1..N compaction would drag windows across
+        # monitors. Single-monitor is this laptop's daily reality; revisit
+        # the per-monitor id allocation if a dock becomes permanent.
+        #
+        # The 200ms one-shot timer coalesces event bursts (closing a window
+        # fires several events), and re-entrancy self-terminates: our own
+        # moves re-schedule one more pass, which finds the layout already
+        # compact and does nothing.
+        wsCompact = {
+          _var = lua ''
+            (function()
+              local pending = false
+              local function compact()
+                pending = false
+                local monitors = {}
+                local normal = {}
+                for _, ws in ipairs(hl.get_workspaces()) do
+                  if ws.id > 0 and not ws.special then
+                    table.insert(normal, ws)
+                    monitors[ws.monitor and ws.monitor.name or "?"] = true
+                  end
+                end
+                local monitorCount = 0
+                for _ in pairs(monitors) do monitorCount = monitorCount + 1 end
+                if monitorCount > 1 then return end
+                table.sort(normal, function(a, b) return a.id < b.id end)
+                local expected = 1
+                local activeId = 0
+                for _, ws in ipairs(normal) do
+                  if ws.active then activeId = ws.id end
+                  if ws.windows > 0 then
+                    if ws.id ~= expected then
+                      for _, w in ipairs(hl.get_workspace_windows(ws.id)) do
+                        hl.dispatch(hl.dsp.window.move({
+                          workspace = expected,
+                          window = "address:" .. tostring(w.address),
+                          silent = true,
+                        }))
+                      end
+                    end
+                    expected = expected + 1
+                  end
+                end
+                -- stranded past the trailing empty (expected is exactly the
+                -- GNOME "one empty at the end" slot): walk back to it
+                if activeId > expected then
+                  hl.dispatch(hl.dsp.focus({ workspace = expected }))
+                end
               end
-            '')
-          ];
+              return function()
+                if pending then return end
+                pending = true
+                hl.timer(compact, { timeout = 200, type = "oneshot" })
+              end
+            end)()
+          '';
         };
+
+        on = [
+          # Runs when Hyprland is already shutting down so no need for
+          # hyprshutdown.
+          {
+            _args = [
+              "hyprland.shutdown"
+              (lua ''
+                function()
+                  hl.exec_cmd(${luaString "${pkgs.systemd}/bin/systemctl --user stop ${config.wayland.systemd.target}"})
+                end
+              '')
+            ];
+          }
+          # The three ways a workspace can lose its last window. window.destroy
+          # rather than window.close: close is the request, destroy the unmap.
+          {
+            _args = [
+              "window.destroy"
+              (lua "function() wsCompact() end")
+            ];
+          }
+          {
+            _args = [
+              "window.move_to_workspace"
+              (lua "function() wsCompact() end")
+            ];
+          }
+          {
+            _args = [
+              "workspace.removed"
+              (lua "function() wsCompact() end")
+            ];
+          }
+        ];
 
         config = {
           input = {
