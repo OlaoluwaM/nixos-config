@@ -137,7 +137,7 @@ let
       background: transparent;
       border: none;
       border-radius: 10px;
-      margin: 3px;
+      margin: 6px;
       /* wider horizontal padding on purpose: the content stack (icon over
          label) is taller than it is wide, so the extra width squares the
          tile up instead of leaving a portrait rectangle */
@@ -160,7 +160,7 @@ let
     .client-label {
       color: #eeeeee;
       font-weight: 500;
-      font-size: 0.85em;
+      font-size: 0.75em;
       text-decoration: none;
     }
   '';
