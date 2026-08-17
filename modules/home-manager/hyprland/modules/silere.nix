@@ -84,6 +84,7 @@ let
         readonly property int    osdTimeout:          ${qml sc.osdTimeout}
         readonly property bool   glassSurfaces:       ${qml sc.glassSurfaces}
         readonly property real   glassOpacity:        ${qml sc.glassOpacity}
+        readonly property real   barOpacity:          ${qml sc.barOpacity}
     }
   '';
 
@@ -388,6 +389,17 @@ in
       # UI slider (Layout -> GLASS) still overrides it at runtime per-user.
       default = 0.70;
       description = "Alpha of glass popup surfaces (0.5-0.95); lower shows more frost.";
+    };
+
+    barOpacity = lib.mkOption {
+      type = lib.types.numbers.between 0.4 1.0;
+      # The bar's half of the glass look: it sits in the same silere-*
+      # blur rule as the popups, so this alpha is what turns it frosted.
+      # A step above glassOpacity's 0.70 on purpose -- the persistent
+      # surface reads slightly more solid than transient popups while
+      # staying the same material. Fork default is 0.88.
+      default = 0.80;
+      description = "Alpha of the bar's glass surface (0.4-1.0); lower shows more frost.";
     };
 
     trayWidget = lib.mkOption {
