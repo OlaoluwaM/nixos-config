@@ -455,6 +455,32 @@ let
         flags.locked = true;
         viewer = false;
       })
+      # GNOME parity: org/gnome/settings-daemon/plugins/media-keys binds
+      # play/next/previous to F4/<Alt>bracketright/<Alt>bracketleft there
+      # (gnome/modules/keybindings.nix). Unlike the XF86Audio* keys above,
+      # these aren't self-describing hardware glyphs, so they stay in the
+      # viewer.
+      (mkDef {
+        keys = "F4";
+        dsp = execDispatcher "${silereIpc} media playPause";
+        desc = "Play or pause media";
+        group = "Hardware";
+        flags.locked = true;
+      })
+      (mkDef {
+        keys = "ALT + bracketright";
+        dsp = execDispatcher "${silereIpc} media next";
+        desc = "Next track";
+        group = "Hardware";
+        flags.locked = true;
+      })
+      (mkDef {
+        keys = "ALT + bracketleft";
+        dsp = execDispatcher "${silereIpc} media previous";
+        desc = "Previous track";
+        group = "Hardware";
+        flags.locked = true;
+      })
       (mkDef {
         keys = "XF86MonBrightnessUp";
         dsp = execDispatcher "${brightnessCommand} set 5%+";
