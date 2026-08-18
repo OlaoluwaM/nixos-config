@@ -516,5 +516,23 @@ in
     # local.hyprland.silere.keybindsFile here). Derived from bindDefs above,
     # so a chord and its documentation can never drift apart.
     xdg.dataFile."silere/keybinds.json".text = builtins.toJSON viewerEntries;
+
+    # Third entry point into the viewer, alongside Super+slash and the qs CLI:
+    # a desktop entry makes it launchable from Vicinae's app search ("Keyboard
+    # Shortcuts"). Exec is the same IPC call the chord runs -- it toggles the
+    # popup in the running shell rather than spawning anything, so the entry
+    # is safe to "launch" repeatedly. Lives here, not silere.nix, because the
+    # viewer's other artifacts (chord, JSON) are declared in this module.
+    xdg.desktopEntries.silere-keybinds = {
+      name = "Keyboard Shortcuts";
+      comment = "Search the Hyprland and shell keybindings";
+      exec = "${silereIpc} keybinds toggle";
+      icon = "preferences-desktop-keyboard-shortcuts";
+      terminal = false;
+      categories = [
+        "Utility"
+        "Settings"
+      ];
+    };
   };
 }
