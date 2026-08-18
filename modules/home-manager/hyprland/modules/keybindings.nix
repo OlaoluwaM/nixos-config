@@ -266,6 +266,17 @@ let
         desc = "Show keyboard shortcuts";
         group = "Session";
       })
+      # GNOME parity: <Super>q is toggle-quick-settings there (see the GNOME
+      # profile's keybindings.nix); silere's closest surface is the menu, and
+      # landing on the Settings tab (index 1) is the deliberate choice -- the
+      # Home tab already has Super+tap and the bar itself. `menu tab` opens or
+      # raises; it does not toggle closed, Escape does that.
+      (mkDef {
+        keys = "${mod} + Q";
+        dsp = execDispatcher "${silereIpc} menu tab 1";
+        desc = "Open the shell settings";
+        group = "Session";
+      })
 
       # -- Windows -----------------------------------------------------------
       (mkDef {
@@ -442,11 +453,11 @@ let
         viewer = false;
       })
     ]
-    # Super+Q (settings), Super+Alt+W (wifi), Super+B (bluetooth),
+    # Super+Alt+W (wifi), Super+B (bluetooth), and
     # Super+Escape/XF86PowerOff (session) are intentionally unbound: their
     # old shell targets are gone. They come back once the new silere shell
-    # lands. Super+Shift+W (wallpapers) is bound above -- the wallpaper
-    # pipeline doesn't depend on the rest of the shell surfacing them.
+    # surfaces them. Super+Q (settings) and Super+Shift+W (wallpapers) are
+    # bound above.
     ++ lib.optionals enableAsusRogKeybindings [
       (mkDef {
         keys = "XF86Launch1";
