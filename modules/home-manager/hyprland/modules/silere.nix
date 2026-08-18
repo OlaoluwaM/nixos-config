@@ -468,11 +468,11 @@ in
 
     glassOpacity = lib.mkOption {
       type = lib.types.numbers.between 0.5 0.95;
-      # Landed by the live design loop (2026-08-17) once the layerrule blur
-      # actually applied: with real frost behind the panes, 0.70 keeps text
-      # legible while letting the wallpaper tint glow through. The Settings
-      # UI slider (Layout -> GLASS) still overrides it at runtime per-user.
-      default = 0.70;
+      # Live design loop, second pass (2026-08-18): 0.70 was the first
+      # landing; the user later pulled it to 0.60 for more frost. The
+      # Settings UI slider (Layout -> GLASS) still overrides it at runtime
+      # per-user, so a persisted slider value shadows this default.
+      default = 0.60;
       description = "Alpha of glass popup surfaces (0.5-0.95); lower shows more frost.";
     };
 
@@ -480,10 +480,11 @@ in
       type = lib.types.numbers.between 0.4 1.0;
       # The bar's half of the glass look: it sits in the same silere-*
       # blur rule as the popups, so this alpha is what turns it frosted.
-      # A step above glassOpacity's 0.70 on purpose -- the persistent
-      # surface reads slightly more solid than transient popups while
-      # staying the same material. Fork default is 0.88.
-      default = 0.80;
+      # A step above glassOpacity on purpose -- the persistent surface
+      # reads slightly more solid than transient popups while staying the
+      # same material (0.64 over glass's 0.60, second design-loop pass).
+      # Fork default is 0.88.
+      default = 0.64;
       description = "Alpha of the bar's glass surface (0.4-1.0); lower shows more frost.";
     };
 
