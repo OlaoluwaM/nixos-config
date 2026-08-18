@@ -66,6 +66,7 @@ let
         readonly property string barWidgetOrderLeft:  ${qml sc.barWidgetOrderLeft}
         readonly property string barWidgetOrderCenter: ${qml sc.barWidgetOrderCenter}
         readonly property string barWidgetOrderRight: ${qml sc.barWidgetOrderRight}
+        readonly property bool   barWidgetOrderLocked: ${qml sc.barWidgetOrderLocked}
         readonly property string caffeineUnit:        ${qml sc.caffeineUnit}
         readonly property string caffeinePresets:     ${qml sc.caffeinePresets}
         readonly property string wifiEditCommand:     ${qml sc.wifiEditCommand}
@@ -340,6 +341,18 @@ in
       # the left zone (see barWidgetOrderLeft).
       default = "tray,updates,privacy,traypopup,caffeine,network,bluetooth,volume,brightness,battery,clock";
       description = "Bar widgets in the right zone, comma-separated in order.";
+    };
+
+    barWidgetOrderLocked = lib.mkOption {
+      type = lib.types.bool;
+      # True here (the fork ships false): the three zone orders above are the
+      # single source of truth, so a runtime drag can never shadow a freshly
+      # declared order -- exactly the bite that prompted the lock, when a
+      # persisted drag state would have hidden the vitals move. The Settings
+      # page keeps its per-widget show/hide toggles; only reordering is
+      # declared-only.
+      default = true;
+      description = "Resolve the zone orders only from these declared values, disabling the Settings drag editor.";
     };
 
     caffeineUnit = lib.mkOption {
