@@ -87,6 +87,7 @@ let
         readonly property bool   glassSurfaces:       ${qml sc.glassSurfaces}
         readonly property real   glassOpacity:        ${qml sc.glassOpacity}
         readonly property real   barOpacity:          ${qml sc.barOpacity}
+        readonly property bool   popupMatchBarOpacity: ${qml sc.popupMatchBarOpacity}
         readonly property bool   wsDynamic:           ${qml sc.wsDynamic}
         readonly property int    tempHotThreshold:    ${qml sc.tempHotThreshold}
         readonly property int    cpuHotPercent:       ${qml sc.cpuHotPercent}
@@ -503,6 +504,16 @@ in
       # Fork default is 0.88.
       default = 0.64;
       description = "Alpha of the bar's glass surface (0.4-1.0); lower shows more frost.";
+    };
+
+    popupMatchBarOpacity = lib.mkOption {
+      type = lib.types.bool;
+      # Upstream 0.6.1+ lets the bar-anchored popups (notifications,
+      # calendar, tray, quick actions) reuse the bar's opacity. Moot while
+      # glassSurfaces is on -- Theme.popup checks glass first -- so this
+      # just mirrors the fork's default.
+      default = false;
+      description = "Bar-anchored popups follow the bar's opacity when glass mode is off.";
     };
 
     trayWidget = lib.mkOption {
