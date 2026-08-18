@@ -266,6 +266,16 @@ let
         desc = "Show keyboard shortcuts";
         group = "Session";
       })
+      # GNOME parity: <Super>v is toggle-message-tray there; tab 2 is the
+      # menu's Notifications tab. Unlike Super+Q this opens/raises only --
+      # the menu IPC's tab() has no toggle -- so Escape closes. Plain V is
+      # free: float is Super+SHIFT+V, clipboard history is ALT+V.
+      (mkDef {
+        keys = "${mod} + V";
+        dsp = execDispatcher "${silereIpc} menu tab 2";
+        desc = "Show notifications";
+        group = "Session";
+      })
       # GNOME parity: <Super>q is toggle-quick-settings there (see the GNOME
       # profile's keybindings.nix). `menu toggle` is the exact counterpart:
       # it opens the menu on its Home tab and closes it when already open.
