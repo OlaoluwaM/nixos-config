@@ -7,8 +7,6 @@
 let
   cfg = config.local.hyprland;
   fonts = config.local.fonts;
-  theme = config.local.theme.colors;
-  stripHash = lib.removePrefix "#";
 in
 {
   config = lib.mkIf cfg.enable {
@@ -18,9 +16,16 @@ in
     # after hypridle locks the session.
     #
     # This block controls the look of the lock screen: background, password
-    # input field, time, date, and username. The composition borrows macOS's
-    # quiet hierarchy and neutral glass treatment. PAM and session-lock
+    # input field, time, and date. The composition follows GNOME's shield
+    # hierarchy — a bold clock dominating upper-center, the date beneath it,
+    # and a lone frosted password field below center (no username label; on a
+    # single-user machine it stated the obvious). PAM and session-lock
     # ownership remain entirely with hyprlock.
+    #
+    # The palette is deliberately neutral: every color here is white, black,
+    # or an alpha of them (design-locked 2026-08-17). The frost on the input
+    # field needs no compositor tricks — the background below is already
+    # blurred, so a low-alpha white fill over it IS the glass.
     #
     # Source: https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/
     programs.hyprlock = {
@@ -68,27 +73,26 @@ in
             # Empty monitor means "show this on all monitors".
             monitor = "";
 
-            # Anchor the compact password field to the bottom rather than the
-            # display center. This keeps the clock visually dominant and makes
-            # the composition adapt to the VM and laptop display heights.
-            size = "240, 40";
-            position = "0, 100";
+            # Just below center, closing toward the clock so the whole
+            # composition reads as one centered cluster rather than a clock
+            # zone and an auth zone (positions live-tuned with hyprlock -c).
+            size = "380, 56";
+            position = "0, -115";
             halign = "center";
-            valign = "bottom";
+            valign = "center";
 
-            # The background's brightness cap supplies the contrast boundary,
-            # so this field only needs a light neutral tint rather than an
-            # opaque black fill. Auth states vary opacity instead of hue;
-            # fail_text remains the clear signal when color is absent.
-            outline_thickness = 1;
-            outer_color = "rgba(ffffff66)";
-            inner_color = "rgba(00000033)";
+            # Borderless frost: the background above is pre-blurred, so this
+            # low-alpha white lift over it reads as translucent glass. More
+            # alpha was tried and rejected — white over a darkened backdrop
+            # goes flat gray fast. hyprlock has no placeholder alignment
+            # option, so the placeholder stays centered.
+            outline_thickness = 0;
+            inner_color = "rgba(ffffff30)";
             font_color = "rgba(ffffffff)";
-            # Hyprlock replaces font_color with these colors while checking or
-            # reporting a failure. local.theme.colors.text is the shared Nix
-            # token for this semantic `on_surface` role.
-            check_color = "rgb(${stripHash theme.text})";
-            fail_color = "rgb(${stripHash theme.text})";
+            # Auth states keep the neutral palette; fail_text is the failure
+            # signal rather than a color change.
+            check_color = "rgba(ffffffff)";
+            fail_color = "rgba(ffffffff)";
             font_family = fonts.shell.family;
 
             # Password dots are centered in the input field.
@@ -99,9 +103,9 @@ in
             # $FAIL is hyprlock's backend-agnostic failure message. $PAMFAIL
             # can be empty when no PAM-specific string accompanies a failure.
             fail_text = "$FAIL";
-            # Ten pixels reads as a rounded rectangle rather than a pill while
-            # preserving the soft geometry used elsewhere in the lock screen.
-            rounding = 10;
+            # Rounded rectangle, not a pill, matching the shell's capsule
+            # doctrine.
+            rounding = 12;
             shadow_passes = 2;
             shadow_size = 4;
             shadow_color = "rgba(000000cc)";
@@ -110,48 +114,32 @@ in
 
         label = [
           {
-            # The date sits above the clock, following the reference hierarchy.
-            # GNU date's %-d omits the leading zero from single-digit days.
-            monitor = "";
-            text = "cmd[update:60000] date '+%A, %B %-d'";
-            color = "rgba(ffffffe6)";
-            font_size = 20;
-            font_family = fonts.shell.family;
-            position = "0, -75";
-            halign = "center";
-            valign = "top";
-            shadow_passes = 4;
-            shadow_size = 5;
-            shadow_color = "rgba(000000e6)";
-          }
-          {
-            # hyprlock substitutes $TIME without spawning a helper. Keep this
-            # as the largest element, but leave enough top margin for laptop
-            # panels with a camera notch or thick bezel.
+            # GNOME's shield leads with the time: large and bold, riding above
+            # center. The bold face is requested by family name because
+            # hyprlock labels have no weight option.
             monitor = "";
             text = "$TIME";
             color = "rgba(ffffffff)";
-            font_size = 84;
-            font_family = fonts.shell.family;
-            position = "0, -115";
+            font_size = 150;
+            font_family = "${fonts.shell.family} Bold";
+            position = "0, 165";
             halign = "center";
-            valign = "top";
+            valign = "center";
             shadow_passes = 4;
             shadow_size = 6;
             shadow_color = "rgba(000000e6)";
           }
           {
-            # An AccountsService avatar is not provisioned by this repo, so a
-            # username label is deterministic in a clean VM while still giving
-            # the lower authentication area a clear identity.
+            # The date sits beneath the clock, GNOME-style. GNU date's %-d
+            # omits the leading zero from single-digit days.
             monitor = "";
-            text = "$USER";
-            color = "rgba(fffffff2)";
-            font_size = 16;
+            text = "cmd[update:60000] date '+%A, %B %-d'";
+            color = "rgba(ffffffe6)";
+            font_size = 26;
             font_family = fonts.shell.family;
-            position = "0, 160";
+            position = "0, 25";
             halign = "center";
-            valign = "bottom";
+            valign = "center";
             shadow_passes = 4;
             shadow_size = 5;
             shadow_color = "rgba(000000e6)";
