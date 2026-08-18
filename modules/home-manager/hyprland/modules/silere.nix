@@ -311,7 +311,12 @@ in
     # mirrors the fork's own _schema validation for these keys.
     barWidgetOrderLeft = lib.mkOption {
       type = lib.types.strMatching "^[a-zA-Z]*(,[a-zA-Z]+)*$";
-      default = "workspaces,media";
+      # vitals rides just after the workspaces by request. Its meta group
+      # ("power") differs from both neighbors' groups, so the default
+      # groups-mode separators render its transient chips as their own
+      # cluster with no extra mechanism -- and appearing here, they can
+      # never shuffle the steady right-zone cluster at all.
+      default = "workspaces,vitals,media";
       description = "Bar widgets in the left zone, comma-separated in order.";
     };
 
@@ -330,11 +335,10 @@ in
       # it shares the cluster's meta group, so no divider splits it off.
       # traypopup sits ahead of it: the collapsed tray pill only exists while
       # SNI items exist, so most of the time it costs nothing. The inline
-      # "tray" key stays listed but dormant (trayWidget=false). vitals leads
-      # the zone: its chips are transient alerts that should not shuffle the
-      # steady cluster when they appear. privacy (REC/mic) outranks even
-      # vitals -- it goes furthest left.
-      default = "tray,updates,privacy,vitals,traypopup,caffeine,network,bluetooth,volume,brightness,battery,clock";
+      # "tray" key stays listed but dormant (trayWidget=false). privacy
+      # (REC/mic) leads the zone -- it goes furthest left. vitals moved to
+      # the left zone (see barWidgetOrderLeft).
+      default = "tray,updates,privacy,traypopup,caffeine,network,bluetooth,volume,brightness,battery,clock";
       description = "Bar widgets in the right zone, comma-separated in order.";
     };
 
