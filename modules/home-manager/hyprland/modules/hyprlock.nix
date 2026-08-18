@@ -90,7 +90,13 @@ in
             inner_color = "rgba(ffffff30)";
             font_color = "rgba(ffffffff)";
             # Auth states keep the neutral palette; fail_text is the failure
-            # signal rather than a color change.
+            # signal rather than a color change. In borderless mode hyprlock
+            # has no outline to recolor, so it pours check/fail_color into the
+            # inner box instead -- opaque white flooded the frost on every
+            # failed attempt. swap_font_color reroutes those state colors to
+            # the font, where white is what the field renders anyway, leaving
+            # the glass untouched (PasswordInputField.cpp's BORDERLESS path).
+            swap_font_color = true;
             check_color = "rgba(ffffffff)";
             fail_color = "rgba(ffffffff)";
             font_family = fonts.shell.family;
