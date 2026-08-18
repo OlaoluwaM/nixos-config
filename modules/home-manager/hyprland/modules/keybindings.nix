@@ -484,9 +484,12 @@ let
         group = "Hardware";
         flags.locked = true;
       })
+      # Through the shell for the same reason as the volume keys above: a
+      # brightnessctl press at 0% or 100% changes nothing the shell can
+      # observe, so the OSD never appeared at the rails. Same 5% step.
       (mkDef {
         keys = "XF86MonBrightnessUp";
-        dsp = execDispatcher "${brightnessCommand} set 5%+";
+        dsp = execDispatcher "${silereIpc} brightness raise";
         desc = "Raise the brightness";
         group = "Hardware";
         flags = {
@@ -497,7 +500,7 @@ let
       })
       (mkDef {
         keys = "XF86MonBrightnessDown";
-        dsp = execDispatcher "${brightnessCommand} set 5%-";
+        dsp = execDispatcher "${silereIpc} brightness lower";
         desc = "Lower the brightness";
         group = "Hardware";
         flags = {
