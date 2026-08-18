@@ -267,14 +267,14 @@ let
         group = "Session";
       })
       # GNOME parity: <Super>q is toggle-quick-settings there (see the GNOME
-      # profile's keybindings.nix); silere's closest surface is the menu, and
-      # landing on the Settings tab (index 1) is the deliberate choice -- the
-      # Home tab already has Super+tap and the bar itself. `menu tab` opens or
-      # raises; it does not toggle closed, Escape does that.
+      # profile's keybindings.nix). `menu toggle` is the exact counterpart:
+      # it opens the menu on its Home tab and closes it when already open.
+      # (Landing on the Settings tab was tried first and rolled back -- the
+      # user wants Home.)
       (mkDef {
         keys = "${mod} + Q";
-        dsp = execDispatcher "${silereIpc} menu tab 1";
-        desc = "Open the shell settings";
+        dsp = execDispatcher "${silereIpc} menu toggle";
+        desc = "Toggle the shell menu";
         group = "Session";
       })
 
