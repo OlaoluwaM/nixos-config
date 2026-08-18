@@ -237,11 +237,11 @@
     "silere-shell": {
       "flake": false,
       "locked": {
-        "lastModified": 1787082033,
-        "narHash": "sha256-XyXmPvXfQD23gVJCtei2w6auVU16moFl97NssP53JFg=",
+        "lastModified": 1787085790,
+        "narHash": "sha256-+Szm4IYVJjoabXAikI27YESpj4RZy4ft8lA9bU6Skkk=",
         "owner": "OlaoluwaM",
         "repo": "silere-shell",
-        "rev": "424929de3f0d408cc165ce72bb22d99e40d3a301",
+        "rev": "d6407888d40fe39e528173c4460c58d7b485a6d0",
         "type": "github"
       },
       "original": {
