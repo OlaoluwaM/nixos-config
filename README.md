@@ -54,6 +54,25 @@ environment variables may still require logging out and back in.
 To apply only the user configuration, use the standalone Home Manager command
 above.
 
+### Changing the wallpaper (Hyprland)
+
+Wallpapers are set through Vicinae or the terminal, never through the shell's
+Settings pane -- silere only *consumes* wallpapers (its "Wallpaper" theme mode
+is the matugen palette toggle, not a picker). Three equivalent entry points:
+
+- `Super+Shift+W` -- random pick from `$WALLPAPERS_DIR`
+  (`~/Pictures/wallpapers` by default)
+- Vicinae search → **Set Wallpaper** -- pick a specific image
+- `wallpaper-set <path>` in a terminal
+
+All three funnel through the same `wallpaper-set` script
+(`modules/home-manager/hyprland/modules/wallpaper.nix`), which is what
+guarantees the full fan-out: awww swaps the desktop, matugen retints the shell
+(the glass surfaces follow, since their tint derives from the matugen
+palette), and the stable PNG hyprlock reads is refreshed atomically. A setter
+inside the shell would bypass the matugen/hyprlock halves, which is why there
+isn't one.
+
 ## Using ROG Control Center on Boreas
 
 ROG Control Center is the window for the `asusd` service. It starts in the
@@ -107,6 +126,15 @@ active.
 - [ ] Break apart user home-manager module into sub-modules
 - [x] Delete old Hyprland QML and legacy desktop shell plumbing code
 - [ ] Look into declaratively setting up a wallpaper (**Optional**)
+- [ ] Animated wallpaper transitions: awww (our swww fork) already supports the
+      r/unixporn-style transitions; the change is the single `awww img "$src"`
+      line in `modules/home-manager/hyprland/modules/wallpaper.nix` gaining
+      flags, e.g. `--transition-type grow --transition-pos "$(hyprctl cursorpos
+      | tr -d ' ')" --transition-fps 60 --transition-duration 0.8` (plus
+      hyprland in the script's runtimeInputs and a center fallback when no
+      cursor exists, e.g. the session-start seed). Other types: wipe, wave,
+      outer, random. Consider a `local.hyprland.wallpaperTransition` option
+      instead of hardcoding.
 
 ## Troubleshooting
 
