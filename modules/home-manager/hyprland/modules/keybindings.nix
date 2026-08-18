@@ -418,6 +418,43 @@ let
         flags.locked = true;
         viewer = false;
       })
+      # GNOME parity: gnome-settings-daemon services these keys natively, so the
+      # GNOME profile never declares them. Routed through the shell's media IPC
+      # rather than playerctl so the keys drive the same player the media card
+      # and bar control -- including a source pinned with the card's steppers,
+      # which playerctld's own last-active pick knows nothing about.
+      (mkDef {
+        keys = "XF86AudioPlay";
+        dsp = execDispatcher "${silereIpc} media playPause";
+        desc = "Play or pause media";
+        group = "Hardware";
+        flags.locked = true;
+        viewer = false;
+      })
+      (mkDef {
+        keys = "XF86AudioPause";
+        dsp = execDispatcher "${silereIpc} media playPause";
+        desc = "Play or pause media";
+        group = "Hardware";
+        flags.locked = true;
+        viewer = false;
+      })
+      (mkDef {
+        keys = "XF86AudioNext";
+        dsp = execDispatcher "${silereIpc} media next";
+        desc = "Next track";
+        group = "Hardware";
+        flags.locked = true;
+        viewer = false;
+      })
+      (mkDef {
+        keys = "XF86AudioPrev";
+        dsp = execDispatcher "${silereIpc} media previous";
+        desc = "Previous track";
+        group = "Hardware";
+        flags.locked = true;
+        viewer = false;
+      })
       (mkDef {
         keys = "XF86MonBrightnessUp";
         dsp = execDispatcher "${brightnessCommand} set 5%+";
