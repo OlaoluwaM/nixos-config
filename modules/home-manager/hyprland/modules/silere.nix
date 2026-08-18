@@ -91,6 +91,7 @@ let
         readonly property int    cpuHotPercent:       ${qml sc.cpuHotPercent}
         readonly property int    memHotPercent:       ${qml sc.memHotPercent}
         readonly property string recordingStateFile:  ${qml sc.recordingStateFile}
+        readonly property string keybindsFile:        ${qml sc.keybindsFile}
     }
   '';
 
@@ -390,6 +391,17 @@ in
       # fork's generic default is blueman-manager.
       default = "kitty --class bluetui-tile bluetui";
       description = "Command template the bluetooth details view launches for deep device management.";
+    };
+
+    keybindsFile = lib.mkOption {
+      type = lib.types.str;
+      # keybindings.nix derives this JSON from the same bindDefs list the
+      # actual Hyprland binds render from, so the shell's Super+/ shortcuts
+      # viewer can never drift from what the chords really do. The fork
+      # ships this key empty, which keeps the viewer dormant on non-Nix
+      # installs.
+      default = "${config.xdg.dataHome}/silere/keybinds.json";
+      description = "JSON file behind the shell's searchable keybindings viewer.";
     };
 
     wsDynamic = lib.mkOption {

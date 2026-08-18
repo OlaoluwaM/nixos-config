@@ -14,6 +14,19 @@
 # compositor config (input/general/decoration/animations/monitor), and
 # services stay in default.nix.
 #
+# Every chord is declared once in `bindDefs` below with a human description
+# and a group, and two artifacts derive from that single list:
+#   1. the Hyprland lua binds (the description rides along as a bind option,
+#      so `hyprctl binds` is self-documenting), and
+#   2. ~/.local/share/silere/keybinds.json, the data behind the shell's
+#      searchable keybindings viewer (silere.nix points its keybindsFile
+#      key here; Super+/ opens the viewer).
+# Entries with `viewer = false` bind without cluttering the viewer (the 20
+# generated workspace chords collapse into two synthetic rows instead), and
+# `viewerExtras` documents chords this module does not own -- the hyprshell
+# switcher registers its own binds with the daemon, and gestures are not
+# binds at all -- so the viewer still lists them.
+#
 # AGENTS.md's rule to keep equivalent GNOME and Hyprland keybindings on the
 # same chord applies here: before changing a binding, check the GNOME
 # profile and preserve parity unless a desktop-specific constraint requires
@@ -30,173 +43,462 @@ let
   vicinaeCommand = lib.getExe' config.programs.vicinae.package "vicinae";
   brightnessCommand = lib.getExe pkgs.brightnessctl;
   wpctlCommand = lib.getExe' pkgs.wireplumber "wpctl";
+  qsCommand = lib.getExe' pkgs.quickshell "qs";
 
   execDispatcher = command: "hl.dsp.exec_cmd(${luaString command})";
-  mkBind = keys: dispatcher: {
-    _args = [
-      keys
-      (lua dispatcher)
-    ];
-  };
 
-  mkBindWithFlags = keys: dispatcher: flags: {
+  # One definition per chord. `flags` holds Hyprland bind options (release,
+  # locked, mouse, ...); the description is merged in when the lua bind is
+  # rendered, so flags never need to carry it themselves.
+  mkDef =
+    {
+      keys,
+      dsp,
+      desc,
+      group,
+      flags ? { },
+      viewer ? true,
+    }:
+    {
+      inherit
+        keys
+        dsp
+        desc
+        group
+        flags
+        viewer
+        ;
+    };
+
+  toLuaBind = d: {
     _args = [
-      keys
-      (lua dispatcher)
-      flags
+      d.keys
+      (lua d.dsp)
+      ({ description = d.desc; } // d.flags)
     ];
   };
 
   # Match Hyprland's standard workspace bindings:
   # Super+1..9 selects workspaces 1..9, Super+0 selects workspace 10.
-  # Adding Shift moves the focused window to that workspace.
-  workspaceBinds = lib.concatMap (
+  # Adding Shift moves the focused window to that workspace. viewer = false:
+  # twenty near-identical rows would drown the viewer, so `viewerExtras`
+  # carries two collapsed rows for them instead.
+  workspaceDefs = lib.concatMap (
     workspace:
     let
       key = if workspace == 10 then "0" else toString workspace;
     in
     [
-      (mkBind "${mod} + ${key}" "hl.dsp.focus({ workspace = ${toString workspace} })")
-      (mkBind "${mod} + SHIFT + ${key}" "hl.dsp.window.move({ workspace = ${toString workspace} })")
+      (mkDef {
+        keys = "${mod} + ${key}";
+        dsp = "hl.dsp.focus({ workspace = ${toString workspace} })";
+        desc = "Switch to workspace ${toString workspace}";
+        group = "Workspaces";
+        viewer = false;
+      })
+      (mkDef {
+        keys = "${mod} + SHIFT + ${key}";
+        dsp = "hl.dsp.window.move({ workspace = ${toString workspace} })";
+        desc = "Move window to workspace ${toString workspace}";
+        group = "Workspaces";
+        viewer = false;
+      })
     ]
   ) (lib.range 1 10);
+
+  bindDefs =
+    [
+      # -- Applications ------------------------------------------------------
+      (mkDef {
+        keys = "${mod} + T";
+        dsp = execDispatcher terminal;
+        desc = "Open a terminal";
+        group = "Applications";
+      })
+      (mkDef {
+        keys = "${mod} + W";
+        dsp = execDispatcher (lib.getExe pkgs.firefox);
+        desc = "Open Firefox";
+        group = "Applications";
+      })
+      (mkDef {
+        keys = "ALT + O";
+        dsp = execDispatcher (lib.getExe unstable.obsidian);
+        desc = "Open Obsidian";
+        group = "Applications";
+      })
+      (mkDef {
+        keys = "CTRL + ALT + T";
+        dsp = execDispatcher (lib.getExe' pkgs.ticktick "ticktick");
+        desc = "Open TickTick";
+        group = "Applications";
+      })
+      # Launch through the desktop entry so the themed override from
+      # home/olaolu/default.nix (dark-mode env) applies, matching GNOME.
+      (mkDef {
+        keys = "${mod} + S";
+        dsp = execDispatcher "gtk-launch slack";
+        desc = "Open Slack";
+        group = "Applications";
+      })
+      (mkDef {
+        keys = "ALT + S";
+        dsp = execDispatcher (lib.getExe pkgs.spotify);
+        desc = "Open Spotify";
+        group = "Applications";
+      })
+      (mkDef {
+        keys = "${mod} + D";
+        dsp = execDispatcher (lib.getExe' unstable.discord "Discord");
+        desc = "Open Discord";
+        group = "Applications";
+      })
+      (mkDef {
+        keys = "${mod} + M";
+        dsp = execDispatcher (lib.getExe unstable.protonmail-desktop);
+        desc = "Open Proton Mail";
+        group = "Applications";
+      })
+      (mkDef {
+        keys = "${mod} + SHIFT + M";
+        dsp = execDispatcher "${pkgs.mission-center}/bin/missioncenter";
+        desc = "Open Mission Center";
+        group = "Applications";
+      })
+      (mkDef {
+        keys = "${mod} + N";
+        dsp = execDispatcher "${pkgs.nautilus}/bin/nautilus";
+        desc = "Open Files";
+        group = "Applications";
+      })
+
+      # -- Launcher ----------------------------------------------------------
+      (mkDef {
+        keys = "${mod} + Space";
+        dsp = execDispatcher "${vicinaeCommand} open";
+        desc = "Open the launcher";
+        group = "Launcher";
+      })
+      (mkDef {
+        keys = "ALT + V";
+        dsp = execDispatcher "${vicinaeCommand} 'vicinae://launch/clipboard/history?toggle=true'";
+        desc = "Open clipboard history";
+        group = "Launcher";
+      })
+      # "random-wallpaper" is a Vicinae script command (wallpaper.nix,
+      # installed under ~/.local/share/vicinae/scripts) that picks a random
+      # image from $WALLPAPERS_DIR and calls wallpaper-set. Its installed
+      # filename is also its deeplink id -- renaming that script without
+      # updating this bind would silently break it. Picking a *specific*
+      # wallpaper stays inside Vicinae's own search ("Set Wallpaper") or the
+      # CLI (wallpaper-set <path>): Vicinae's script-command argument types
+      # have no live-directory picker to bind a chord to.
+      (mkDef {
+        keys = "${mod} + SHIFT + W";
+        dsp = execDispatcher "${vicinaeCommand} 'vicinae://launch/scripts/random-wallpaper'";
+        desc = "Set a random wallpaper";
+        group = "Launcher";
+      })
+
+      # -- Screen capture ----------------------------------------------------
+      (mkDef {
+        keys = "F6";
+        dsp = execDispatcher "${commands.screenshotScript}/bin/hypr-shell-screenshot area";
+        desc = "Screenshot an area";
+        group = "Screen capture";
+      })
+      (mkDef {
+        keys = "SHIFT + F6";
+        dsp = execDispatcher "${commands.screenshotScript}/bin/hypr-shell-screenshot full";
+        desc = "Screenshot the screen";
+        group = "Screen capture";
+      })
+      (mkDef {
+        keys = "CTRL + F6";
+        dsp = execDispatcher "${commands.screenshotScript}/bin/hypr-shell-screenshot window";
+        desc = "Screenshot the focused window";
+        group = "Screen capture";
+      })
+      (mkDef {
+        keys = "${mod} + SHIFT + R";
+        dsp = execDispatcher "${commands.screenrecordScript}/bin/hypr-shell-record area";
+        desc = "Record an area of the screen";
+        group = "Screen capture";
+      })
+      (mkDef {
+        keys = "${mod} + CTRL + R";
+        dsp = execDispatcher "${commands.screenrecordScript}/bin/hypr-shell-record full";
+        desc = "Record the screen";
+        group = "Screen capture";
+      })
+      (mkDef {
+        keys = "${mod} + ALT + R";
+        dsp = execDispatcher "${commands.screenrecordScript}/bin/hypr-shell-record stop";
+        desc = "Stop the recording";
+        group = "Screen capture";
+      })
+
+      # -- Session -----------------------------------------------------------
+      (mkDef {
+        keys = "${mod} + L";
+        dsp = execDispatcher "${pkgs.systemd}/bin/loginctl lock-session";
+        desc = "Lock the screen";
+        group = "Session";
+      })
+      # Same hypr-shell-caffeine.service the shell's menu row and mug pill
+      # control -- one unit, so chord and UI can never disagree. The script
+      # goes through the shell's IPC first, so the chord starts a run with
+      # the last chosen preset and the pill lights instantly.
+      (mkDef {
+        keys = "${mod} + C";
+        dsp = execDispatcher "${commands.caffeineScript}/bin/hypr-shell-caffeine toggle";
+        desc = "Toggle caffeine";
+        group = "Session";
+      })
+      (mkDef {
+        keys = "${mod} + slash";
+        dsp = execDispatcher "${qsCommand} ipc call keybinds toggle";
+        desc = "Show keyboard shortcuts";
+        group = "Session";
+      })
+
+      # -- Windows -----------------------------------------------------------
+      (mkDef {
+        keys = "${mod} + SHIFT + Q";
+        dsp = "hl.dsp.window.close()";
+        desc = "Close the window";
+        group = "Windows";
+      })
+      (mkDef {
+        keys = "ALT + F4";
+        dsp = "hl.dsp.window.close()";
+        desc = "Close the window";
+        group = "Windows";
+      })
+      (mkDef {
+        keys = "${mod} + F";
+        dsp = "hl.dsp.window.fullscreen()";
+        desc = "Toggle fullscreen";
+        group = "Windows";
+      })
+      (mkDef {
+        keys = "${mod} + Up";
+        dsp = "hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"set\" })";
+        desc = "Maximize the window";
+        group = "Windows";
+      })
+      (mkDef {
+        keys = "${mod} + Down";
+        dsp = "hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"unset\" })";
+        desc = "Unmaximize the window";
+        group = "Windows";
+      })
+      (mkDef {
+        keys = "ALT + F5";
+        dsp = "hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"unset\" })";
+        desc = "Unmaximize the window";
+        group = "Windows";
+        viewer = false;
+      })
+      (mkDef {
+        keys = "${mod} + SHIFT + V";
+        dsp = "hl.dsp.window.float()";
+        desc = "Toggle floating";
+        group = "Windows";
+      })
+    ]
+    ++ workspaceDefs
+    ++ [
+      # Scroll through existing workspaces with Super + scroll.
+      (mkDef {
+        keys = "${mod} + mouse_down";
+        dsp = "hl.dsp.focus({ workspace = \"e+1\" })";
+        desc = "Next workspace (scroll)";
+        group = "Workspaces";
+      })
+      (mkDef {
+        keys = "${mod} + mouse_up";
+        dsp = "hl.dsp.focus({ workspace = \"e-1\" })";
+        desc = "Previous workspace (scroll)";
+        group = "Workspaces";
+      })
+
+      # Release binds are useful for "press Super by itself" behavior because
+      # they avoid firing before Hyprland knows whether Super is part of a combo.
+      (mkDef {
+        keys = "${mod} + SUPER_L";
+        dsp = execDispatcher "${vicinaeCommand} open";
+        desc = "Open the launcher (tap Super)";
+        group = "Launcher";
+        flags.release = true;
+        viewer = false;
+      })
+      (mkDef {
+        keys = "${mod} + SUPER_R";
+        dsp = execDispatcher "${vicinaeCommand} open";
+        desc = "Open the launcher (tap Super)";
+        group = "Launcher";
+        flags.release = true;
+        viewer = false;
+      })
+
+      # Mouse binds keep running while the mouse button is held. Used here so
+      # Super+left-drag moves a window and Super+right-drag resizes one.
+      (mkDef {
+        keys = "${mod} + mouse:272";
+        dsp = "hl.dsp.window.drag()";
+        desc = "Move window (drag)";
+        group = "Windows";
+        flags.mouse = true;
+      })
+      (mkDef {
+        keys = "${mod} + mouse:273";
+        dsp = "hl.dsp.window.resize()";
+        desc = "Resize window (drag)";
+        group = "Windows";
+        flags.mouse = true;
+      })
+
+      # Stock Hyprland has no shell OSD, so these direct device commands are
+      # the only thing keeping the hardware keys usable, including while
+      # locked. viewer = false: hardware keys are self-describing.
+      (mkDef {
+        keys = "XF86AudioRaiseVolume";
+        dsp = execDispatcher "${wpctlCommand} set-volume --limit 1.0 @DEFAULT_AUDIO_SINK@ 5%+";
+        desc = "Raise the volume";
+        group = "Hardware";
+        flags = {
+          locked = true;
+          repeating = true;
+        };
+        viewer = false;
+      })
+      (mkDef {
+        keys = "XF86AudioLowerVolume";
+        dsp = execDispatcher "${wpctlCommand} set-volume @DEFAULT_AUDIO_SINK@ 5%-";
+        desc = "Lower the volume";
+        group = "Hardware";
+        flags = {
+          locked = true;
+          repeating = true;
+        };
+        viewer = false;
+      })
+      (mkDef {
+        keys = "XF86AudioMute";
+        dsp = execDispatcher "${wpctlCommand} set-mute @DEFAULT_AUDIO_SINK@ toggle";
+        desc = "Mute the audio";
+        group = "Hardware";
+        flags.locked = true;
+        viewer = false;
+      })
+      (mkDef {
+        keys = "XF86MonBrightnessUp";
+        dsp = execDispatcher "${brightnessCommand} set 5%+";
+        desc = "Raise the brightness";
+        group = "Hardware";
+        flags = {
+          locked = true;
+          repeating = true;
+        };
+        viewer = false;
+      })
+      (mkDef {
+        keys = "XF86MonBrightnessDown";
+        dsp = execDispatcher "${brightnessCommand} set 5%-";
+        desc = "Lower the brightness";
+        group = "Hardware";
+        flags = {
+          locked = true;
+          repeating = true;
+        };
+        viewer = false;
+      })
+      (mkDef {
+        keys = "XF86KbdBrightnessUp";
+        dsp = execDispatcher "${brightnessCommand} --device='*::kbd_backlight' set 5%+";
+        desc = "Raise the keyboard backlight";
+        group = "Hardware";
+        flags = {
+          locked = true;
+          repeating = true;
+        };
+        viewer = false;
+      })
+      (mkDef {
+        keys = "XF86KbdBrightnessDown";
+        dsp = execDispatcher "${brightnessCommand} --device='*::kbd_backlight' set 5%-";
+        desc = "Lower the keyboard backlight";
+        group = "Hardware";
+        flags = {
+          locked = true;
+          repeating = true;
+        };
+        viewer = false;
+      })
+    ]
+    # Super+Q (settings), Super+Alt+W (wifi), Super+B (bluetooth),
+    # Super+Escape/XF86PowerOff (session) are intentionally unbound: their
+    # old shell targets are gone. They come back once the new silere shell
+    # lands. Super+Shift+W (wallpapers) is bound above -- the wallpaper
+    # pipeline doesn't depend on the rest of the shell surfacing them.
+    ++ lib.optionals enableAsusRogKeybindings [
+      (mkDef {
+        keys = "XF86Launch1";
+        dsp = execDispatcher (lib.getExe' pkgs.asusctl "rog-control-center");
+        desc = "Open ROG Control Center";
+        group = "Hardware";
+      })
+      (mkDef {
+        keys = "F5";
+        dsp = execDispatcher "${lib.getExe' pkgs.asusctl "asusctl"} profile -n";
+        desc = "Cycle the power profile";
+        group = "Hardware";
+      })
+    ];
+
+  # Chords the viewer should list that this module does not bind: hyprshell's
+  # daemon registers the switcher binds itself (hyprshell.nix), the workspace
+  # number chords collapse from twenty generated binds into two rows, and the
+  # swipe is a gesture, not a bind.
+  viewerExtras = [
+    {
+      keys = "ALT + Tab";
+      desc = "Switch windows";
+      group = "Workspaces";
+    }
+    {
+      keys = "${mod} + 1–9, 0";
+      desc = "Switch to workspace 1–10";
+      group = "Workspaces";
+    }
+    {
+      keys = "${mod} + SHIFT + 1–9, 0";
+      desc = "Move window to workspace 1–10";
+      group = "Workspaces";
+    }
+    {
+      keys = "3-finger swipe";
+      desc = "Switch workspaces (past the end creates one)";
+      group = "Workspaces";
+    }
+  ];
+
+  viewerEntries =
+    map (d: {
+      inherit (d) keys desc group;
+    }) (lib.filter (d: d.viewer) bindDefs)
+    ++ viewerExtras;
 in
 {
   config = lib.mkIf cfg.enable {
     wayland.windowManager.hyprland.settings = {
-      # Plain binds run once when the key is pressed.
-      bind = [
-        (mkBind "${mod} + T" (execDispatcher terminal))
-        (mkBind "${mod} + W" (execDispatcher (lib.getExe pkgs.firefox)))
-        (mkBind "ALT + O" (execDispatcher (lib.getExe unstable.obsidian)))
-        (mkBind "CTRL + ALT + T" (execDispatcher (lib.getExe' pkgs.ticktick "ticktick")))
-        # Launch through the desktop entry so the themed override from
-        # home/olaolu/default.nix (dark-mode env) applies, matching GNOME.
-        (mkBind "${mod} + S" (execDispatcher "gtk-launch slack"))
-        (mkBind "ALT + S" (execDispatcher (lib.getExe pkgs.spotify)))
-        (mkBind "${mod} + D" (execDispatcher (lib.getExe' unstable.discord "Discord")))
-
-        (mkBind "${mod} + Space" (execDispatcher "${vicinaeCommand} open"))
-        (mkBind "ALT + V" (
-          execDispatcher "${vicinaeCommand} 'vicinae://launch/clipboard/history?toggle=true'"
-        ))
-
-        # "random-wallpaper" is a Vicinae script command (wallpaper.nix,
-        # installed under ~/.local/share/vicinae/scripts) that picks a random
-        # image from $WALLPAPERS_DIR and calls wallpaper-set. Its installed
-        # filename is also its deeplink id -- renaming that script without
-        # updating this bind would silently break it. Picking a *specific*
-        # wallpaper stays inside Vicinae's own search ("Set Wallpaper") or the
-        # CLI (wallpaper-set <path>): Vicinae's script-command argument types
-        # have no live-directory picker to bind a chord to.
-        (mkBind "${mod} + SHIFT + W" (
-          execDispatcher "${vicinaeCommand} 'vicinae://launch/scripts/random-wallpaper'"
-        ))
-
-        (mkBind "F6" (execDispatcher "${commands.screenshotScript}/bin/hypr-shell-screenshot area"))
-        (mkBind "SHIFT + F6" (execDispatcher "${commands.screenshotScript}/bin/hypr-shell-screenshot full"))
-        (mkBind "CTRL + F6" (
-          execDispatcher "${commands.screenshotScript}/bin/hypr-shell-screenshot window"
-        ))
-
-        (mkBind "${mod} + SHIFT + R" (
-          execDispatcher "${commands.screenrecordScript}/bin/hypr-shell-record area"
-        ))
-        (mkBind "${mod} + CTRL + R" (
-          execDispatcher "${commands.screenrecordScript}/bin/hypr-shell-record full"
-        ))
-        (mkBind "${mod} + ALT + R" (
-          execDispatcher "${commands.screenrecordScript}/bin/hypr-shell-record stop"
-        ))
-
-        (mkBind "${mod} + N" (execDispatcher "${pkgs.nautilus}/bin/nautilus"))
-        (mkBind "${mod} + L" (execDispatcher "${pkgs.systemd}/bin/loginctl lock-session"))
-        # Same hypr-shell-caffeine.service the shell's menu row and mug pill
-        # control -- one unit, so chord and UI can never disagree. The pill
-        # catches the flip on its next inhibitor poll rather than instantly.
-        (mkBind "${mod} + C" (execDispatcher "${commands.caffeineScript}/bin/hypr-shell-caffeine toggle"))
-
-        (mkBind "${mod} + M" (execDispatcher (lib.getExe unstable.protonmail-desktop)))
-        (mkBind "${mod} + SHIFT + M" (execDispatcher "${pkgs.mission-center}/bin/missioncenter"))
-
-        (mkBind "${mod} + SHIFT + Q" "hl.dsp.window.close()")
-        (mkBind "ALT + F4" "hl.dsp.window.close()")
-
-        (mkBind "${mod} + F" "hl.dsp.window.fullscreen()")
-        (mkBind "${mod} + Up" "hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"set\" })")
-        (mkBind "${mod} + Down" "hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"unset\" })")
-        (mkBind "ALT + F5" "hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"unset\" })")
-        (mkBind "${mod} + SHIFT + V" "hl.dsp.window.float()")
-      ]
-      ++ workspaceBinds
-      ++ [
-        # Scroll through existing workspaces with Super + scroll.
-        (mkBind "${mod} + mouse_down" "hl.dsp.focus({ workspace = \"e+1\" })")
-        (mkBind "${mod} + mouse_up" "hl.dsp.focus({ workspace = \"e-1\" })")
-
-        # Release binds are useful for "press Super by itself" behavior because
-        # they avoid firing before Hyprland knows whether Super is part of a combo.
-        (mkBindWithFlags "${mod} + SUPER_L" (execDispatcher "${vicinaeCommand} open") { release = true; })
-        (mkBindWithFlags "${mod} + SUPER_R" (execDispatcher "${vicinaeCommand} open") { release = true; })
-
-        # Mouse binds keep running while the mouse button is held. Used here so
-        # Super+left-drag moves a window and Super+right-drag resizes one.
-        (mkBindWithFlags "${mod} + mouse:272" "hl.dsp.window.drag()" { mouse = true; })
-        (mkBindWithFlags "${mod} + mouse:273" "hl.dsp.window.resize()" { mouse = true; })
-
-        # Stock Hyprland has no shell OSD, so these direct device commands are
-        # the only thing keeping the hardware keys usable, including while
-        # locked.
-        (mkBindWithFlags "XF86AudioRaiseVolume"
-          (execDispatcher "${wpctlCommand} set-volume --limit 1.0 @DEFAULT_AUDIO_SINK@ 5%+")
-          {
-            locked = true;
-            repeating = true;
-          }
-        )
-        (mkBindWithFlags "XF86AudioLowerVolume"
-          (execDispatcher "${wpctlCommand} set-volume @DEFAULT_AUDIO_SINK@ 5%-")
-          {
-            locked = true;
-            repeating = true;
-          }
-        )
-        (mkBindWithFlags "XF86AudioMute"
-          (execDispatcher "${wpctlCommand} set-mute @DEFAULT_AUDIO_SINK@ toggle")
-          { locked = true; }
-        )
-        (mkBindWithFlags "XF86MonBrightnessUp" (execDispatcher "${brightnessCommand} set 5%+") {
-          locked = true;
-          repeating = true;
-        })
-        (mkBindWithFlags "XF86MonBrightnessDown" (execDispatcher "${brightnessCommand} set 5%-") {
-          locked = true;
-          repeating = true;
-        })
-        (mkBindWithFlags "XF86KbdBrightnessUp"
-          (execDispatcher "${brightnessCommand} --device='*::kbd_backlight' set 5%+")
-          {
-            locked = true;
-            repeating = true;
-          }
-        )
-        (mkBindWithFlags "XF86KbdBrightnessDown"
-          (execDispatcher "${brightnessCommand} --device='*::kbd_backlight' set 5%-")
-          {
-            locked = true;
-            repeating = true;
-          }
-        )
-      ]
-      # Super+Q (settings), Super+Alt+W (wifi), Super+B (bluetooth),
-      # Super+Escape/XF86PowerOff (session) are intentionally unbound: their
-      # old shell targets are gone. They come back once the new silere shell
-      # lands. Super+Shift+W (wallpapers) is bound above -- the wallpaper
-      # pipeline doesn't depend on the rest of the shell surfacing them.
-      ++ lib.optionals enableAsusRogKeybindings [
-        (mkBind "XF86Launch1" (execDispatcher (lib.getExe' pkgs.asusctl "rog-control-center")))
-        (mkBind "F5" (execDispatcher "${lib.getExe' pkgs.asusctl "asusctl"} profile -n"))
-      ];
+      bind = map toLuaBind bindDefs;
     };
+
+    # The viewer data the shell's Keybinds service reads (silere.nix points
+    # local.hyprland.silere.keybindsFile here). Derived from bindDefs above,
+    # so a chord and its documentation can never drift apart.
+    xdg.dataFile."silere/keybinds.json".text = builtins.toJSON viewerEntries;
   };
 }
