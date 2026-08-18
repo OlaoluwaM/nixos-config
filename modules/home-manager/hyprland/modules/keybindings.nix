@@ -385,12 +385,15 @@ let
         flags.mouse = true;
       })
 
-      # Stock Hyprland has no shell OSD, so these direct device commands are
-      # the only thing keeping the hardware keys usable, including while
-      # locked. viewer = false: hardware keys are self-describing.
+      # Raise/lower go through the shell like the media keys: a direct wpctl
+      # press at 0% or 100% is a PipeWire no-op the shell never sees, so the
+      # OSD stayed dark exactly when feedback matters most. The shell applies
+      # the same 5% step and 1.0 cap, and keeps running while locked. Mute
+      # stays a direct device command below. viewer = false: hardware keys
+      # are self-describing.
       (mkDef {
         keys = "XF86AudioRaiseVolume";
-        dsp = execDispatcher "${wpctlCommand} set-volume --limit 1.0 @DEFAULT_AUDIO_SINK@ 5%+";
+        dsp = execDispatcher "${silereIpc} audio raise";
         desc = "Raise the volume";
         group = "Hardware";
         flags = {
@@ -401,7 +404,7 @@ let
       })
       (mkDef {
         keys = "XF86AudioLowerVolume";
-        dsp = execDispatcher "${wpctlCommand} set-volume @DEFAULT_AUDIO_SINK@ 5%-";
+        dsp = execDispatcher "${silereIpc} audio lower";
         desc = "Lower the volume";
         group = "Hardware";
         flags = {
