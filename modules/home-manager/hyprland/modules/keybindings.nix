@@ -44,6 +44,11 @@ let
   brightnessCommand = lib.getExe pkgs.brightnessctl;
   wpctlCommand = lib.getExe' pkgs.wireplumber "wpctl";
   qsCommand = lib.getExe' pkgs.quickshell "qs";
+  # `qs ipc` locates the running instance by config path, and this shell runs
+  # from a Nix store path (silere.nix's ExecStart -p flag), not the default
+  # config dir -- a bare `qs ipc call` finds nothing. Every IPC call must
+  # carry the same -p the service uses.
+  silereIpc = "${qsCommand} -p ${commands.silereShellPackage}/share/silere-shell/shell.qml ipc call";
 
   execDispatcher = command: "hl.dsp.exec_cmd(${luaString command})";
 
@@ -257,7 +262,7 @@ let
       })
       (mkDef {
         keys = "${mod} + slash";
-        dsp = execDispatcher "${qsCommand} ipc call keybinds toggle";
+        dsp = execDispatcher "${silereIpc} keybinds toggle";
         desc = "Show keyboard shortcuts";
         group = "Session";
       })

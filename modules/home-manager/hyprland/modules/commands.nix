@@ -56,6 +56,12 @@ let
       # instance it is calling into.
       pkgs.quickshell
     ];
+    # `qs ipc` locates the running instance by config path, and the shell
+    # runs from a store path via -p, not the default config dir -- a bare
+    # `qs ipc call` finds nothing and the script silently fell back to raw
+    # unit control (losing the preset). The script reads this variable to
+    # target the exact packaged shell.qml the service runs.
+    runtimeEnv.SILERE_SHELL_QML = "${cfg.commands.silereShellPackage}/share/silere-shell/shell.qml";
     text = builtins.readFile ../scripts/hypr-shell-caffeine.sh;
   };
 in
