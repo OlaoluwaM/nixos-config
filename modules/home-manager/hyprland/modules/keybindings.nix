@@ -266,13 +266,13 @@ let
         desc = "Show keyboard shortcuts";
         group = "Session";
       })
-      # GNOME parity: <Super>v is toggle-message-tray there; tab 2 is the
-      # menu's Notifications tab. Unlike Super+Q this opens/raises only --
-      # the menu IPC's tab() has no toggle -- so Escape closes. Plain V is
-      # free: float is Super+SHIFT+V, clipboard history is ALT+V.
+      # GNOME parity: <Super>v is toggle-message-tray there. Unlike Super+Q
+      # this opens/raises only -- the menu IPC has no per-tab toggle -- so
+      # Escape closes. Plain V is free: float is Super+SHIFT+V, clipboard
+      # history is ALT+V.
       (mkDef {
         keys = "${mod} + V";
-        dsp = execDispatcher "${silereIpc} menu tab 2";
+        dsp = execDispatcher "${silereIpc} menu show notifications";
         desc = "Show notifications";
         group = "Session";
       })
