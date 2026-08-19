@@ -6,29 +6,6 @@
   ...
 }:
 
-# Beginner orientation:
-#
-# This module is the wallpaper pipeline for the Hyprland profile: one script
-# (wallpaper-set) that fans a chosen image out to everything that needs to
-# know about it --
-#   - awww: the live desktop background daemon
-#   - matugen: retints silere-shell (and anything else matugen drives) from
-#     the new image's palette
-#   - local.hyprland.wallpaper: the stable path hyprlock reads, kept in sync
-#     by converting (not copying) into it
-#
-# wallpaper-set is exposed to the rest of the profile as
-# local.hyprland.commands.wallpaperSetScript (option declared in
-# commands.nix, assigned below -- the same re-plumb silere.nix uses for
-# commands.silereShellPackage), so silere.nix can point the shell's
-# wallpaperCommand setting at this exact script.
-#
-# The human entry points used to be a pair of Vicinae script commands. They
-# are now the shell's own picker instead (Super+SHIFT+W and the "Wallpapers"
-# desktop entry, both in keybindings.nix): Vicinae's script-command argument
-# types only support a single static text field, never a live directory
-# listing, so a real picker over $WALLPAPERS_DIR was never something Vicinae
-# itself could render -- only the shell's own overlay can.
 let
   cfg = config.local.hyprland;
 
@@ -37,83 +14,34 @@ let
   # script below).
   placeholderWallpaper = pkgs.nixos-artwork.wallpapers.nineish-dark-gray.gnomeFilePath;
 
-  # The single entry point the rest of this pipeline funnels through. Only
-  # this script needs a Nix-level value (the stable wallpaper path), so it
-  # stays inline here instead of living under ../scripts/ with the other
-  # helper scripts, which are pure bash parameterized by args/env only.
+  matugenConfig = (pkgs.formats.toml { }).generate "matugen-config.toml" {
+    config = {
+      # Matugen would still rebuild the SchemeContent palette for this
+      # template, so caching would add files without making this faster.
+      caching = false;
+      version_check = false;
+    };
+
+    templates."silere-shell" = {
+      input_path = "${cfg.commands.silereShellPackage}/share/silere-shell/assets/matugen-theme.json";
+      output_path = "${config.xdg.configHome}/matugen/silere-shell.json";
+      mode = "Dark";
+      type = "SchemeContent";
+    };
+  };
+
   wallpaperSetScript = pkgs.writeShellApplication {
     name = "wallpaper-set";
     runtimeInputs = [
       unstable.awww
-      # unstable deliberately: stable ships 4.0.0, whose config struct has no
-      # `prefer` field (checked against the v4.0.0 source), so the config.toml
-      # preference below is only real from 4.1.0 -- which unstable pins.
+      # Keep the packaged helper on the same Matugen version that the Hyprland
+      # profile exposes for direct terminal use.
       unstable.matugen
       pkgs.imagemagick
       pkgs.coreutils
     ];
-    text = ''
-      # shellcheck shell=bash
-
-      # Beginner orientation:
-      #
-      # Usage: wallpaper-set <image-path>
-      #
-      # Updates, in order: the live desktop background (awww), the shell's
-      # matugen-derived theme, and the stable path hyprlock reads.
-
-      if [ "$#" -ne 1 ]; then
-          echo "usage: wallpaper-set <image-path>" >&2
-          exit 1
-      fi
-
-      src="$1"
-
-      if [ ! -f "$src" ] || [ ! -r "$src" ]; then
-          echo "wallpaper-set: not a readable file: $src" >&2
-          exit 1
-      fi
-
-      awww img "$src"
-      # Why each flag is here:
-      #
-      #   --prefer saturation
-      #     Some images give matugen several colors it could build the theme
-      #     from. When that happens it normally stops and asks you to pick one
-      #     -- but nothing that runs this script has a terminal to ask in (the
-      #     picker and the keybind both run headless), so instead of asking it
-      #     just dies, and the wallpaper quietly stops sticking. This flag
-      #     answers the question up front: take the most colorful one. The
-      #     same preference is also in config.toml, but only matugen 4.1.0
-      #     and newer reads it there, so the flag stays to cover any version.
-      #
-      #   -m dark
-      #     Build the dark palette. That's matugen's default today, but this
-      #     shell only has a dark look, so we say it outright instead of
-      #     hoping the default never changes.
-      #
-      #   -t scheme-tonal-spot
-      #     Which Material palette recipe to use -- also today's default. The
-      #     shell's colors were all tuned against this recipe, so if a new
-      #     matugen ever changed the default, every color in the shell would
-      #     quietly shift. Saying it here means that can't happen.
-      matugen image "$src" --prefer saturation -m dark -t scheme-tonal-spot
-
-      stable="${cfg.wallpaper}"
-      stable_dir="$(dirname -- "$stable")"
-
-      # Convert into a temp file in the same directory as the stable path,
-      # then rename over it. Rename is atomic on the same filesystem, so
-      # hyprlock (or anything else reading that path) never observes a
-      # partially written file. Converting rather than copying also means
-      # the stable path's .png extension always matches the real pixel
-      # format, no matter what format the picked image was in.
-      tmp="$(mktemp "$stable_dir/.wallpaper-set.XXXXXX.png")"
-      trap 'rm -f "$tmp"' EXIT
-      magick "$src" "$tmp"
-      mv -f "$tmp" "$stable"
-      trap - EXIT
-    '';
+    runtimeEnv.HYPR_WALLPAPER_PATH = cfg.wallpaper;
+    text = builtins.readFile ../scripts/wallpaper-set.sh;
   };
 in
 {
@@ -141,31 +69,11 @@ in
     '';
 
     # Replaces the fork installer's role here (scripts/install.sh normally
-    # writes this file's [templates.silere-shell] table itself): Nix already
-    # owns the checkout and packages the matugen template inside it, so it
-    # owns wiring matugen to that template too. silere-shell's
-    # MatugenPalette.qml live-watches output_path and repaints as soon as
-    # matugen rewrites it -- no shell restart needed.
-    # `prefer` is load-bearing, not taste: when matugen 4.x extracts several
-    # candidate source colors it PROMPTS for a choice, and with no terminal
-    # attached (the shell's picker, the Super+Shift+W chord -- every real
-    # caller) it errors out instead, which under wallpaper-set's set -e also
-    # skipped the stable-path convert -- the old "wallpaper resets on rebuild"
-    # bug. The maintainer's endorsed scripted answer is a preference
-    # (InioX/matugen#255). saturation = the most chromatic candidate, which is
-    # what an accent derived from artwork should be, and the most-chosen value
-    # in real dotfiles. NOTE: matugen only reads this key from 4.1.0; the
-    # deployed 4.0.0 ignores it, so wallpaper-set passes --prefer on the CLI
-    # as the actual carrier and this entry is forward-compatibility.
-    xdg.configFile."matugen/config.toml".text = ''
-      [config]
-      version_check = false
-      prefer = "saturation"
-
-      [templates.silere-shell]
-      input_path = "${cfg.commands.silereShellPackage}/share/silere-shell/assets/matugen-theme.json"
-      output_path = "${config.xdg.configHome}/matugen/silere-shell.json"
-    '';
+    # writes this file's [templates.silere-shell] table itself). Home Manager
+    # links the generated TOML into Matugen's standard config location.
+    # silere-shell's MatugenPalette.qml watches output_path and repaints when
+    # Matugen rewrites it, so no shell restart is needed.
+    xdg.configFile."matugen/config.toml".source = matugenConfig;
 
     systemd.user.services = {
       hypr-shell-awww = {
