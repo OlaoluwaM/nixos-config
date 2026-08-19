@@ -37,6 +37,10 @@ let
     name = "hypr-shell-record";
     runtimeInputs = with pkgs; [
       coreutils
+      # hyprctl + jq: the window mode derives its capture geometry from the
+      # active window the same way screenshotScript's window mode does.
+      hyprland
+      jq
       libnotify
       procps
       slurp

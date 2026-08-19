@@ -224,22 +224,27 @@ let
         desc = "Screenshot the focused window";
         group = "Screen capture";
       })
+      # Every record chord is a toggle (the script stops a running wf-recorder
+      # before it ever starts a new one), so no chord is spent on a dedicated
+      # stop bind anymore -- the slot mod+ALT+R used to burn on "stop" now
+      # mirrors CTRL+F6's focused-window mode instead. The bar's recording
+      # pill is the other stop path: clicking it runs the same script.
       (mkDef {
         keys = "${mod} + SHIFT + R";
         dsp = execDispatcher "${commands.screenrecordScript}/bin/hypr-shell-record area";
-        desc = "Record an area of the screen";
+        desc = "Start/stop an area recording";
         group = "Screen capture";
       })
       (mkDef {
         keys = "${mod} + CTRL + R";
         dsp = execDispatcher "${commands.screenrecordScript}/bin/hypr-shell-record full";
-        desc = "Record the screen";
+        desc = "Start/stop a screen recording";
         group = "Screen capture";
       })
       (mkDef {
         keys = "${mod} + ALT + R";
-        dsp = execDispatcher "${commands.screenrecordScript}/bin/hypr-shell-record stop";
-        desc = "Stop the recording";
+        dsp = execDispatcher "${commands.screenrecordScript}/bin/hypr-shell-record window";
+        desc = "Start/stop a window recording";
         group = "Screen capture";
       })
 

@@ -93,6 +93,7 @@ let
         readonly property int    cpuHotPercent:       ${qml sc.cpuHotPercent}
         readonly property int    memHotPercent:       ${qml sc.memHotPercent}
         readonly property string recordingStateFile:  ${qml sc.recordingStateFile}
+        readonly property string recordingStopCommand: ${qml sc.recordingStopCommand}
         readonly property string keybindsFile:        ${qml sc.keybindsFile}
     }
   '';
@@ -337,10 +338,11 @@ in
       # it shares the cluster's meta group, so no divider splits it off.
       # traypopup sits ahead of it: the collapsed tray pill only exists while
       # SNI items exist, so most of the time it costs nothing. The inline
-      # "tray" key stays listed but dormant (trayWidget=false). privacy
-      # (REC/mic) leads the zone -- it goes furthest left. vitals moved to
-      # the left zone (see barWidgetOrderLeft).
-      default = "tray,updates,privacy,traypopup,caffeine,network,bluetooth,volume,brightness,battery,clock";
+      # "tray" key stays listed but dormant (trayWidget=false). recording and
+      # privacy (blinking REC dot + timer, then mic) lead the zone as one
+      # capture cluster -- they share the "privacy" meta group, so no divider
+      # splits them. vitals moved to the left zone (see barWidgetOrderLeft).
+      default = "tray,updates,recording,privacy,traypopup,caffeine,network,bluetooth,volume,brightness,battery,clock";
       description = "Bar widgets in the right zone, comma-separated in order.";
     };
 
@@ -446,6 +448,16 @@ in
       # machine. Revisit if that ever changes.
       default = "/run/user/1000/hypr-shell/recording";
       description = "Path whose existence means a screen recording is running.";
+    };
+
+    recordingStopCommand = lib.mkOption {
+      type = lib.types.str;
+      # The bar's recording pill runs this on click. Routed through the same
+      # wrapper the record chords toggle (its stop mode SIGINTs wf-recorder)
+      # so the pill, the chords, and a terminal invocation share one stop
+      # path and can never disagree about notification or cleanup behavior.
+      default = "${cfg.commands.screenrecordScript}/bin/hypr-shell-record stop";
+      description = "Command the shell's recording pill runs to stop a running recording.";
     };
 
     # -- Vitals thresholds ---------------------------------------------------

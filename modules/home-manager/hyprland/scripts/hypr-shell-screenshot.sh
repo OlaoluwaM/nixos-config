@@ -32,7 +32,10 @@
 
 mode="${1:-area}"
 screenshot_dir="${XDG_PICTURES_DIR:-"$HOME/Pictures"}/Screenshots"
-output_pattern="$screenshot_dir/screenshot-%Y%m%d-%H%M%S.png"
+# Human-readable stamp, second precision: date hyphenated, time dotted, no
+# spaces so the name never needs quoting in a terminal. Strftime-expanded by
+# satty, hence the bare % where the record script calls date itself.
+output_pattern="$screenshot_dir/screenshot-%Y-%m-%d-%H.%M.%S.png"
 
 mkdir -p "$screenshot_dir"
 
