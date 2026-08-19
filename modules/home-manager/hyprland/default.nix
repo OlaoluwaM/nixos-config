@@ -181,6 +181,10 @@ in
       # bluetooth details view (btEditCommand). Both open as normal tiles.
       bluetui
       wifitui
+      # Behind the Sound section's "Advanced settings" row. The shell finds it
+      # by probe (SystemTools.hasPwvucontrol), not by a rendered path, so the
+      # row lights up simply because this package is on PATH.
+      pwvucontrol
     ];
 
     # Catppuccin Mocha for wifitui (auto-discovered: wifitui probes
