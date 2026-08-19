@@ -19,7 +19,6 @@ in
       enable = true;
       xwayland = {
         enable = true;
-        force_zero_scaling = true; # Have XWayland apps scale correctly under Wayland
       };
     };
 

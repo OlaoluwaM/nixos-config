@@ -235,6 +235,10 @@ in
             layout = "dwindle";
           };
 
+          xwayland = {
+            force_zero_scaling = true; # Have XWayland apps scale correctly under Wayland
+          };
+
           decoration = {
             rounding = 14;
             rounding_power = 3.5;
