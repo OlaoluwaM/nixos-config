@@ -48,7 +48,13 @@ let
   # from a Nix store path (silere.nix's ExecStart -p flag), not the default
   # config dir -- a bare `qs ipc call` finds nothing. Every IPC call must
   # carry the same -p the service uses.
-  silereIpc = "${qsCommand} -p ${commands.silereShellPackage}/share/silere-shell/shell.qml ipc call";
+  #
+  # The trailing `--` is load-bearing: quickshell 0.3.0's CLI only accepts
+  # positionals past <target> <function> after a separator, so any call that
+  # passes a function argument (`menu show notifications`) is rejected by the
+  # qs binary itself without it -- the shell never sees the call. Harmless on
+  # argument-less calls, so it lives here rather than per call site.
+  silereIpc = "${qsCommand} -p ${commands.silereShellPackage}/share/silere-shell/shell.qml ipc call --";
 
   execDispatcher = command: "hl.dsp.exec_cmd(${luaString command})";
 
