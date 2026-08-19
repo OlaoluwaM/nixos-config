@@ -75,14 +75,34 @@ let
       fi
 
       awww img "$src"
-      # --prefer rides the CLI even though config.toml carries the same
-      # preference: config-level `prefer` only exists from matugen 4.1.0, and
-      # this script's pinned matugen is whatever nixpkgs ships -- 4.0.0 today,
-      # which reads the config fine and silently ignores the key. Trusting the
-      # config alone is exactly how this fix broke once already. Mode and
-      # scheme type have no config key at any version, so they are pinned here
-      # too: this shell is dark-only by design, and the theme's role mapping
-      # was built against tonal-spot's palette shape.
+      # Every matugen option here is deliberate:
+      #
+      #   --prefer saturation
+      #     matugen 4.x can extract several candidate source colors from one
+      #     image; with no preference it PROMPTS interactively, and with no
+      #     terminal attached (the shell's picker, the Super+Shift+W chord --
+      #     every real caller) it hard-errors instead, killing this script
+      #     before the stable-path convert below. This answers the question
+      #     non-interactively: the most chromatic candidate, which is what an
+      #     accent derived from artwork should be. It rides the CLI even
+      #     though config.toml carries the same preference, because the
+      #     config key only exists from matugen 4.1.0 (runtimeInputs pins
+      #     unstable's 4.1.0 for that reason) and a version that predates it
+      #     ignores the key silently -- trusting the config alone is exactly
+      #     how this fix broke once.
+      #
+      #   -m dark
+      #     Palette mode. Dark is matugen's default, but there is no config
+      #     key for it and this shell is dark-only by design, so the intent
+      #     is pinned rather than borrowed from a default that upstream is
+      #     free to change.
+      #
+      #   -t scheme-tonal-spot
+      #     Material scheme type (also today's default, also config-less).
+      #     The shell's Theme.qml maps matugen's accent/secondary/tertiary
+      #     roles onto its own accent/success/warning, and that mapping was
+      #     tuned against tonal-spot's palette shape -- a silently changed
+      #     scheme default would reshape every derived color in the shell.
       matugen image "$src" --prefer saturation -m dark -t scheme-tonal-spot
 
       stable="${cfg.wallpaper}"
