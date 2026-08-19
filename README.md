@@ -128,16 +128,7 @@ active.
 - [x] Break apart hyprland home-manager module into sub-modules
 - [ ] Break apart user home-manager module into sub-modules
 - [x] Delete old Hyprland QML and legacy desktop shell plumbing code
-- [ ] Look into declaratively setting up a wallpaper (**Optional**)
-- [ ] Animated wallpaper transitions: awww (our swww fork) already supports the
-      r/unixporn-style transitions; the change is the single `awww img "$src"`
-      line in `modules/home-manager/hyprland/modules/wallpaper.nix` gaining
-      flags, e.g. `--transition-type grow --transition-pos "$(hyprctl cursorpos
-      | tr -d ' ')" --transition-fps 60 --transition-duration 0.8` (plus
-      hyprland in the script's runtimeInputs and a center fallback when no
-      cursor exists, e.g. the session-start seed). Other types: wipe, wave,
-      outer, random. Consider a `local.hyprland.wallpaperTransition` option
-      instead of hardcoding.
+- [ ] Ensure all documentation and comments are accurate and up to date, and that they make sense
 
 ## Troubleshooting
 
