@@ -17,7 +17,7 @@ if [ ! -f "$src" ] || [ ! -r "$src" ]; then
 	exit 1
 fi
 
-awww img "$src"
+awww img "$src" --transition-type grow --transition-duration 2 --transition-fps 60
 matugen image "$src" --source-color-index 0 -q
 
 stable="$HYPR_WALLPAPER_PATH"
