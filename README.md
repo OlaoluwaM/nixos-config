@@ -56,22 +56,25 @@ above.
 
 ### Changing the wallpaper (Hyprland)
 
-Wallpapers are set through Vicinae or the terminal, never through the shell's
-Settings pane -- silere only *consumes* wallpapers (its "Wallpaper" theme mode
-is the matugen palette toggle, not a picker). Three equivalent entry points:
+Wallpapers are set through the shell's own picker or the terminal -- Vicinae
+no longer has a role here. Three equivalent entry points:
 
-- `Super+Shift+W` -- random pick from `$WALLPAPERS_DIR`
-  (`~/Pictures/wallpapers` by default)
-- Vicinae search → **Set Wallpaper** -- pick a specific image
+- `Super+Shift+W` -- opens silere-shell's wallpaper picker, a frosted grid
+  over `$WALLPAPERS_DIR` (`~/Pictures/wallpapers` by default); click an image
+  to apply it, Ctrl+F filters by name, and its Random button picks one for
+  you
+- `... ipc call wallpapers random` (or the picker's Random button) -- random
+  pick from `$WALLPAPERS_DIR` without opening the grid
 - `wallpaper-set <path>` in a terminal
 
 All three funnel through the same `wallpaper-set` script
 (`modules/home-manager/hyprland/modules/wallpaper.nix`), which is what
 guarantees the full fan-out: awww swaps the desktop, matugen retints the shell
 (the glass surfaces follow, since their tint derives from the matugen
-palette), and the stable PNG hyprlock reads is refreshed atomically. A setter
-inside the shell would bypass the matugen/hyprlock halves, which is why there
-isn't one.
+palette), and the stable PNG hyprlock reads is refreshed atomically. The
+picker calls this same script through `local.hyprland.silere.wallpaperCommand`
+(silere.nix) rather than bypassing it, so the matugen/hyprlock fan-out can
+never be skipped.
 
 ## Using ROG Control Center on Boreas
 

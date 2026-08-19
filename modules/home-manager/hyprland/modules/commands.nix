@@ -116,6 +116,33 @@ in
           package's share/silere-shell/assets/.
         '';
       };
+
+      wallpaperSetScript = lib.mkOption {
+        type = lib.types.package;
+        internal = true;
+        description = ''
+          Packaged wallpaper-set script (defined in wallpaper.nix, assigned
+          here the same way silereShellPackage is above), exposed so
+          silere.nix can point the shell's wallpaperCommand setting at this
+          exact binary -- the picker, its Random button, the Super+Shift+W
+          chord, and a terminal `wallpaper-set` invocation then all funnel
+          through the one script, so awww's swap, matugen's retint, and the
+          hyprlock stable-path convert can never be applied out of step with
+          each other.
+        '';
+      };
+
+      wallpapersDir = lib.mkOption {
+        type = lib.types.str;
+        internal = true;
+        description = ''
+          Absolute wallpaper directory (assigned in default.nix from the
+          same expression that seeds $WALLPAPERS_DIR for the session),
+          exposed here so silere.nix's wallpapersDir default and
+          default.nix's session variable can never drift into two different
+          computations of the same directory.
+        '';
+      };
     };
   };
 

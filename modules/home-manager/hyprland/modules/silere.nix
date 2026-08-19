@@ -95,6 +95,8 @@ let
         readonly property string recordingStateFile:  ${qml sc.recordingStateFile}
         readonly property string recordingStopCommand: ${qml sc.recordingStopCommand}
         readonly property string keybindsFile:        ${qml sc.keybindsFile}
+        readonly property string wallpaperCommand:     ${qml sc.wallpaperCommand}
+        readonly property string wallpapersDir:        ${qml sc.wallpapersDir}
     }
   '';
 
@@ -422,6 +424,36 @@ in
       # installs.
       default = "${config.xdg.dataHome}/silere/keybinds.json";
       description = "JSON file behind the shell's searchable keybindings viewer.";
+    };
+
+    wallpaperCommand = lib.mkOption {
+      type = lib.types.str;
+      # Same funneling reasoning as recordingStopCommand above, aimed at the
+      # wallpaper picker instead of the recording pill: the picker's click-
+      # to-apply action, its Random button, the Super+Shift+W toggle chord,
+      # and a terminal `wallpaper-set` invocation all run this one command,
+      # so awww's swap, matugen's retint, and the hyprlock stable-path
+      # convert can never fall out of step across entry points. The shell
+      # appends the chosen image's absolute path as this command's one
+      # argument -- this value is a bare launch template, not a full shell
+      # line. The fork ships this key empty, which keeps the whole picker
+      # dormant on non-Nix installs: with no way to apply anything, its IPC
+      # toggle no-ops rather than opening a dead surface.
+      default = "${cfg.commands.wallpaperSetScript}/bin/wallpaper-set";
+      description = "Command the shell runs to apply a wallpaper; the shell appends the image path as an argument.";
+    };
+
+    wallpapersDir = lib.mkOption {
+      type = lib.types.str;
+      # Mirrors default.nix's own $WALLPAPERS_DIR export exactly -- both
+      # read from the one wallpapersDir expression in default.nix, exposed
+      # here via commands.wallpapersDir (commands.nix) so this default can
+      # never drift into a second, divergent computation of the same
+      # directory. The fork ships this key empty too; unlike wallpaperCommand
+      # that alone is not dormancy -- a configured command with no directory
+      # still opens the picker, onto its "set wallpapersDir" guidance.
+      default = cfg.commands.wallpapersDir;
+      description = "Absolute directory the wallpaper picker scans for images.";
     };
 
     wsDynamic = lib.mkOption {

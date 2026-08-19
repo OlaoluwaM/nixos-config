@@ -17,9 +17,18 @@
 #   - local.hyprland.wallpaper: the stable path hyprlock reads, kept in sync
 #     by converting (not copying) into it
 #
-# -- plus the two entry points that call wallpaper-set for a human: a pair of
-# Vicinae script commands, and the Super+SHIFT+W keybind (keybindings.nix)
-# that opens the random one.
+# wallpaper-set is exposed to the rest of the profile as
+# local.hyprland.commands.wallpaperSetScript (option declared in
+# commands.nix, assigned below -- the same re-plumb silere.nix uses for
+# commands.silereShellPackage), so silere.nix can point the shell's
+# wallpaperCommand setting at this exact script.
+#
+# The human entry points used to be a pair of Vicinae script commands. They
+# are now the shell's own picker instead (Super+SHIFT+W and the "Wallpapers"
+# desktop entry, both in keybindings.nix): Vicinae's script-command argument
+# types only support a single static text field, never a live directory
+# listing, so a real picker over $WALLPAPERS_DIR was never something Vicinae
+# itself could render -- only the shell's own overlay can.
 let
   cfg = config.local.hyprland;
 
@@ -81,36 +90,17 @@ let
       trap - EXIT
     '';
   };
-
-  # Zero-input: picks a random image from $WALLPAPERS_DIR. This is what
-  # Super+SHIFT+W opens (see keybindings.nix).
-  vicinaeRandomWallpaperScript = pkgs.writeShellApplication {
-    name = "random-wallpaper";
-    runtimeInputs = [
-      wallpaperSetScript
-      pkgs.coreutils
-      pkgs.findutils
-    ];
-    text = builtins.readFile ../scripts/vicinae-random-wallpaper.sh;
-  };
-
-  # Takes one argument: a filename inside $WALLPAPERS_DIR, or an absolute
-  # path. Vicinae's script-command dropdown argument only supports a single
-  # static option (not a live directory listing), so a picker over
-  # $WALLPAPERS_DIR isn't something Vicinae can render declaratively --  a
-  # text argument is the cleanest mechanism it actually supports for this.
-  vicinaeSetWallpaperScript = pkgs.writeShellApplication {
-    name = "set-wallpaper";
-    runtimeInputs = [
-      wallpaperSetScript
-      pkgs.coreutils
-    ];
-    text = builtins.readFile ../scripts/vicinae-set-wallpaper.sh;
-  };
 in
 {
   config = lib.mkIf cfg.enable {
     home.packages = [ wallpaperSetScript ];
+
+    # Re-plumb, not a new definition: the derivation stays right here where
+    # wallpaper-set's one Nix-level dependency (the stable wallpaper path)
+    # lives, but the value is also visible under local.hyprland.commands so
+    # silere.nix can reach it (see the comment on commands.wallpaperSetScript
+    # in commands.nix, and this file's header comment above).
+    local.hyprland.commands.wallpaperSetScript = wallpaperSetScript;
 
     # The stable wallpaper path must be a real, user-writable file --
     # wallpaper-set overwrites it in place on every change, which a
@@ -124,16 +114,6 @@ in
         run chmod $VERBOSE_ARG u+w "${cfg.wallpaper}"
       fi
     '';
-
-    # Vicinae scans ~/.local/share/vicinae/scripts (XDG_DATA_HOME) for
-    # script commands by default, so a plain xdg.dataFile placement is all
-    # either command needs -- no Vicinae settings/preferences plumbing
-    # required. The installed filename doubles as the command's stable id
-    # (see keybindings.nix's Super+SHIFT+W deeplink).
-    xdg.dataFile = {
-      "vicinae/scripts/random-wallpaper".source = "${vicinaeRandomWallpaperScript}/bin/random-wallpaper";
-      "vicinae/scripts/set-wallpaper".source = "${vicinaeSetWallpaperScript}/bin/set-wallpaper";
-    };
 
     # Replaces the fork installer's role here (scripts/install.sh normally
     # writes this file's [templates.silere-shell] table itself): Nix already

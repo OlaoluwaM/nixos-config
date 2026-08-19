@@ -136,6 +136,12 @@ in
     # will not pick this up until the next login.
     systemd.user.sessionVariables.WALLPAPERS_DIR = wallpapersDir;
 
+    # Same value, exposed as a commands.nix option (see the re-plumb comment
+    # on commands.wallpaperSetScript) so silere.nix's wallpapersDir default
+    # -- what the shell's picker scans -- reads this exact expression
+    # instead of a second, potentially divergent copy of it.
+    local.hyprland.commands.wallpapersDir = wallpapersDir;
+
     # Baseline user packages for the Hyprland profile. These are not all visible
     # apps; some are fonts and Qt support libraries that make the UI render
     # correctly.

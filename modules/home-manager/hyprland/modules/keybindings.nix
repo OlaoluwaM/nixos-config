@@ -190,18 +190,22 @@ let
         desc = "Open clipboard history";
         group = "Launcher";
       })
-      # "random-wallpaper" is a Vicinae script command (wallpaper.nix,
-      # installed under ~/.local/share/vicinae/scripts) that picks a random
-      # image from $WALLPAPERS_DIR and calls wallpaper-set. Its installed
-      # filename is also its deeplink id -- renaming that script without
-      # updating this bind would silently break it. Picking a *specific*
-      # wallpaper stays inside Vicinae's own search ("Set Wallpaper") or the
-      # CLI (wallpaper-set <path>): Vicinae's script-command argument types
-      # have no live-directory picker to bind a chord to.
+      # Opens the shell's own wallpaper picker via IPC (silere.nix's
+      # wallpaperCommand feeds the actual apply step; this chord just opens
+      # the overlay): a frosted grid over local.hyprland.silere.wallpapersDir
+      # ($WALLPAPERS_DIR, default.nix), click an image to apply it, Ctrl+F
+      # filters by name, and a Random button inside the picker replaces the
+      # old zero-input chord. This used to be a Vicinae script-command
+      # deeplink ("random-wallpaper") -- Vicinae's script-command argument
+      # types only support a single static text field, never a live
+      # directory listing, so a real picker over $WALLPAPERS_DIR was never
+      # something Vicinae itself could render. Both former Vicinae wallpaper
+      # commands are gone now (wallpaper.nix); the shell's picker replaces
+      # them both.
       (mkDef {
         keys = "${mod} + SHIFT + W";
-        dsp = execDispatcher "${vicinaeCommand} 'vicinae://launch/scripts/random-wallpaper'";
-        desc = "Set a random wallpaper";
+        dsp = execDispatcher "${silereIpc} wallpapers toggle";
+        desc = "Open the wallpaper picker";
         group = "Launcher";
       })
 
@@ -632,6 +636,23 @@ in
       comment = "Search the Hyprland and shell keybindings";
       exec = "${silereIpc} keybinds toggle";
       icon = "preferences-desktop-keyboard-shortcuts";
+      terminal = false;
+      categories = [
+        "Utility"
+        "Settings"
+      ];
+    };
+
+    # Same reasoning as silere-keybinds above, aimed at the wallpaper picker:
+    # exists so Vicinae's app search ("Wallpapers") can launch the picker too,
+    # not just the Super+Shift+W chord. Exec toggles the picker in the
+    # running shell rather than spawning anything, so it is safe to "launch"
+    # repeatedly.
+    xdg.desktopEntries.silere-wallpapers = {
+      name = "Wallpapers";
+      comment = "Pick a wallpaper from the shell's frosted grid";
+      exec = "${silereIpc} wallpapers toggle";
+      icon = "preferences-desktop-wallpaper";
       terminal = false;
       categories = [
         "Utility"

@@ -19,9 +19,9 @@ shell's own Settings UI can still override per-key at runtime.
 - `modules/home-manager/hyprland/modules/hyprsunset.nix`: display color temperature schedule.
 - `modules/home-manager/hyprland/modules/session-services.nix`: extra Hyprland-session user services (media idle-inhibit, manual caffeine inhibitor).
 - `modules/home-manager/hyprland/modules/silere.nix`: the `silere-shell` Quickshell bar -- packaging, declared defaults, and the user service.
-- `modules/home-manager/hyprland/modules/wallpaper.nix`: the wallpaper pipeline (`wallpaper-set`, awww, matugen retinting, hyprlock's stable path) and the Vicinae wallpaper commands.
+- `modules/home-manager/hyprland/modules/wallpaper.nix`: the wallpaper pipeline (`wallpaper-set`, awww, matugen retinting, hyprlock's stable path). The human entry points are silere-shell's own picker (keybindings.nix) now, not Vicinae.
 - `modules/home-manager/vicinae.nix`: generic Vicinae program config, imported and targeted at `hyprland-session.target` by this profile.
-- `modules/home-manager/hyprland/scripts/`: keybind and Vicinae helper scripts (caffeine, screenshot, screenrecord, wallpaper commands).
+- `modules/home-manager/hyprland/scripts/`: keybind helper scripts (caffeine, screenshot, screenrecord).
 
 Enable the profile by setting the host `desktopProfile` to `"hyprland"` in `flake.nix`.
 
@@ -46,11 +46,11 @@ The setup deliberately avoids UWSM.
 
 See `./modules/keybindings.nix`. Hardware media/brightness keys (volume, brightness,
 keyboard backlight) are bound directly to `wpctl`/`brightnessctl` since there
-is no shell OSD to own them. Super+Shift+W opens the "Random Wallpaper"
-Vicinae script command (see Wallpaper Pipeline below). A handful of other
-chords that used to open shell surfaces (settings, wifi, bluetooth, session
-menu) are intentionally unbound until the shell's design-build phase wires
-their new targets.
+is no shell OSD to own them. Super+Shift+W opens silere-shell's own wallpaper
+picker (see Wallpaper Pipeline below). A handful of other chords that used to
+open shell surfaces (settings, wifi, bluetooth, session menu) are
+intentionally unbound until the shell's design-build phase wires their new
+targets.
 
 Alt+Tab (hold Alt, tap Tab to cycle, Shift+Tab or `` Alt+` `` to reverse,
 release Alt to switch) opens hyprshell's GNOME-style window switcher across
@@ -94,7 +94,8 @@ and omits its own shebang/`set` line for that reason.
 - `hypr-shell-screenshot`: grim/slurp/Satty; copies the raw capture to the clipboard instantly, with Satty as an optional annotate/save step to `~/Pictures/Screenshots/`.
 - `hypr-shell-record`: wf-recorder, saves to `~/Videos/Screencasts/`.
 - `hypr-shell-caffeine`: manual systemd idle inhibitor toggle.
-- `vicinae-random-wallpaper`, `vicinae-set-wallpaper`: the two Vicinae wallpaper script commands (see Wallpaper Pipeline below). `wallpaper-set` itself is inlined in `wallpaper.nix` rather than kept here, since it is the one script that needs a Nix-level value (the stable wallpaper path).
+
+`wallpaper-set` itself is inlined in `wallpaper.nix` rather than kept here, since it is the one script that needs a Nix-level value (the stable wallpaper path) -- see Wallpaper Pipeline below. There used to be a pair of Vicinae wallpaper script commands here too; they are gone, replaced by silere-shell's own picker.
 
 ## Lock, Idle, And Wallpaper
 
@@ -123,16 +124,23 @@ role the fork's own `scripts/install.sh` normally plays. `silere-shell`'s
 `MatugenPalette.qml` live-watches matugen's output JSON and repaints as soon
 as it changes, no shell restart needed.
 
-Two Vicinae script commands (installed under
-`~/.local/share/vicinae/scripts/`, scanned by Vicinae itself) call
-`wallpaper-set` for a human: "Random Wallpaper" (zero-input, picks from
-`$WALLPAPERS_DIR`) is bound to Super+Shift+W via its `vicinae://` deeplink;
-"Set Wallpaper" takes a filename/path as a Vicinae script-command text
-argument and is reachable from Vicinae's own search. Vicinae's
-script-command dropdown argument type only supports a single static option,
-not a live directory listing, so a full picker over `$WALLPAPERS_DIR` isn't
-something it can render declaratively -- a text argument is the cleanest
-mechanism it actually supports here.
+The human entry point is silere-shell's own wallpaper picker now, not
+Vicinae: Super+Shift+W (keybindings.nix) opens a frosted grid over
+`$WALLPAPERS_DIR`, click an image to apply it, Ctrl+F filters by name, and a
+Random button inside the picker covers the zero-input case (also reachable
+headless via `... ipc call wallpapers random`). It is also launchable from
+Vicinae's app search via the `silere-wallpapers` desktop entry
+(keybindings.nix), but the picker itself is shell UI, not a Vicinae
+script command. `local.hyprland.silere.wallpaperCommand` (silere.nix) points
+the picker's apply step at this exact `wallpaper-set` binary, and
+`local.hyprland.silere.wallpapersDir` points it at the same directory
+`$WALLPAPERS_DIR` resolves to (both packaging-only settings keys, wired via
+`local.hyprland.commands.wallpaperSetScript`/`wallpapersDir` in
+`commands.nix` -- see that module's comments). This replaced a pair of
+Vicinae script commands: Vicinae's script-command argument types only
+support a single static text field, never a live directory listing, so a
+real picker over `$WALLPAPERS_DIR` was never something Vicinae itself could
+render -- only the shell's own overlay can.
 
 ## Portals And Fonts
 
