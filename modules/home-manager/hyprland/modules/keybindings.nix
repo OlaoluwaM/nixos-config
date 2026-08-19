@@ -291,6 +291,16 @@ let
         desc = "Show notifications";
         group = "Session";
       })
+      # The direct door to the Settings tab that Super+Q deliberately is not
+      # (its settings-landing was tried and rolled back -- see its comment
+      # below). Same opens/raises-only contract as Super+V above: the menu
+      # IPC has no per-tab toggle, so Escape closes.
+      (mkDef {
+        keys = "${mod} + U";
+        dsp = execDispatcher "${silereIpc} menu show settings";
+        desc = "Open shell settings";
+        group = "Session";
+      })
       # GNOME parity: <Super>q is toggle-quick-settings there (see the GNOME
       # profile's keybindings.nix). `menu toggle` is the exact counterpart:
       # it opens the menu on its Home tab and closes it when already open.
