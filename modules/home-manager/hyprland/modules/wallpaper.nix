@@ -45,7 +45,10 @@ let
     name = "wallpaper-set";
     runtimeInputs = [
       unstable.awww
-      pkgs.matugen
+      # unstable deliberately: stable ships 4.0.0, whose config struct has no
+      # `prefer` field (checked against the v4.0.0 source), so the config.toml
+      # preference below is only real from 4.1.0 -- which unstable pins.
+      unstable.matugen
       pkgs.imagemagick
       pkgs.coreutils
     ];
@@ -72,13 +75,15 @@ let
       fi
 
       awww img "$src"
-      # The non-tty source-color preference lives in config.toml (see the
-      # xdg.configFile block below) -- mode and scheme type have no config
-      # key, so they are pinned here instead of trusting matugen's defaults:
-      # this shell is dark-only by design, and the theme's role mapping was
-      # built against tonal-spot's palette shape, so neither should drift if
-      # a matugen major bump ever changes a default.
-      matugen image "$src" -m dark -t scheme-tonal-spot
+      # --prefer rides the CLI even though config.toml carries the same
+      # preference: config-level `prefer` only exists from matugen 4.1.0, and
+      # this script's pinned matugen is whatever nixpkgs ships -- 4.0.0 today,
+      # which reads the config fine and silently ignores the key. Trusting the
+      # config alone is exactly how this fix broke once already. Mode and
+      # scheme type have no config key at any version, so they are pinned here
+      # too: this shell is dark-only by design, and the theme's role mapping
+      # was built against tonal-spot's palette shape.
+      matugen image "$src" --prefer saturation -m dark -t scheme-tonal-spot
 
       stable="${cfg.wallpaper}"
       stable_dir="$(dirname -- "$stable")"
@@ -133,10 +138,11 @@ in
     # caller) it errors out instead, which under wallpaper-set's set -e also
     # skipped the stable-path convert -- the old "wallpaper resets on rebuild"
     # bug. The maintainer's endorsed scripted answer is a preference
-    # (InioX/matugen#255), config-level per upstream's own example config.
-    # saturation = the most chromatic candidate, which is what an accent
-    # derived from artwork should be, and the most-chosen value in real
-    # dotfiles.
+    # (InioX/matugen#255). saturation = the most chromatic candidate, which is
+    # what an accent derived from artwork should be, and the most-chosen value
+    # in real dotfiles. NOTE: matugen only reads this key from 4.1.0; the
+    # deployed 4.0.0 ignores it, so wallpaper-set passes --prefer on the CLI
+    # as the actual carrier and this entry is forward-compatibility.
     xdg.configFile."matugen/config.toml".text = ''
       [config]
       version_check = false
