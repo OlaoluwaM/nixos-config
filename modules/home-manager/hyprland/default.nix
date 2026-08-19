@@ -186,6 +186,7 @@ in
       # by probe (SystemTools.hasPwvucontrol), not by a rendered path, so the
       # row lights up simply because this package is on PATH.
       pwvucontrol
+      unstable.wiremix
       unstable.matugen
     ];
 
