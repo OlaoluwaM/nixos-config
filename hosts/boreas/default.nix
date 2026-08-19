@@ -72,7 +72,9 @@ in
   boot.loader.systemd-boot.memtest86.enable = true;
 
   # Use latest kernel.
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  # Temporarily pinning to 7.1 because the nvidia drivers (which as of now is NVIDIA 595.71.05) is not compatible with pkgs.linuxPackages_latest (kernel 7.2)
+  # We could also downgrade to the LTS kernel version (pkgs.linuxPackages), but nah
+  boot.kernelPackages = pkgs.linuxPackages_7_1;
 
   # Literal value because of the directory path. This is under the "boreas" host so making it variable doesn't make sense
   networking.hostName = "boreas";
