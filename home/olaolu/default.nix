@@ -173,7 +173,6 @@ in
       GIT_PAGER = "delta";
       COMPOSE_BAKE = "true";
       NIX_FLAKE_PATH = hostConfig.nixosConfigPath;
-      NIXOS_OZONE_WL = "1";
     };
   };
 

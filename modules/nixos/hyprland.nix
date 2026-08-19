@@ -17,7 +17,16 @@ in
     # XWayland support for older apps that still speak X11.
     programs.hyprland = {
       enable = true;
-      xwayland.enable = true;
+      xwayland = {
+        enable = true;
+        force_zero_scaling = true; # Have XWayland apps scale correctly under Wayland
+      };
+    };
+
+    # Force XWayland apps to use Wayland to avoid some pixalation issues
+    # Helps Chromium/Electron apps prefer Wayland behavior under NixOS.
+    environment.sessionVariables = {
+      NIXOS_OZONE_WL = "1";
     };
 
     # Nautilus and other GTK/GNOME apps store settings in dconf. GNOME enables
