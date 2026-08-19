@@ -75,34 +75,28 @@ let
       fi
 
       awww img "$src"
-      # Every matugen option here is deliberate:
+      # Why each flag is here:
       #
       #   --prefer saturation
-      #     matugen 4.x can extract several candidate source colors from one
-      #     image; with no preference it PROMPTS interactively, and with no
-      #     terminal attached (the shell's picker, the Super+Shift+W chord --
-      #     every real caller) it hard-errors instead, killing this script
-      #     before the stable-path convert below. This answers the question
-      #     non-interactively: the most chromatic candidate, which is what an
-      #     accent derived from artwork should be. It rides the CLI even
-      #     though config.toml carries the same preference, because the
-      #     config key only exists from matugen 4.1.0 (runtimeInputs pins
-      #     unstable's 4.1.0 for that reason) and a version that predates it
-      #     ignores the key silently -- trusting the config alone is exactly
-      #     how this fix broke once.
+      #     Some images give matugen several colors it could build the theme
+      #     from. When that happens it normally stops and asks you to pick one
+      #     -- but nothing that runs this script has a terminal to ask in (the
+      #     picker and the keybind both run headless), so instead of asking it
+      #     just dies, and the wallpaper quietly stops sticking. This flag
+      #     answers the question up front: take the most colorful one. The
+      #     same preference is also in config.toml, but only matugen 4.1.0
+      #     and newer reads it there, so the flag stays to cover any version.
       #
       #   -m dark
-      #     Palette mode. Dark is matugen's default, but there is no config
-      #     key for it and this shell is dark-only by design, so the intent
-      #     is pinned rather than borrowed from a default that upstream is
-      #     free to change.
+      #     Build the dark palette. That's matugen's default today, but this
+      #     shell only has a dark look, so we say it outright instead of
+      #     hoping the default never changes.
       #
       #   -t scheme-tonal-spot
-      #     Material scheme type (also today's default, also config-less).
-      #     The shell's Theme.qml maps matugen's accent/secondary/tertiary
-      #     roles onto its own accent/success/warning, and that mapping was
-      #     tuned against tonal-spot's palette shape -- a silently changed
-      #     scheme default would reshape every derived color in the shell.
+      #     Which Material palette recipe to use -- also today's default. The
+      #     shell's colors were all tuned against this recipe, so if a new
+      #     matugen ever changed the default, every color in the shell would
+      #     quietly shift. Saying it here means that can't happen.
       matugen image "$src" --prefer saturation -m dark -t scheme-tonal-spot
 
       stable="${cfg.wallpaper}"
