@@ -426,6 +426,26 @@ let
         flags.locked = true;
         viewer = false;
       })
+      # Same direct-device pattern as sink mute above, aimed at the capture
+      # side; the bar's mic chip is the feedback (it swaps to the slashed
+      # glyph while a stream holds the source open). The chord exists because
+      # not every keyboard emits XF86AudioMicMute, and unlike the hardware
+      # key it isn't self-describing, so it stays in the viewer.
+      (mkDef {
+        keys = "XF86AudioMicMute";
+        dsp = execDispatcher "${wpctlCommand} set-mute @DEFAULT_AUDIO_SOURCE@ toggle";
+        desc = "Mute the microphone";
+        group = "Hardware";
+        flags.locked = true;
+        viewer = false;
+      })
+      (mkDef {
+        keys = "${mod} + CTRL + M";
+        dsp = execDispatcher "${wpctlCommand} set-mute @DEFAULT_AUDIO_SOURCE@ toggle";
+        desc = "Mute or unmute the microphone";
+        group = "Hardware";
+        flags.locked = true;
+      })
       # GNOME parity: gnome-settings-daemon services these keys natively, so the
       # GNOME profile never declares them. Routed through the shell's media IPC
       # rather than playerctl so the keys drive the same player the media card
