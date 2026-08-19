@@ -72,15 +72,13 @@ let
       fi
 
       awww img "$src"
-      # --prefer is load-bearing, not taste: when matugen 4.x extracts several
-      # candidate source colors it PROMPTS for a choice, and with no terminal
-      # attached (the shell's picker, the Super+Shift+W chord -- every real
-      # caller) it errors out instead. Under this script's set -e that abort
-      # also skips the stable-path convert below, which is how the wallpaper
-      # used to "reset" on rebuild: the restore unit faithfully re-pushed a
-      # stale stable file. saturation = the most chromatic candidate, which is
-      # what an accent derived from artwork should be.
-      matugen image "$src" --prefer saturation
+      # The non-tty source-color preference lives in config.toml (see the
+      # xdg.configFile block below) -- mode and scheme type have no config
+      # key, so they are pinned here instead of trusting matugen's defaults:
+      # this shell is dark-only by design, and the theme's role mapping was
+      # built against tonal-spot's palette shape, so neither should drift if
+      # a matugen major bump ever changes a default.
+      matugen image "$src" -m dark -t scheme-tonal-spot
 
       stable="${cfg.wallpaper}"
       stable_dir="$(dirname -- "$stable")"
@@ -129,9 +127,20 @@ in
     # owns wiring matugen to that template too. silere-shell's
     # MatugenPalette.qml live-watches output_path and repaints as soon as
     # matugen rewrites it -- no shell restart needed.
+    # `prefer` is load-bearing, not taste: when matugen 4.x extracts several
+    # candidate source colors it PROMPTS for a choice, and with no terminal
+    # attached (the shell's picker, the Super+Shift+W chord -- every real
+    # caller) it errors out instead, which under wallpaper-set's set -e also
+    # skipped the stable-path convert -- the old "wallpaper resets on rebuild"
+    # bug. The maintainer's endorsed scripted answer is a preference
+    # (InioX/matugen#255), config-level per upstream's own example config.
+    # saturation = the most chromatic candidate, which is what an accent
+    # derived from artwork should be, and the most-chosen value in real
+    # dotfiles.
     xdg.configFile."matugen/config.toml".text = ''
       [config]
       version_check = false
+      prefer = "saturation"
 
       [templates.silere-shell]
       input_path = "${cfg.commands.silereShellPackage}/share/silere-shell/assets/matugen-theme.json"
