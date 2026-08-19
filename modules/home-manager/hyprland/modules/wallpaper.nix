@@ -72,7 +72,15 @@ let
       fi
 
       awww img "$src"
-      matugen image "$src"
+      # --prefer is load-bearing, not taste: when matugen 4.x extracts several
+      # candidate source colors it PROMPTS for a choice, and with no terminal
+      # attached (the shell's picker, the Super+Shift+W chord -- every real
+      # caller) it errors out instead. Under this script's set -e that abort
+      # also skips the stable-path convert below, which is how the wallpaper
+      # used to "reset" on rebuild: the restore unit faithfully re-pushed a
+      # stale stable file. saturation = the most chromatic candidate, which is
+      # what an accent derived from artwork should be.
+      matugen image "$src" --prefer saturation
 
       stable="${cfg.wallpaper}"
       stable_dir="$(dirname -- "$stable")"
@@ -166,6 +174,12 @@ in
 
         Service = {
           Type = "oneshot";
+          # Without this, a oneshot reads inactive(dead) the moment it finishes,
+          # and every home-manager activation sees a wanted-but-inactive unit
+          # and runs it again -- re-pushing the stable path (and replaying the
+          # awww transition) on every rebuild, not just at login. active(exited)
+          # makes "once per session" mean what it says.
+          RemainAfterExit = true;
           ExecStart = "${lib.getExe unstable.awww} img ${cfg.wallpaper}";
         };
       };
