@@ -192,7 +192,10 @@ let
   # the 4.11-alpha line, which reworks the CSS surface this module also
   # depends on -- see the styles comment above).
   hyprshellPackage = pkgs.hyprshell.overrideAttrs (old: {
-    patches = (old.patches or [ ]) ++ [ ./hyprshell-switcher-tiles.patch ];
+    patches = (old.patches or [ ]) ++ [
+      ./hyprshell-desktop-icons.patch
+      ./hyprshell-switcher-tiles.patch
+    ];
   });
 in
 {

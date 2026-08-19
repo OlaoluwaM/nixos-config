@@ -1,0 +1,85 @@
+diff --git a/crates/windows-lib/src/desktop_map.rs b/crates/windows-lib/src/desktop_map.rs
+index f987e2a..1fcb3c0 100644
+--- a/crates/windows-lib/src/desktop_map.rs
++++ b/crates/windows-lib/src/desktop_map.rs
+@@ -110,7 +110,7 @@ pub fn get_icon_name_by_name_from_desktop_files(
+         warn!("Failed to lock icon path map");
+         return None;
+     };
+-    // prio: name by pid-exec, desktop file name, startup wm class, exec name
++    // prio: name by pid-exec, startup wm class, desktop file name, exec name
+     map.get(&(Box::from(name.to_ascii_lowercase()), Source::ByPidExec))
+         .map(|s| (s.0.clone(), s.1.clone(), Source::ByPidExec))
+         .or_else(|| {
+@@ -118,14 +118,14 @@ pub fn get_icon_name_by_name_from_desktop_files(
+                 Box::from(name.to_ascii_lowercase()),
+-                Source::DesktopFileName,
++                Source::DesktopFileStartupWmClass,
+             ))
+-            .map(|s| (s.0.clone(), s.1.clone(), Source::DesktopFileName))
++            .map(|s| (s.0.clone(), s.1.clone(), Source::DesktopFileStartupWmClass))
+         })
+         .or_else(|| {
+             map.get(&(
+                 Box::from(name.to_ascii_lowercase()),
+-                Source::DesktopFileStartupWmClass,
++                Source::DesktopFileName,
+             ))
+-            .map(|s| (s.0.clone(), s.1.clone(), Source::DesktopFileStartupWmClass))
++            .map(|s| (s.0.clone(), s.1.clone(), Source::DesktopFileName))
+         })
+         .or_else(|| {
+             map.get(&(
+diff --git a/crates/windows-lib/src/icon.rs b/crates/windows-lib/src/icon.rs
+index 31b5758..1d72562 100644
+--- a/crates/windows-lib/src/icon.rs
++++ b/crates/windows-lib/src/icon.rs
+@@ -49,25 +49,26 @@ fn load_icon_from_cache(name: &str, pic: &Image) -> Option<Box<Path>> {
+-    if default::theme_has_icon_name(name) {
+-        pic.set_icon_name(Some(name));
+-        Some(Box::from(Path::new(name)))
+-    } else if default::theme_has_icon_name(&name_lower) {
+-        pic.set_icon_name(Some(&name_lower));
+-        Some(Box::from(Path::new(&name_lower)))
++    // Desktop metadata identifies the application. A theme icon with the same
++    // name as the window class can be an unrelated generic icon (for example,
++    // Colloid's `code` icon is a text-editor alias, while code.desktop maps the
++    // `Code` class to the `vscode` icon).
++    if let Some((icon_path, path, source)) = get_icon_name_by_name_from_desktop_files(name) {
++        trace!(
++            "Found icon for {name} / {icon_path:?} in cache from source: {source:?} at {path:?}"
++        );
++        if icon_path.is_absolute() {
++            pic.set_from_file(Some(Path::new(&*icon_path)));
++        } else {
++            pic.set_icon_name(icon_path.file_name().and_then(|name| name.to_str()));
++        }
++        Some(icon_path)
++    } else if default::theme_has_icon_name(name) {
++        pic.set_icon_name(Some(name));
++        Some(Box::from(Path::new(name)))
++    } else if default::theme_has_icon_name(&name_lower) {
++        pic.set_icon_name(Some(&name_lower));
++        Some(Box::from(Path::new(&name_lower)))
+     } else {
+-        // check if icon is in desktop file cache and apply it
+-        if let Some((icon_path, path, source)) = get_icon_name_by_name_from_desktop_files(name) {
+-            trace!(
+-                "Found icon for {name} / {icon_path:?} in cache from source: {source:?} at {path:?}"
+-            );
+-            if icon_path.is_absolute() {
+-                pic.set_from_file(Some(Path::new(&*icon_path)));
+-            } else {
+-                pic.set_icon_name(icon_path.file_name().and_then(|name| name.to_str()));
+-            }
+-            Some(icon_path)
+-        } else {
+-            trace!("Icon for {name} not found in theme or cache, using `application-x-executable`");
+-            pic.set_icon_name(Some("application-x-executable"));
+-            None
+-        }
++        trace!("Icon for {name} not found in theme or cache, using `application-x-executable`");
++        pic.set_icon_name(Some("application-x-executable"));
++        None
+     }
+ }
