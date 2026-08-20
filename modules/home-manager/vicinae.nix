@@ -35,6 +35,7 @@ in
       settings = {
         launcher_window.layer_shell = {
           enabled = true;
+          # We had an issue with satty where taking a screenshot of vicinae would hog keyboard input so trying to "ESC" or "ENTER" while both satty and vicinae were active would not work as expected. We'd need to close vicinae before satty could get keyboard input again. This option only passes keyboard input to vicinae when it is in focus. This way if we have satty up, it can correctly take input without interference from vicinae.
           keyboard_interactivity = "on_demand";
         };
       };
