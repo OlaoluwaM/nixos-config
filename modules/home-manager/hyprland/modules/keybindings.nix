@@ -44,6 +44,7 @@ let
   brightnessCommand = lib.getExe pkgs.brightnessctl;
   wpctlCommand = lib.getExe' pkgs.wireplumber "wpctl";
   qsCommand = lib.getExe' pkgs.quickshell "qs";
+  colloidAppIcons = "${pkgs.colloid-icon-theme}/share/icons/Colloid-Dark/apps/scalable";
   # `qs ipc` locates the running instance by config path, and this shell runs
   # from a Nix store path (silere.nix's ExecStart -p flag), not the default
   # config dir -- a bare `qs ipc call` finds nothing. Every IPC call must
@@ -651,7 +652,9 @@ in
       name = "Keyboard Shortcuts";
       comment = "Search the Hyprland and shell keybindings";
       exec = "${silereIpc} keybinds toggle";
-      icon = "preferences-desktop-keyboard-shortcuts";
+      # Vicinae does not resolve these semantic names through the active icon
+      # theme, so use the matching Colloid application icon directly.
+      icon = "${colloidAppIcons}/preferences-desktop-keyboard-shortcuts.svg";
       terminal = false;
       categories = [
         "Utility"
@@ -668,7 +671,7 @@ in
       name = "Wallpapers";
       comment = "Pick a wallpaper from the shell's frosted grid";
       exec = "${silereIpc} wallpapers toggle";
-      icon = "preferences-desktop-wallpaper";
+      icon = "${colloidAppIcons}/preferences-desktop-wallpaper.svg";
       terminal = false;
       categories = [
         "Utility"
