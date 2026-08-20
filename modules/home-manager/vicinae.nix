@@ -33,7 +33,10 @@ in
 
       # useLayerShell
       settings = {
-        launcher_window.layer_shell.enabled = true;
+        launcher_window.layer_shell = {
+          enabled = true;
+          keyboard_interactivity = "on_demand";
+        };
       };
     };
   };
