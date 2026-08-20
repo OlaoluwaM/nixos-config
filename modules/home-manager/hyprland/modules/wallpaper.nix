@@ -79,17 +79,15 @@ in
       hypr-shell-awww = {
         Unit = {
           Description = "awww wallpaper daemon";
-          # Same reasoning as silere-shell.service's ordering: without it,
-          # systemd could start awww-daemon before Hyprland (and a Wayland
-          # display to connect to) is up, burning the unit's restart budget
-          # on early, unrecoverable failures.
-          After = [ config.wayland.systemd.target ];
           PartOf = [ config.wayland.systemd.target ];
         };
 
         Install.WantedBy = [ config.wayland.systemd.target ];
 
         Service = {
+          # awww sends READY=1 after it creates its IPC socket. Let systemd
+          # hold dependent units until the daemon can accept their commands.
+          Type = "notify";
           ExecStart = lib.getExe' unstable.awww "awww-daemon";
           Restart = "on-failure";
         };
@@ -104,6 +102,7 @@ in
         Unit = {
           Description = "Restore the last wallpaper into awww";
           After = [ "hypr-shell-awww.service" ];
+          Requires = [ "hypr-shell-awww.service" ];
           PartOf = [ config.wayland.systemd.target ];
         };
 
@@ -117,7 +116,7 @@ in
           # awww transition) on every rebuild, not just at login. active(exited)
           # makes "once per session" mean what it says.
           RemainAfterExit = true;
-          ExecStart = "${lib.getExe unstable.awww} img ${cfg.wallpaper}";
+          ExecStart = "${lib.getExe unstable.awww} img --transition-type grow ${cfg.wallpaper}";
         };
       };
     };
