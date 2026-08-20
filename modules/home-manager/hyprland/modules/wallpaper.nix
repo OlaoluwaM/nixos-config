@@ -9,6 +9,27 @@
 let
   cfg = config.local.hyprland;
 
+  # Vicinae is another transient glass surface, so give its Matugen
+  # background the same depth transform as the shell's glass popups. The
+  # shell mixes its background toward black by half of matugenDepth; these
+  # QColor darker factors are the equivalent brightness scales.
+  vicinaeGlassDarkerFactors = {
+    none = 100;
+    deep = 123;
+    deeper = 167;
+  };
+  vicinaeGlassDarkerFactor = vicinaeGlassDarkerFactors.${cfg.silere.matugenDepth};
+
+  # Keep Vicinae's pinned template as the schema source and carry only the
+  # one local visual delta. --replace-fail makes an upstream template change
+  # break the build instead of silently dropping the shared shell tint.
+  vicinaeMatugenTemplate = pkgs.runCommand "vicinae-matugen-template.toml" { } ''
+    substitute "${config.programs.vicinae.package.src}/extra/matugen.toml" "$out" \
+      --replace-fail \
+        'background = "{{colors.surface.default.hex}}"' \
+        'background = { name = "{{colors.background.default.hex}}", darker = ${toString vicinaeGlassDarkerFactor} }'
+  '';
+
   # Same placeholder default.nix used to provision the stable wallpaper path
   # directly; wallpaper.nix now owns seeding it instead (see the activation
   # script below).
@@ -25,6 +46,18 @@ let
     templates."silere-shell" = {
       input_path = "${cfg.commands.silereShellPackage}/share/silere-shell/assets/matugen-theme.json";
       output_path = "${config.xdg.configHome}/matugen/silere-shell.json";
+      mode = "Dark";
+      type = "SchemeContent";
+    };
+
+    # Use the template shipped by the pinned Vicinae source so its theme
+    # schema stays in step with the installed launcher version. Vicinae watches
+    # its theme directory, and the post-hook selects the regenerated palette
+    # after every wallpaper change.
+    templates.vicinae = {
+      input_path = "${vicinaeMatugenTemplate}";
+      output_path = "${config.xdg.dataHome}/vicinae/themes/matugen.toml";
+      post_hook = "${lib.getExe' config.programs.vicinae.package "vicinae"} theme set matugen";
       mode = "Dark";
       type = "SchemeContent";
     };

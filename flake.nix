@@ -18,6 +18,10 @@
     codex-cli.url = "github:sadjow/codex-cli-nix";
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
     catppuccin.url = "github:catppuccin/nix/release-26.05";
+    vicinae-extensions = {
+      url = "github:vicinaehq/extensions";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     # My fork of s3rven/silere-shell, the Quickshell/QML bar for the Hyprland
     # profile. Fork-side NixOS-compat commits land on custom-branch. Upstream

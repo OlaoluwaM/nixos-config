@@ -343,6 +343,14 @@ in
             blur = true;
             ignore_alpha = 0.2;
           }
+          {
+            # Vicinae is a layer-shell surface, so regular window blur does
+            # not cover it. Match the shell's blur threshold so its Matugen-
+            # tinted translucent background reads as the same frosted glass.
+            match.namespace = "^(vicinae)$";
+            blur = true;
+            ignore_alpha = 0.2;
+          }
         ];
 
         window_rule = [

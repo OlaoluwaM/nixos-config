@@ -53,9 +53,9 @@ let
     cfg.shell
   ];
 
-  # A preferred family can be shared by several roles (UI, document and shell
-  # all use SF Pro Display), so collapse to one alias per family and merge those
-  # roles' fallback lists de-duplicated, in fontRoles order — so when roles
+  # A preferred family can be shared by several roles (document and shell use
+  # SF Pro Display), so collapse to one alias per family and merge those roles'
+  # fallback lists de-duplicated in fontRoles order. When roles
   # disagree (document wants serif fallbacks), the earlier role's chain wins.
   aliasFamilies = lib.unique (map (role: role.family) fontRoles);
   fallbacksFor =
