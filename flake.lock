@@ -303,11 +303,11 @@
     "silere-shell": {
       "flake": false,
       "locked": {
-        "lastModified": 1787320327,
-        "narHash": "sha256-kZSthLaVaFQUVOIMrdV/YwSulFGkqfRNLc9m7FSIqbc=",
+        "lastModified": 1787335352,
+        "narHash": "sha256-D0S8ApVRknGIq3qSy44Kd9Wp7LUeC16OB09JfNIbfqw=",
         "owner": "OlaoluwaM",
         "repo": "silere-shell",
-        "rev": "90d353af9dfc0ed140810f8c3df15ad7881b4693",
+        "rev": "2777659a980d3c716d40320a5cc174f20a076442",
         "type": "github"
       },
       "original": {
@@ -403,11 +403,11 @@
         "systems": "systems_3"
       },
       "locked": {
-        "lastModified": 1787232541,
-        "narHash": "sha256-Tl++tyDcMn8qFUQB9OmyuPUGWUMCff3wLDqtdysoeJc=",
+        "lastModified": 1787337948,
+        "narHash": "sha256-yue+CM0qahd/Bmntb1rIemELHzciMNx0DJRU5fPCQzI=",
         "owner": "vicinaehq",
         "repo": "vicinae",
-        "rev": "db651f6c8c6e1b07198ec4cea94206d754db37d2",
+        "rev": "be7cdf048214c3ee898036e46b08a3d707003973",
         "type": "github"
       },
       "original": {
