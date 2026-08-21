@@ -59,6 +59,13 @@ in
       experimental-features = "nix-command flakes";
       # Opinionated: disable global registry
       flake-registry = "";
+      # Vicinae is built from its own flake input, which Hydra never builds;
+      # upstream publishes binaries to this cachix instead. Without it every
+      # `nix flake update vicinae` costs a local Qt compile.
+      extra-substituters = [ "https://vicinae.cachix.org" ];
+      extra-trusted-public-keys = [
+        "vicinae.cachix.org-1:1kDrfienkGHPYbkpNj1mWTr7Fm1+zcenzgTizIcI3oc="
+      ];
     };
     # Opinionated: disable channels
     channel.enable = false;

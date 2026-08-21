@@ -18,6 +18,12 @@
     codex-cli.url = "github:sadjow/codex-cli-nix";
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
     catppuccin.url = "github:catppuccin/nix/release-26.05";
+    # Vicinae from its own flake: nixpkgs lags upstream badly (0.23.x vs
+    # 0.26.x), and upstream ships a cachix cache for exactly this input (see
+    # nix.settings on boreas). Deliberately NOT following our nixpkgs — the
+    # vicinae docs warn that a follows here defeats their cache. Update with
+    # `nix flake update vicinae`.
+    vicinae.url = "github:vicinaehq/vicinae";
     vicinae-extensions = {
       url = "github:vicinaehq/extensions";
       inputs.nixpkgs.follows = "nixpkgs";

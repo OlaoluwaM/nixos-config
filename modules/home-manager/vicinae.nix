@@ -38,6 +38,11 @@ in
 
     programs.vicinae = {
       enable = true;
+      # Home Manager's module defaults to pkgs.vicinae, which trails upstream
+      # by several minor versions (root search history landed in 0.24.0 and
+      # nixpkgs still carries 0.23.2). The flake input tracks upstream's main
+      # and is served from their cachix cache, so no local Qt build.
+      package = inputs.vicinae.packages.${pkgs.stdenv.hostPlatform.system}.default;
       systemd = {
         enable = true;
         autoStart = true;
