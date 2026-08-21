@@ -69,6 +69,7 @@ let
         readonly property bool   barWidgetOrderLocked: ${qml sc.barWidgetOrderLocked}
         readonly property string caffeineUnit:        ${qml sc.caffeineUnit}
         readonly property string caffeinePresets:     ${qml sc.caffeinePresets}
+        readonly property string dndPresets:          ${qml sc.dndPresets}
         readonly property string wifiEditCommand:     ${qml sc.wifiEditCommand}
         readonly property string btEditCommand:       ${qml sc.btEditCommand}
         readonly property bool   barShowCaffeine:     ${qml sc.barShowCaffeine}
@@ -384,6 +385,16 @@ in
       # the same preset-aware code path (see scripts/hypr-shell-caffeine.sh).
       default = "15,30,60,0";
       description = "Comma-separated minutes for the caffeine timed presets (0 = until turned off).";
+    };
+
+    dndPresets = lib.mkOption {
+      type = lib.types.strMatching "^[0-9]+(,[0-9]+)*$";
+      # Same shape and semantics as caffeinePresets: these fill the DND row's
+      # duration chips, the shell appends 0 if omitted, and the picked preset
+      # is a runtime choice the shell persists. The picker's Custom slider is
+      # not bound by this list -- it writes any 5-480 minute value directly.
+      default = "15,30,60,0";
+      description = "Comma-separated minutes for the DND timed presets (0 = until turned off).";
     };
 
     barShowCaffeine = lib.mkOption {
