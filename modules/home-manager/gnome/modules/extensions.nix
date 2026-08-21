@@ -34,7 +34,10 @@ in
       { package = pkgs.gnomeExtensions.just-perfection; }
       { package = unstable.gnomeExtensions.media-controller; }
       { package = pkgs.gnomeExtensions.vitals; }
-    ];
+    ]
+    ++ lib.optional config.local.capabilities.hardware.asusRog {
+      package = unstable.gnomeExtensions.perf-switcher-asusctl;
+    };
 
     dconf.settings = {
       "org/gnome/tweaks" = {

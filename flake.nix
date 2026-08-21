@@ -98,7 +98,7 @@
         nix-flatpak.homeManagerModules.nix-flatpak
         {
           local.capabilities.graphics.cuda = true;
-          local.capabilities.input.asusRogKeys = true;
+          local.capabilities.hardware.asusRog = true;
         }
         # We're getting claude-code from this repo https://github.com/sadjow/claude-code-nix to always have the most up to date version
         # The same guy also has a repo for codex https://github.com/sadjow/codex-cli-nix

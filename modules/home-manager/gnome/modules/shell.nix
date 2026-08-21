@@ -2,7 +2,7 @@
 
 let
   cfg = config.local.gnome;
-  enableAsusRogKeybindings = config.local.capabilities.input.asusRogKeys;
+  enableAsusRogControls = config.local.capabilities.hardware.asusRog;
 
   gvariant = lib.hm.gvariant;
   inherit (gvariant) mkTuple mkVariant;
@@ -73,7 +73,7 @@ let
     "com.obsproject.Studio.desktop"
     "com.github.neithern.g4music.desktop"
   ]
-  ++ lib.optionals enableAsusRogKeybindings [
+  ++ lib.optionals enableAsusRogControls [
     "rog-control-center.desktop"
   ];
 in

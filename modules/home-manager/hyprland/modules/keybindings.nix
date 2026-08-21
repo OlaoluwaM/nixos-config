@@ -34,7 +34,7 @@
 let
   cfg = config.local.hyprland;
   commands = cfg.commands;
-  enableAsusRogKeybindings = config.local.capabilities.input.asusRogKeys;
+  enableAsusRogKeybindings = config.local.capabilities.hardware.asusRog;
   lua = lib.generators.mkLuaInline;
   luaString = builtins.toJSON;
   mod = "SUPER";
