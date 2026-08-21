@@ -27,6 +27,14 @@ in
     # field needs no compositor tricks — the background below is already
     # blurred, so a low-alpha white fill over it IS the glass.
     #
+    # Known upstream bug, not a config problem: the first password attempt
+    # after resuming from suspend fails, and the same password succeeds on
+    # the second try. Keyboard state desyncs on resume and pollutes the
+    # first attempt's buffer (stray key events in the logs). A plain idle
+    # lock is unaffected — verified on this machine 2026-08-21. Until
+    # https://github.com/hyprwm/hyprlock/issues/499 is fixed, press Escape
+    # once after waking to flush the stale state, then type.
+    #
     # Source: https://wiki.hypr.land/Hypr-Ecosystem/hyprlock/
     programs.hyprlock = {
       enable = true;
