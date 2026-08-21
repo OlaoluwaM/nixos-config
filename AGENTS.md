@@ -20,17 +20,10 @@ The Hyprland session's shell is **silere-shell**, a Quickshell/QML bar maintaine
 
 - Consumed as the `silere-shell` flake input — `github:OlaoluwaM/silere-shell/custom-branch` with `flake = false`. It is a plain pinned source tree; packaging happens here, in `modules/home-manager/hyprland/modules/silere.nix`. The fork ships a dev-shell-only `flake.nix` for hacking on it; it must never grow `packages`/overlay outputs, because the build-time defaults substitution needs configuration knowledge only this repo has.
 - The local checkout lives at `~/Desktop/dev/silere-shell`, branch `custom-branch`. Shell/UI work happens **there**, not in this repo. After pushing fork commits, re-lock deliberately with `nix flake update silere-shell`.
-- **GeneratedDefaults.qml is generated output.** In the built package it is rendered from the `local.hyprland.silere.*` options in `silere.nix` — change the options or the render template, never the packaged file. In the fork, the checked-in copy holds upstream-identical defaults so non-Nix users see no change; keep that invariant.
+- **GeneratedDefaults.qml is generated output.** In the built package it is rendered from the `local.hyprland.silere.*` options in `silere.nix` — change the options or the render template, never the packaged file. The rationale for this mechanism is recorded in [adrs/0001](adrs/0001-own-the-forks-defaults-from-nix-instead-of-writing-settings-json.md).
 - Nix-declared default values must stay inside the fork's `_schema` clamp table (`services/ShellSettings.qml`) — the loader silently clamps out-of-bounds values.
 
-Fork working conventions (from the fork's `docs/forking.md`, plus this project's):
-
-- For all UI work, first inspect and follow the shell's existing design system and visual conventions; prefer its established components and patterns over new one-off styles.
-- Commit style matches upstream: short, lowercase, imperative subjects. Keep commits small and mechanical — every line of divergence is future rebase cost.
-- Gates before pushing: `bash scripts/ci-lint.sh` and `bash scripts/check.sh` (run inside the fork's `nix develop` so `qs`/`hyprctl` resolve).
-- Every new QML file needs a `qmldir` entry; motion goes through the `Motion`/`MotionBehavior` tokens (never bare `Behavior`); row heights via `Metrics.rowHeightFor()`; colors only from `Theme` tokens — no hex in widgets. The lint scripts enforce these.
-- Keep the `silere-*` layer-shell namespaces: Hyprland blur/animation rules match those strings.
-- Use the `qt-qml` skill when editing QML; run `qt-qml-review` before finalizing substantial QML changes. For Qt/QML API research prefer the `qt-docs` MCP server (`https://qt-docs-mcp.qt.io/mcp`) if configured; otherwise official Qt and Quickshell documentation. Ask before configuring the MCP server globally, because that changes the local agent environment rather than this repository.
+Fork working conventions — commit style, pre-commit gates (including the settings contract between `GeneratedDefaults.qml` and the silere module's render), QML rules, and the upstream merge policy — live in the fork checkout's `AGENTS.md` and `README.md`. Read them there before fork work; do not restate them here.
 
 ## Source Of Truth
 
