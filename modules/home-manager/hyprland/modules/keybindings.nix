@@ -586,13 +586,13 @@ let
     ++ lib.optionals enableAsusRogKeybindings [
       (mkDef {
         keys = "XF86Launch1";
-        dsp = execDispatcher (lib.getExe' pkgs.asusctl "rog-control-center");
+        dsp = execDispatcher (lib.getExe' unstable.asusctl "rog-control-center");
         desc = "Open ROG Control Center";
         group = "Hardware";
       })
       (mkDef {
         keys = "F5";
-        dsp = execDispatcher "${lib.getExe' pkgs.asusctl "asusctl"} profile -n";
+        dsp = execDispatcher "${lib.getExe' unstable.asusctl "asusctl"} profile -n";
         desc = "Cycle the power profile";
         group = "Hardware";
       })

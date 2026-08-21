@@ -42,10 +42,6 @@ in
   ];
 
   nixpkgs = {
-    overlays = import ../../modules/nixos/overlays {
-      inherit unstable;
-    };
-
     # Configure your nixpkgs instance
     config = {
       # Disable if you don't want unfree packages
@@ -250,6 +246,7 @@ in
   services = {
     asusd = {
       enable = true;
+      package = unstable.asusctl;
 
       # Hardware defaults captured from this GU604VI. Custom curves stay
       # disabled, so the embedded controller keeps automatic fan control.
