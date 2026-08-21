@@ -338,13 +338,17 @@ in
       type = lib.types.strMatching "^[a-zA-Z]*(,[a-zA-Z]+)*$";
       # caffeine leads the connectivity cluster (left of wifi) by request --
       # it shares the cluster's meta group, so no divider splits it off.
-      # traypopup sits ahead of it: the collapsed tray pill only exists while
-      # SNI items exist, so most of the time it costs nothing. The inline
-      # "tray" key stays listed but dormant (trayWidget=false). recording and
-      # privacy (blinking REC dot + timer, then mic) lead the zone as one
-      # capture cluster -- they share the "privacy" meta group, so no divider
-      # splits them. vitals moved to the left zone (see barWidgetOrderLeft).
-      default = "tray,updates,recording,privacy,traypopup,caffeine,network,bluetooth,volume,brightness,battery,clock";
+      # dnd rides just after it: the two self-set session modes read as one
+      # run at the cluster's head, and like recording the pill only exists
+      # while the mode is on, so it costs nothing the rest of the time.
+      # traypopup sits ahead of both: the collapsed tray pill only exists
+      # while SNI items exist, so most of the time it costs nothing. The
+      # inline "tray" key stays listed but dormant (trayWidget=false).
+      # recording and privacy (blinking REC dot + timer, then mic) lead the
+      # zone as one capture cluster -- they share the "privacy" meta group,
+      # so no divider splits them. vitals moved to the left zone (see
+      # barWidgetOrderLeft).
+      default = "tray,updates,recording,privacy,traypopup,caffeine,dnd,network,bluetooth,volume,brightness,battery,clock";
       description = "Bar widgets in the right zone, comma-separated in order.";
     };
 
