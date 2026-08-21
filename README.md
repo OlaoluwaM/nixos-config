@@ -14,19 +14,16 @@ Clone this repo in the `$HOME` directory.
 1. Refresh the `hardware-configuration.nix` module in `hosts/$HOST` so it aligns with what NixOS expects
 2. Run `nixos-rebuild switch --flake ...`, which activates both the NixOS and Home Manager configurations.
 
-Home Manager is integrated into the NixOS configuration, so every subsequent
-`nixos-rebuild switch` also applies the user's Home Manager configuration:
+From then on, home manager is integrated into the NixOS configuration, so every subsequent `nixos-rebuild switch` also applies the user's Home Manager configuration. Here is what the full command looks like:
 
 - `sudo nixos-rebuild switch --flake $HOME/nixos-config#hostname`
 - `sudo nixos-rebuild switch --flake "$HOME/nixos-config#hostname"`
 - `sudo nixos-rebuild switch --flake ~/nixos-config#hostname`
 - `cd ~/nixos-config` then run `sudo nixos-rebuild switch --flake .#hostname`
 
-Make sure, regardless of the command you use, the NixOS switch passes successfully.
+The first NixOS switch also installs the flake-pinned `home-manager` CLI in the user's NixOS profile so no separate Home Manager initialization is required. In other words, you can immediately start using the standalone home-manager cli to apply user-configuration changes if necessary after the first `nixos-rebuild switch`:
 
-The first NixOS switch also installs the flake-pinned `home-manager` CLI in the
-user's NixOS profile; no separate Home Manager initialization is required.
-In other words, you can immediately start using the standalone home-manager cli to apply user-configuration changes if necessary:
+A standalone home-manager invocation should look like this:
 
 ```bash
 home-manager switch -b hm-standalone-backup --flake .#$USER@$HOST
@@ -48,38 +45,25 @@ If we wanted to move Home Manager to `master`, we'd need to have Home Manager tr
 sudo nixos-rebuild switch --flake ~/nixos-config#$HOST
 ```
 
-This single command applies both layers in the correct order. Changes to session
-environment variables may still require logging out and back in.
+This single command applies both layers in the correct order. Changes to session environment variables may still require logging out and back in.
 
-To apply only the user configuration, use the standalone Home Manager command
-above.
+To apply only the user configuration, use the standalone Home Manager command above.
 
-### Changing the wallpaper (Hyprland)
+## TODOs
 
-Wallpapers are set through the shell's own picker or the terminal -- Vicinae
-no longer has a role here. Three equivalent entry points:
+- [ ] Make hosts/boreas a bit more modular. Move out stuff like the nvidia configuration into a separate module to allow for better composition moving forward
+- [x] Add shell aliases for the `nixos-rebuild` and `home-manager switch` flake commands
+- [x] Break apart Gnome home-manager module into sub-modules
+- [x] Break apart hyprland home-manager module into sub-modules
+- [ ] Break apart user home-manager module into sub-modules
+- [x] Delete old Hyprland QML and legacy desktop shell plumbing code
+- [ ] Ensure all documentation and comments are accurate and up to date, and that they make sense
 
-- `Super+Shift+W` -- opens silere-shell's wallpaper picker, a frosted grid
-  over `$WALLPAPERS_DIR` (`~/Pictures/wallpapers` by default); click an image
-  to apply it, Ctrl+F filters by name, and its Random button picks one for
-  you
-- `... ipc call wallpapers random` (or the picker's Random button) -- random
-  pick from `$WALLPAPERS_DIR` without opening the grid
-- `wallpaper-set <path>` in a terminal
+## Notes
 
-All three funnel through the same `wallpaper-set` script
-(`modules/home-manager/hyprland/modules/wallpaper.nix`), which is what
-guarantees the full fan-out: awww swaps the desktop, matugen retints the shell
-(the glass surfaces follow, since their tint derives from the matugen
-palette), and the stable PNG hyprlock reads is refreshed atomically. The
-picker calls this same script through `local.hyprland.silere.wallpaperCommand`
-(silere.nix) rather than bypassing it, so the matugen/hyprlock fan-out can
-never be skipped.
+### Using ROG Control Center on Boreas
 
-## Using ROG Control Center on Boreas
-
-ROG Control Center is the window for the `asusd` service. It starts in the
-background when you sign in to GNOME or Hyprland.
+ROG Control Center is the window for the `asusd` service. It starts in the background when you sign in to GNOME or Hyprland.
 
 Open it in one of these ways:
 
@@ -91,7 +75,7 @@ Closing the window leaves the app running in the tray. **Quit App** closes the
 window and tray app, but `asusd` keeps running. Run `rog-control-center` again
 to reopen it.
 
-### What to change
+#### What to change
 
 | Page | What to use it for | Boreas rule |
 | --- | --- | --- |
@@ -102,7 +86,7 @@ to reopen it.
 | Battery Info | Check battery health, charge state, and power use. | The charge limit is set to 80% in [`hosts/boreas/asusd/asusd.ron`](hosts/boreas/asusd/asusd.ron). |
 | App Settings | Control the window, tray, and notifications. | Leave **Start app on system startup** off. NixOS already starts it. |
 
-### Fan curves
+#### Fan curves
 
 The **Enabled** box does not turn the physical fan on or off. It tells `asusd`
 to replace the firmware's automatic curve with the curve shown in the graph.
@@ -119,16 +103,6 @@ has the full fan-curve format. The
 [6.3.11 fan-control code](https://github.com/OpenGamingCollective/asusctl/blob/6.3.11/asusd/src/ctrl_fancurves.rs)
 shows that enabling a curve applies it immediately when its power profile is
 active.
-
-## TODOs
-
-- [ ] Make hosts/boreas a bit more modular. Move out stuff like the nvidia configuration into a separate module to allow for better composition moving forward
-- [x] Add shell aliases for the `nixos-rebuild` and `home-manager switch` flake commands
-- [x] Break apart Gnome home-manager module into sub-modules
-- [x] Break apart hyprland home-manager module into sub-modules
-- [ ] Break apart user home-manager module into sub-modules
-- [x] Delete old Hyprland QML and legacy desktop shell plumbing code
-- [ ] Ensure all documentation and comments are accurate and up to date, and that they make sense
 
 ## Troubleshooting
 
@@ -148,3 +122,4 @@ On real hardware this must be replaced before the first `nixos-rebuild`:
   with `boot.loader.efi.canTouchEfiVariables = true`, and drop the GRUB block.
 - BIOS machines: keep GRUB but point `boot.loader.grub.device` at the actual disk
   (e.g. `/dev/nvme0n1` / `/dev/sda`), not `/dev/vda`.
+- To enable memtest add `boot.loader.systemd-boot.memtest86.enable = true;`
