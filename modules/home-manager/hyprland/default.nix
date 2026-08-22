@@ -218,8 +218,8 @@ in
     # xdg.mimeApps set that desktop.nix enables. GNOME gets these as stock
     # desktop defaults; outside GNOME they must be declared, or xdg-open falls
     # back to whatever app happens to advertise the type (opening a directory
-    # in VS Code, say). Loupe, Papers, and Nautilus are installed above; VLC
-    # and Gapless come from home.packages.
+    # in VS Code, say). Loupe, Papers, and Nautilus are installed above;
+    # Celluloid and Gapless come from home.packages.
     xdg.mimeApps.defaultApplications =
       lib.genAttrs [
         "image/png"
@@ -238,7 +238,7 @@ in
         "video/mpeg"
         "video/x-msvideo"
         "video/quicktime"
-      ] (_: "vlc.desktop")
+      ] (_: "io.github.celluloid_player.Celluloid.desktop")
       // lib.genAttrs [
         "audio/mpeg"
         "audio/flac"

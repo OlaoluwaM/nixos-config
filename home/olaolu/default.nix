@@ -179,6 +179,9 @@ in
     acpi
     atool
 
+    # Video player: GTK frontend over mpv, replacing VLC. The Hyprland
+    # profile's xdg.mimeApps video defaults point at its desktop entry.
+    celluloid
     cmake
     claude-code # From https://github.com/sadjow/claude-code-nix
     codex # From https://github.com/sadjow/codex-cli-nix
@@ -211,6 +214,9 @@ in
     localsend
 
     meson
+    # Celluloid brings its own mpv as the playback backend; this copy is for
+    # direct `mpv` use from a terminal.
+    mpv
 
     nmap
     nixfmt
@@ -240,8 +246,6 @@ in
     ticktick # GNOME keybind <Control><Alt>t launches this
     typescript
     typst
-
-    vlc
 
     wirelesstools
     wl-clipboard
