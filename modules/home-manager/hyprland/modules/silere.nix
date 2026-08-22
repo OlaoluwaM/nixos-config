@@ -74,7 +74,6 @@ let
         readonly property string btEditCommand:       ${qml sc.btEditCommand}
         readonly property bool   barShowCaffeine:     ${qml sc.barShowCaffeine}
         readonly property bool   trayWidget:          ${qml sc.trayWidget}
-        readonly property bool   updatesWidget:       ${qml sc.updatesWidget}
         readonly property bool   neutralTheme:        ${qml sc.neutralTheme}
         readonly property string baseTone:            ${qml sc.baseTone}
         readonly property string matugenAccentRole:   ${qml sc.matugenAccentRole}
@@ -349,7 +348,7 @@ in
       # zone as one capture cluster -- they share the "privacy" meta group,
       # so no divider splits them. vitals moved to the left zone (see
       # barWidgetOrderLeft).
-      default = "tray,updates,recording,privacy,traypopup,caffeine,dnd,network,bluetooth,volume,brightness,battery,clock";
+      default = "tray,recording,privacy,traypopup,caffeine,dnd,network,bluetooth,volume,brightness,battery,clock";
       description = "Bar widgets in the right zone, comma-separated in order.";
     };
 
@@ -484,7 +483,7 @@ in
 
     recordingStateFile = lib.mkOption {
       type = lib.types.str;
-      # Presence file hypr-shell-screenrecord touches while wf-recorder runs
+      # Presence file hypr-shell-screenrecord touches while gpu-screen-recorder runs
       # (see that script); the shell's Recording service watches it for the
       # bar's REC privacy chip. Under the runtime dir on purpose: its tmpfs
       # dies with the boot, so a crash or power loss can never leave a stale
@@ -500,7 +499,7 @@ in
     recordingStopCommand = lib.mkOption {
       type = lib.types.str;
       # The bar's recording pill runs this on click. Routed through the same
-      # wrapper the record chords toggle (its stop mode SIGINTs wf-recorder)
+      # wrapper the record chords toggle (its stop mode SIGINTs gpu-screen-recorder)
       # so the pill, the chords, and a terminal invocation share one stop
       # path and can never disagree about notification or cleanup behavior.
       default = "${cfg.commands.screenrecordScript}/bin/hypr-shell-record stop";
@@ -582,14 +581,6 @@ in
       # the tray is still reachable through the shell's own Settings UI
       # runtime toggle -- this option only controls the bar's inline icon.
       description = "Show the system tray widget on the bar. Off until the tray popup widget design lands -- see the comment on this option in silere.nix.";
-    };
-
-    updatesWidget = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      # The shell's update-count backends are pacman/dnf; this profile is
-      # NixOS, so the widget would just poll tools that are never present.
-      description = "Show the package-updates widget on the bar. Off -- its pacman/dnf backends are dead weight on NixOS.";
     };
 
     # -- Theme ---------------------------------------------------------------
