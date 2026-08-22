@@ -235,7 +235,6 @@ in
     powertop
 
     racket
-    (callPackage ../../pkgs/rxfetch { })
 
     service-wrapper
     slack
