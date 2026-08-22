@@ -37,6 +37,10 @@ let
     name = "hypr-shell-record";
     runtimeInputs = with pkgs; [
       coreutils
+      # gpu-screen-recorder's KMS capture needs the setcap gsr-kms-server
+      # wrapper granted by programs.gpu-screen-recorder.enable (see
+      # hosts/boreas/default.nix) -- this only puts the CLI on PATH.
+      gpu-screen-recorder
       # hyprctl + jq: the window mode derives its capture geometry from the
       # active window the same way screenshotScript's window mode does.
       hyprland
@@ -44,7 +48,6 @@ let
       libnotify
       procps
       slurp
-      wf-recorder
       xdg-utils
     ];
     text = builtins.readFile ../scripts/hypr-shell-screenrecord.sh;

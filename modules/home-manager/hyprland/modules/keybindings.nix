@@ -234,8 +234,9 @@ let
       desc = "Screenshot the focused window";
       group = "Screen capture";
     })
-    # Every record chord is a toggle (the script stops a running wf-recorder
-    # before it ever starts a new one), so no chord is spent on a dedicated
+    # Every record chord is a toggle (the script stops a running
+    # gpu-screen-recorder before it ever starts a new one), so no chord is
+    # spent on a dedicated
     # stop bind anymore -- the slot mod+ALT+R used to burn on "stop" now
     # mirrors CTRL+F6's focused-window mode instead. The bar's recording
     # pill is the other stop path: clicking it runs the same script.

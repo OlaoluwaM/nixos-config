@@ -181,6 +181,33 @@ in
     dynamicBoost.enable = true;
   };
 
+  # VAAPI encode for screen recording (gpu-screen-recorder's KMS capture
+  # needs a real hardware encoder on the Intel iGPU render node, not just
+  # decode). The pinned nixos-hardware profile for this laptop
+  # (asus-zephyrus-gu603h -> common/cpu/intel -> gpu/intel) already threads
+  # intel-media-driver into hardware.graphics.extraPackages by default, but
+  # that's an implicit fact a future reader would have to trace through
+  # three upstream modules to find. Declare it here too, next to the rest of
+  # this host's GPU config -- extraPackages is a list-type option, so this
+  # merges additively instead of becoming a second source of truth.
+  #
+  # This must NOT replace the driver set globally: nvidia-vaapi-driver stays
+  # in extraPackages (it's decode-only) because Firefox's NVDEC path still
+  # depends on it.
+  hardware.graphics.extraPackages = [ pkgs.intel-media-driver ];
+
+  # gpu-screen-recorder's KMS capture path (used by the Hyprland profile's
+  # screen-record script instead of a portal) shells out to a gsr-kms-server
+  # helper that needs CAP_SYS_ADMIN to read the DRM/KMS state -- something a
+  # plain unprivileged binary can't have. This NixOS module is what actually
+  # grants that: it installs the package and wraps gsr-kms-server through
+  # security.wrappers with the capability set, instead of running the whole
+  # recorder as root or prompting for sudo on every recording. A
+  # home-manager-only install of the package could not create that wrapper
+  # (security.wrappers is NixOS-level), so this has to live here, not in the
+  # Hyprland home-manager profile.
+  programs.gpu-screen-recorder.enable = true;
+
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
