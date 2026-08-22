@@ -59,6 +59,10 @@ in
 
       "org/gnome/nautilus/preferences" = {
         default-folder-viewer = "icon-view";
+        # Sort listings by modification time, newest first, so recent files
+        # surface at the top instead of wherever the name sort lands them.
+        default-sort-order = "mtime";
+        default-sort-in-reverse-order = true;
         search-filter-time-type = "last_modified";
         show-hidden-files = true;
         show-delete-permanently = true;
