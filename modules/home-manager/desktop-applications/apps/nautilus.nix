@@ -36,9 +36,13 @@ in
     };
 
     dconf.settings = {
+      # Nautilus has no folders-first key of its own; it reads
+      # sort-directories-first from this shared GTK file-chooser settings path
+      # (gtk4 for Nautilus and GTK4 dialogs, the legacy path below for GTK3
+      # apps), so flipping it here changes both the browser and file dialogs.
       "org/gtk/gtk4/settings/file-chooser" = {
         show-hidden = true;
-        sort-directories-first = false;
+        sort-directories-first = true;
       };
 
       "org/gtk/settings/file-chooser" = {
@@ -48,7 +52,7 @@ in
         show-size-column = true;
         show-type-column = true;
         sort-column = "name";
-        sort-directories-first = false;
+        sort-directories-first = true;
         sort-order = "ascending";
         type-format = "category";
       };
