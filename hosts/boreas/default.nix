@@ -38,13 +38,10 @@ in
     # Import your generated (nixos-generate-config) hardware configuration
     ./hardware-configuration.nix
     ../../modules/nixos/desktop.nix
+    ../../modules/nixos/custom-firewall-config.nix
   ];
 
   nixpkgs = {
-    overlays = import ../../modules/nixos/overlays {
-      inherit unstable;
-    };
-
     # Configure your nixpkgs instance
     config = {
       # Disable if you don't want unfree packages
@@ -58,6 +55,13 @@ in
       experimental-features = "nix-command flakes";
       # Opinionated: disable global registry
       flake-registry = "";
+      # Vicinae is built from its own flake input, which Hydra never builds;
+      # upstream publishes binaries to this cachix instead. Without it every
+      # `nix flake update vicinae` costs a local Qt compile.
+      extra-substituters = [ "https://vicinae.cachix.org" ];
+      extra-trusted-public-keys = [
+        "vicinae.cachix.org-1:1kDrfienkGHPYbkpNj1mWTr7Fm1+zcenzgTizIcI3oc="
+      ];
     };
     # Opinionated: disable channels
     channel.enable = false;
@@ -71,7 +75,9 @@ in
   boot.loader.systemd-boot.memtest86.enable = true;
 
   # Use latest kernel.
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  # Temporarily pinning to 7.1 because the nvidia drivers (which as of now is NVIDIA 595.71.05) is not compatible with pkgs.linuxPackages_latest (kernel 7.2)
+  # We could also downgrade to the LTS kernel version (pkgs.linuxPackages), but nah
+  boot.kernelPackages = pkgs.linuxPackages_7_1;
 
   # Literal value because of the directory path. This is under the "boreas" host so making it variable doesn't make sense
   networking.hostName = "boreas";
@@ -175,6 +181,33 @@ in
     dynamicBoost.enable = true;
   };
 
+  # VAAPI encode for screen recording (gpu-screen-recorder's KMS capture
+  # needs a real hardware encoder on the Intel iGPU render node, not just
+  # decode). The pinned nixos-hardware profile for this laptop
+  # (asus-zephyrus-gu603h -> common/cpu/intel -> gpu/intel) already threads
+  # intel-media-driver into hardware.graphics.extraPackages by default, but
+  # that's an implicit fact a future reader would have to trace through
+  # three upstream modules to find. Declare it here too, next to the rest of
+  # this host's GPU config -- extraPackages is a list-type option, so this
+  # merges additively instead of becoming a second source of truth.
+  #
+  # This must NOT replace the driver set globally: nvidia-vaapi-driver stays
+  # in extraPackages (it's decode-only) because Firefox's NVDEC path still
+  # depends on it.
+  hardware.graphics.extraPackages = [ pkgs.intel-media-driver ];
+
+  # gpu-screen-recorder's KMS capture path (used by the Hyprland profile's
+  # screen-record script instead of a portal) shells out to a gsr-kms-server
+  # helper that needs CAP_SYS_ADMIN to read the DRM/KMS state -- something a
+  # plain unprivileged binary can't have. This NixOS module is what actually
+  # grants that: it installs the package and wraps gsr-kms-server through
+  # security.wrappers with the capability set, instead of running the whole
+  # recorder as root or prompting for sudo on every recording. A
+  # home-manager-only install of the package could not create that wrapper
+  # (security.wrappers is NixOS-level), so this has to live here, not in the
+  # Hyprland home-manager profile.
+  programs.gpu-screen-recorder.enable = true;
+
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
@@ -240,6 +273,7 @@ in
   services = {
     asusd = {
       enable = true;
+      package = unstable.asusctl;
 
       # Hardware defaults captured from this GU604VI. Custom curves stay
       # disabled, so the embedded controller keeps automatic fan control.

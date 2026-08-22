@@ -57,6 +57,19 @@ status)
 	fi
 	;;
 toggle)
+	# Prefer the shell's own toggle over raw unit control: silere-shell's
+	# Caffeine service applies the user's chosen timed preset (scheduling
+	# the auto-stop timer alongside the unit) and flips the bar pill
+	# optimistically, so a chord press reacts instantly instead of on the
+	# next reconcile poll. Raw control below knows neither, so it stays
+	# the fallback for when the shell isn't running -- `qs ipc` exits
+	# nonzero when no live instance answers. The -p is load-bearing: qs
+	# finds the instance by config path, and the shell runs from the store
+	# path in SILERE_SHELL_QML (set by commands.nix), not any default dir.
+	if [ -n "${SILERE_SHELL_QML:-}" ] && command -v qs >/dev/null 2>&1 \
+		&& timeout 3 qs -p "$SILERE_SHELL_QML" ipc call caffeine toggle >/dev/null 2>&1; then
+		exit 0
+	fi
 	if is_active; then
 		stop_inhibitor
 	else

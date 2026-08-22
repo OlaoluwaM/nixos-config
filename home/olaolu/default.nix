@@ -146,15 +146,12 @@ in
     ../../modules/home-manager/lsd.nix
     ../../modules/home-manager/neovim.nix
     ../../modules/home-manager/ssh.nix
+    ../../modules/home-manager/vscode.nix
     ../../modules/home-manager/yazi.nix
     ../../modules/home-manager/zsh.nix
   ];
 
   nixpkgs = {
-    overlays = import ../../modules/home-manager/overlays {
-      inherit unstable;
-    };
-
     # Configure your nixpkgs instance
     config = {
       # Disable if you don't want unfree packages
@@ -182,6 +179,9 @@ in
     acpi
     atool
 
+    # Video player: GTK frontend over mpv, replacing VLC. The Hyprland
+    # profile's xdg.mimeApps video defaults point at its desktop entry.
+    celluloid
     cmake
     claude-code # From https://github.com/sadjow/claude-code-nix
     codex # From https://github.com/sadjow/codex-cli-nix
@@ -214,6 +214,9 @@ in
     localsend
 
     meson
+    # Celluloid brings its own mpv as the playback backend; this copy is for
+    # direct `mpv` use from a terminal.
+    mpv
 
     nmap
     nixfmt
@@ -232,7 +235,6 @@ in
     powertop
 
     racket
-    (callPackage ../../pkgs/rxfetch { })
 
     service-wrapper
     slack
@@ -243,8 +245,6 @@ in
     ticktick # GNOME keybind <Control><Alt>t launches this
     typescript
     typst
-
-    vlc
 
     wirelesstools
     wl-clipboard
@@ -341,10 +341,6 @@ in
 
     unstable.uv
 
-    # vscode-fhs uses a user namespace that maps only this user's UID.
-    # Unmapped Nix store owners appear as nobody, so OpenSSH rejects Home
-    # Manager's Nix-store-backed ~/.ssh/config.
-    unstable.vscode
     vscodeDesktopEntry
 
     unstable.w3m

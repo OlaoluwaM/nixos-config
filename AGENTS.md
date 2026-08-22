@@ -9,23 +9,33 @@ This is a NixOS/Home Manager flake for the `boreas` (and other) machine.
 - `home/olaolu/`: user Home Manager profile.
 - `modules/nixos/`: reusable NixOS modules.
 - `modules/home-manager/`: reusable Home Manager modules.
-- `modules/home-manager/hyprland/`: Hyprland desktop profile.
-- `modules/home-manager/hyprland/quickshell/`: Quickshell QML shell.
+- `modules/home-manager/hyprland/`: the Hyprland desktop profile. Its `README.md` is the detailed map: keybindings, silere-shell packaging, wallpaper pipeline, lock/idle.
 - `pkgs/`: local package definitions.
 
-Prefer changing the narrowest module that owns the behavior. Do not push host-specific choices into reusable modules unless the module already takes that host data as an argument.
+Change the narrowest module that owns the behavior. Don't push host-specific choices into reusable modules unless the module already takes that host data as an argument.
+
+## The silere-shell Fork
+
+The Hyprland session's shell is **silere-shell**, a Quickshell/QML bar maintained as a fork of `s3rven/silere-shell`:
+
+- It comes in as the `silere-shell` flake input: `github:OlaoluwaM/silere-shell/custom-branch` with `flake = false`, meaning a plain pinned source tree. Packaging happens here, in `modules/home-manager/hyprland/modules/silere.nix`. The fork ships a `flake.nix` that only provides a dev shell; it must never grow `packages` or overlay outputs, because substituting the build-time defaults needs configuration knowledge only this repo has.
+- The local checkout lives at `~/Desktop/dev/silere-shell`, branch `custom-branch`. Shell and UI work happens **there**, not in this repo. After fork commits are pushed, re-lock deliberately with `nix flake update silere-shell`.
+- **GeneratedDefaults.qml is generated output.** In the built package it is rendered from the `local.hyprland.silere.*` options in `silere.nix`. Change the options or the render template, never the packaged file. The reasoning behind this mechanism is in [adrs/0001](adrs/0001-own-the-forks-defaults-from-nix-instead-of-writing-settings-json.md).
+- Nix-declared default values must stay inside the fork's `_schema` clamp table (`services/ShellSettings.qml`). The loader clamps out-of-bounds values without saying so.
+
+Fork working conventions (commit style, pre-commit gates including the settings contract between `GeneratedDefaults.qml` and the silere module's render, QML rules, and the upstream merge policy) live in the fork checkout's `AGENTS.md` and `README.md`. Read them there before fork work; don't restate them here.
 
 ## Source Of Truth
 
-Trust `flake.nix` and the relevant module files over older prose when there is a conflict. README files are useful orientation, but they may lag current pins or implementation details.
+When prose and code disagree, trust `flake.nix` and the relevant module files over the prose. README files are useful orientation, but they can lag current pins or implementation details.
 
-Do not update `flake.lock`, flake inputs, `home.stateVersion`, or `system.stateVersion` as incidental cleanup. Change them only when the task explicitly calls for it, and explain the migration risk.
+Don't update `flake.lock`, flake inputs, `home.stateVersion`, or `system.stateVersion` as incidental cleanup. Change them only when the task explicitly calls for it (re-locking `silere-shell` after deliberately pushed fork commits is the routine example), and explain the migration risk.
 
-This repo intentionally uses stable Nixpkgs/Home Manager with selected packages from `nixpkgs-unstable`. Preserve that split unless there is a specific reason to move a whole subsystem together.
+This repo intentionally runs stable Nixpkgs/Home Manager with selected packages from `nixpkgs-unstable`. Keep that split unless there's a specific reason to move a whole subsystem together.
 
 ## Nix Workflow
 
-Use `nixfmt` for Nix files. Keep module changes idiomatic and close to existing style: small option sets, explicit imports, and host-specific data flowing through `hostConfig`.
+Use `nixfmt` for Nix files. Keep module changes idiomatic and close to the existing style: small option sets, explicit imports, and host-specific data flowing through `hostConfig`.
 
 Useful verification commands, depending on the change:
 
@@ -38,69 +48,28 @@ nix build .#homeConfigurations.olaolu@boreas.activationPackage --no-link
 
 For Home Manager-only changes, at least evaluate or build `.#homeConfigurations.olaolu@boreas.activationPackage` when feasible. For NixOS module changes, evaluate or build the `boreas` system derivation when feasible.
 
-Do not run `nixos-rebuild switch` or `home-manager switch` unless Olaolu explicitly asks for a live system activation.
-
-## Existing Design System
-
-For all UI work in this repo, first inspect and follow the existing design system and local visual conventions. Prefer established components, spacing, typography, colors, interaction patterns, icons, and file organization over introducing new one-off styles.
-
-For Quickshell UI, start with `modules/home-manager/hyprland/quickshell/Theme.qml`, `GeneratedTheme.qml`, `BarCapsule.qml`, `IconButton.qml`, `ActionButton.qml`, `StyledText.qml`, `StyledSlider.qml`, `HoverTooltip.qml`, and nearby panel/capsule implementations before creating new visual patterns.
-
-When a change genuinely needs a new pattern, keep it consistent with adjacent Quickshell/QML surfaces and explain the tradeoff before implementing it.
-
-## Quickshell QML
-
-This repo uses QML for the Hyprland Quickshell shell in:
-
-- `modules/home-manager/hyprland/quickshell/**/*.qml`
-
-When editing those files, use the `qt-qml` skill if available.
-
-Before finalizing substantial QML changes, use the `qt-qml-review` skill if available and address correctness, layout, binding, and maintainability findings.
-
-If either skill is missing, ask the user before installing it with:
-
-```sh
-python /home/olaolu/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
-  --repo TheQtCompanyRnD/agent-skills \
-  --path skills/qt-qml \
-  --path skills/qt-qml-review
-```
-
-After installation, tell the user to restart Codex so the skills are picked up.
-
-Every new QML file in `modules/home-manager/hyprland/quickshell/` must be added to `qmldir`; Qt does not auto-discover files there.
-
-Treat `GeneratedTheme.qml` and `GeneratedCommands.qml` as generated outputs. Update `modules/home-manager/hyprland/quickshell.nix` or the source template logic instead of hand-editing generated values.
-
-Prefer native Quickshell services over shell commands when Quickshell exposes the domain directly, especially PipeWire audio, MPRIS media, UPower battery state, notifications, tray items, and Hyprland integration.
-
-Keep command paths and placeholders centralized through the generated command layer. Child components should call narrow domain objects or action APIs rather than embedding shell commands.
+**Never run `nixos-rebuild switch` or `home-manager switch` unprompted.** The user's daily driver is Fedora; nothing here is live on this host. Runtime verification happens when the user boots their separate NixOS installation on its own SSD, so build-level checks are the ceiling for agent verification.
 
 ## Hyprland Profile
 
-The Hyprland profile is intentionally a small, owned desktop setup rather than a copied rice. Keep changes aligned with the existing launch path:
+The Hyprland profile is deliberately a small, owned desktop setup rather than a copied rice. Keep changes aligned with the existing launch path:
 
 ```text
-greetd -> tuigreet -> Hyprland -> Home Manager hyprland.conf -> hyprland-session.target -> user services -> Quickshell QML
+greetd -> tuigreet -> Hyprland -> Home Manager hyprland.lua -> hyprland-session.target -> user services
 ```
 
-Do not casually switch only one Hyprland ecosystem package to unstable. If Hyprland itself moves, verify the compositor, portal, lock, idle, and shell stack coherently.
+`hyprland-session.target` starts `silere-shell.service`, Vicinae, the awww wallpaper daemon and restore unit, hypridle, hyprsunset, and the idle-inhibit helpers. The profile README has the full list.
 
-Keep equivalent GNOME and Hyprland keybindings on the same chord wherever practical. Before changing a binding in either profile, inspect the other profile and preserve parity unless a desktop-specific constraint requires an intentional difference.
+Don't casually switch just one Hyprland ecosystem package to unstable. If Hyprland itself moves, verify that the compositor, portal, lock, idle, and shell stack move coherently.
 
-Helper scripts under `modules/home-manager/hyprland/scripts/` are embedded with `pkgs.writeShellApplication`. Preserve the existing convention: scripts use `# shellcheck shell=bash` and omit a direct shebang.
+Keybindings live in `modules/home-manager/hyprland/modules/keybindings.nix`, the single definition site for every chord. Keep equivalent GNOME and Hyprland keybindings on the same chord wherever practical. Before changing a binding in either profile, inspect the other profile and preserve parity unless a desktop-specific constraint requires an intentional difference.
 
-## Qt Documentation MCP
+The stable wallpaper path (`local.hyprland.wallpaper`) is a **seeded user-writable file**, not a store symlink; `wallpaper-set` overwrites it in place. Don't convert it back to an `xdg.configFile` entry.
 
-When researching Qt or QML APIs for Quickshell work, prefer the `qt-docs` MCP server if it is already configured. It provides Qt documentation lookup through:
-
-- `https://qt-docs-mcp.qt.io/mcp`
-
-If the MCP server is not configured, fall back to official Qt and Quickshell documentation. Ask the user before configuring the MCP server globally, because that changes the local agent environment rather than this repository.
+Helper scripts under `modules/home-manager/hyprland/scripts/` are embedded with `pkgs.writeShellApplication`. Keep the existing convention: scripts use `# shellcheck shell=bash` and omit a direct shebang.
 
 ## Worktree Discipline
 
-The worktree may contain unrelated user changes. Do not revert, reformat, or fold them into your work unless the task explicitly requires it.
+This applies to both this repo and the fork checkout. The worktree may contain unrelated user changes. Don't revert, reformat, or fold them into your work unless the task explicitly requires it.
 
 Before editing, check `git status --short`. Before finalizing, show or inspect the relevant diff. Keep commits atomic if Olaolu asks for a commit.

@@ -1,0 +1,41 @@
+--- a/crates/windows-lib/src/switch/clients.rs
++++ b/crates/windows-lib/src/switch/clients.rs
+@@ -47,25 +47,26 @@
+                 #[watch]
+                 set_css_classes: if self.active { &["active", "client"] } else { &["client"] },
+                 set_cursor_from_name: Some("pointer"),
+-                set_width_request: scale(self.monitor_data.width, self.scale),
+-                set_height_request: scale(self.monitor_data.height, self.scale),
+-                gtk::Frame {
+-                    #[wrap(Some)]
+-                    set_label_widget = &gtk::Label {
++                gtk::Box {
++                    set_orientation: gtk::Orientation::Vertical,
++                    set_spacing: 4,
++                    set_valign: gtk::Align::Center,
++                    #[name(image)]
++                    gtk::Image {
++                        set_css_classes: if self.data.enabled { &["client-image"] } else { &["client-image", "monochrome"] },
++                        set_pixel_size: calc_image_size(self.monitor_data.height, self.monitor_data.width, self.scale),
++                    },
++                    gtk::Label {
++                        set_css_classes: &["client-label"],
+                         set_overflow: gtk::Overflow::Visible,
+-                        set_margin_start: 6,
+                         set_ellipsize: pango::EllipsizeMode::End,
++                        set_justify: gtk::Justification::Center,
++                        set_width_request: calc_image_size(self.monitor_data.height, self.monitor_data.width, self.scale),
+                         set_label: if self.data.title.trim().is_empty() {
+                             &self.data.class
+                         } else {
+                             &self.data.title
+                         },
+-                    },
+-                    set_label_align: 0.5,
+-                    #[name(image)]
+-                    gtk::Image {
+-                        set_css_classes: if self.data.enabled { &["client-image"] } else { &["client-image", "monochrome"] },
+-                        set_pixel_size: calc_image_size(self.monitor_data.height, self.monitor_data.width, self.scale),
+                     }
+                 }
+             }

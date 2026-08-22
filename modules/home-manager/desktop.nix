@@ -10,25 +10,10 @@ let
 
   fontSpec = font: "${font.name} ${toString font.size}";
 
-  # Keep GNOME on its stock Adwaita dark theme. The Catppuccin desktop theme
-  # remains available to the Hyprland profile when its preset is active.
-  useCatppuccin = cfg.profile == "hyprland" && config.local.catppuccin.enable;
-  useCatppuccinForQt = useCatppuccin && cfg.catppuccinQt.enable;
-
-  gtkTheme =
-    if useCatppuccin then
-      {
-        name = "Catppuccin-Mocha-Standard-Lavender-Dark";
-        package = pkgs.catppuccin-gtk.override {
-          accents = [ "lavender" ];
-          variant = "mocha";
-        };
-      }
-    else
-      {
-        name = "Adwaita-dark";
-        package = pkgs.gnome-themes-extra;
-      };
+  gtkTheme = {
+    name = "Adwaita-dark";
+    package = pkgs.gnome-themes-extra;
+  };
 
   cursorTheme = {
     name = "catppuccin-mocha-dark-cursors";
@@ -44,6 +29,7 @@ in
 {
   imports = [
     ./theme.nix
+    ./desktop-applications
     ./gnome
     ./hyprland
   ];
@@ -65,16 +51,6 @@ in
         local graphical session.
       '';
     };
-
-    catppuccinQt.enable = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = ''
-        Use Catppuccin's Kvantum theme for Qt applications when the active
-        local theme preset is Catppuccin. Disable this to keep Qt on Adwaita
-        while leaving the rest of Catppuccin theming enabled.
-      '';
-    };
   };
 
   config = lib.mkMerge [
@@ -84,8 +60,6 @@ in
     }
 
     (lib.mkIf (cfg.profile != "none") {
-      catppuccin.kvantum.enable = useCatppuccinForQt;
-
       # Default applications for every desktop profile, codifying the explicit
       # choices from the Fedora install's user-level mimeapps.list. Stock GNOME
       # defaults (Evince, Loupe, Totem, Nautilus, ...) are deliberately not
@@ -190,8 +164,8 @@ in
 
       qt = {
         enable = true;
-        platformTheme.name = if useCatppuccinForQt then "kvantum" else "adwaita";
-        style.name = if useCatppuccinForQt then "kvantum" else "adwaita-dark";
+        platformTheme.name = "adwaita";
+        style.name = "adwaita-dark";
         qt5ctSettings.Fonts = {
           fixed = "\"${fonts.mono.family},${toString fonts.mono.size}\"";
           general = "\"${fonts.ui.family},${toString fonts.ui.size}\"";

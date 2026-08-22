@@ -53,9 +53,9 @@ let
     cfg.shell
   ];
 
-  # A preferred family can be shared by several roles (UI, document and shell
-  # all use SF Pro Display), so collapse to one alias per family and merge those
-  # roles' fallback lists de-duplicated, in fontRoles order — so when roles
+  # A preferred family can be shared by several roles (document and shell use
+  # SF Pro Display), so collapse to one alias per family and merge those roles'
+  # fallback lists de-duplicated in fontRoles order. When roles
   # disagree (document wants serif fallbacks), the earlier role's chain wins.
   aliasFamilies = lib.unique (map (role: role.family) fontRoles);
   fallbacksFor =
@@ -71,24 +71,40 @@ let
   # asked for keeps strong binding — and fontconfig ranks strong family matches
   # ahead of weak ones, so the preferred font still wins whenever it is
   # installed. This covers every app that requests these families by name
-  # (Quickshell, hyprlock, GTK), not just the generic serif/sans/monospace
+  # (hyprlock, GTK, a future shell UI), not just the generic serif/sans/monospace
   # aliases handled by defaultFonts.
   familyAlias =
-    family:
+    family: fallbacks:
     lib.concatStringsSep "\n" (
       [
         "  <alias>"
         "    <family>${family}</family>"
         "    <prefer>"
       ]
-      ++ map (f: "      <family>${f}</family>") (fallbacksFor family)
+      ++ map (f: "      <family>${f}</family>") fallbacks
       ++ [
         "    </prefer>"
         "  </alias>"
       ]
     );
 
-  namedFamilyFallbacks = lib.concatMapStringsSep "\n" familyAlias aliasFamilies;
+  namedFamilyFallbacks = lib.concatMapStringsSep "\n" (
+    family: familyAlias family (fallbacksFor family)
+  ) aliasFamilies;
+
+  # silere-shell requests "JetBrainsMono Nerd Font" by name for its default
+  # bar font; this profile deliberately substitutes its own mono stack
+  # instead of shipping a second Nerd Font alongside Berkeley Mono. Reuse the
+  # same weak-binding alias machinery as namedFamilyFallbacks above, keyed on
+  # the exact name the shell asks for rather than one of the local.fonts
+  # roles. "Symbols Nerd Font" is appended after Berkeley Mono so the
+  # private-use-area glyphs the shell's Nerd-Font icons rely on still
+  # render -- Berkeley Mono itself carries none of them, and the symbols-only
+  # package is already installed by the Hyprland profile.
+  jetbrainsMonoNerdFontFallback = familyAlias "JetBrainsMono Nerd Font" [
+    cfg.mono.family
+    "Symbols Nerd Font"
+  ];
 in
 {
   options.local.fonts = {
@@ -164,6 +180,7 @@ in
           <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
           <fontconfig>
           ${namedFamilyFallbacks}
+          ${jetbrainsMonoNerdFontFallback}
           </fontconfig>
         '';
       };

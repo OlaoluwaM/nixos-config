@@ -33,6 +33,8 @@ in
 
         sync.records = true;
         ai.enabled = true;
+        auto_sync = true;
+        sync_frequency = "1h";
 
         daemon = {
           enabled = true;

@@ -11,12 +11,12 @@
         modules may use.
       '';
     };
-    input.asusRogKeys = lib.mkOption {
+    hardware.asusRog = lib.mkOption {
       type = lib.types.bool;
       default = false;
       description = ''
-        Whether the target system provides ASUS ROG keys support that Home Manager
-        modules may use.
+        Whether the target system is an ASUS ROG device whose hardware controls
+        Home Manager modules may use.
       '';
     };
   };

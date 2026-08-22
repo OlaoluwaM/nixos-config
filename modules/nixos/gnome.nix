@@ -21,8 +21,6 @@ in
     # Ensure Gnome Online Accounts daemon is active
     services.gnome.gnome-online-accounts.enable = true;
 
-    services.gnome.gnome-keyring.enable = true;
-
     services.switcherooControl.enable = true;
   };
 }

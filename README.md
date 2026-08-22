@@ -12,28 +12,21 @@ Clone this repo in the `$HOME` directory.
 **Then for the first time only, following a fresh installation of NixOS, run the script `scripts/fresh-install-first-rebuild-switch.sh`. It will do two things:**
 
 1. Refresh the `hardware-configuration.nix` module in `hosts/$HOST` so it aligns with what NixOS expects
-2. Runs a `nixos-rebuild switch --flake ...`.
+2. Run `nixos-rebuild switch --flake ...`, which activates both the NixOS and Home Manager configurations.
 
-After that, run any one of the following to apply the system configuration from this repo moving forward:
+From then on, home manager is integrated into the NixOS configuration, so every subsequent `nixos-rebuild switch` also applies the user's Home Manager configuration. Here is what the full command looks like:
 
 - `sudo nixos-rebuild switch --flake $HOME/nixos-config#hostname`
 - `sudo nixos-rebuild switch --flake "$HOME/nixos-config#hostname"`
 - `sudo nixos-rebuild switch --flake ~/nixos-config#hostname`
 - `cd ~/nixos-config` then run `sudo nixos-rebuild switch --flake .#hostname`
 
-Make sure, regardless of the command you use, the nixos switch passes successfully.
+The first NixOS switch also installs the flake-pinned `home-manager` CLI in the user's NixOS profile so no separate Home Manager initialization is required. In other words, you can immediately start using the standalone home-manager cli to apply user-configuration changes if necessary after the first `nixos-rebuild switch`:
 
-If the above command was successful, we must then setup/initialize home-manager using the following command (the flake path can be specified in the same manner as with the `nixos-rebuild`). We run this only once. 
-
-```bash
-# Version used here must match the version of the Home Manager branch pinned in flake.nix.
-nix run github:nix-community/home-manager/release-26.05 -- switch -b backup --flake ~/nixos-config#$USER@$HOST
-```
-
-Once this is done we should be able to just use home-manager directly (<https://nix-community.github.io/home-manager/index.xhtml#sec-flakes-prerequisites>)
+A standalone home-manager invocation should look like this:
 
 ```bash
-home-manager switch --flake .#username@hostname
+home-manager switch -b hm-standalone-backup --flake .#$USER@$HOST
 ```
 
 This repo intentionally uses a stable base with selected unstable packages:
@@ -46,20 +39,31 @@ That keeps the NixOS and Home Manager module systems aligned while still allowin
 
 If we wanted to move Home Manager to `master`, we'd need to have Home Manager track nixpkgs-unstable. In `flake.nix`, this means changing `home-manager.url` to `github:nix-community/home-manager/master` and changing `home-manager.inputs.nixpkgs.follows` from `nixpkgs` to `nixpkgs-unstable`. For a fully unstable setup, we'd also make the standalone Home Manager `pkgs` come from `nixpkgs-unstable`.
 
-
-### Apply order: system first, then home
+### Applying changes
 
 ```bash
 sudo nixos-rebuild switch --flake ~/nixos-config#$HOST
-home-manager switch --flake ~/nixos-config#$USER@$HOST
 ```
 
-On a fresh install this order is mandatory: standalone Home Manager can only run once `nixos-rebuild` has produced what it needs (our user account, the nix daemon, `allowed-users`). Afterwards the two are independent. If only one layer changed, running just that layer's `switch` is fine, but for changes spanning both, keep system first: the home config usually assumes system plumbing (sessions, groups, dbus services) that should land before it. Cross-layer changes may also need a re-login for `hm-session-vars.sh` to take effect.
+This single command applies both layers in the correct order. Changes to session environment variables may still require logging out and back in.
 
-## Using ROG Control Center on Boreas
+To apply only the user configuration, use the standalone Home Manager command above.
 
-ROG Control Center is the window for the `asusd` service. It starts in the
-background when you sign in to GNOME or Hyprland.
+## TODOs
+
+- [ ] Make hosts/boreas a bit more modular. Move out stuff like the nvidia configuration into a separate module to allow for better composition moving forward
+- [x] Add shell aliases for the `nixos-rebuild` and `home-manager switch` flake commands
+- [x] Break apart Gnome home-manager module into sub-modules
+- [x] Break apart hyprland home-manager module into sub-modules
+- [ ] Break apart user home-manager module into sub-modules
+- [x] Delete old Hyprland QML and legacy desktop shell plumbing code
+- [ ] Ensure all documentation and comments are accurate and up to date, and that they make sense
+
+## Notes
+
+### Using ROG Control Center on Boreas
+
+ROG Control Center is the window for the `asusd` service. It starts in the background when you sign in to GNOME or Hyprland.
 
 Open it in one of these ways:
 
@@ -71,7 +75,7 @@ Closing the window leaves the app running in the tray. **Quit App** closes the
 window and tray app, but `asusd` keeps running. Run `rog-control-center` again
 to reopen it.
 
-### What to change
+#### What to change
 
 | Page | What to use it for | Boreas rule |
 | --- | --- | --- |
@@ -82,7 +86,7 @@ to reopen it.
 | Battery Info | Check battery health, charge state, and power use. | The charge limit is set to 80% in [`hosts/boreas/asusd/asusd.ron`](hosts/boreas/asusd/asusd.ron). |
 | App Settings | Control the window, tray, and notifications. | Leave **Start app on system startup** off. NixOS already starts it. |
 
-### Fan curves
+#### Fan curves
 
 The **Enabled** box does not turn the physical fan on or off. It tells `asusd`
 to replace the firmware's automatic curve with the curve shown in the graph.
@@ -100,16 +104,6 @@ has the full fan-curve format. The
 shows that enabling a curve applies it immediately when its power profile is
 active.
 
-## TODOs
-
-- [ ] Make hosts/boreas a bit more modular. Move out stuff like the nvidia configuration into a separate module to allow for better composition moving forward
-- [x] Add shell aliases for the `nixos-rebuild` and `home-manager switch` flake commands
-- [x] Break apart Gnome home-manager module into sub-modules
-- [ ] Break apart hyprland home-manager module into sub-modules
-- [ ] Break apart user home-manager module into sub-modules
-- [ ] Delete old Hyprland QML and Caffyne OS plumbing code
-- [ ] Look into declaratively setting up a wallpaper (**Optional**)
-
 ## Troubleshooting
 
 ### Not booting up?
@@ -117,7 +111,7 @@ active.
 You probably need to update the `hosts/<hostname>/hardware-configuration.nix` file with what's in `/etc/nixos/hardware-configuration.nix`. Run
 
 ```shell
-cp /etc/nixos/hardware-configuration.nix ~/nixos-config/hosts/<hostname>/
+./scripts/regenerate-hardware-configuration.sh <hostname>
 ```
 
 The bootloader is configured separately, in `hosts/<hostname>/default.nix`, and
@@ -128,4 +122,4 @@ On real hardware this must be replaced before the first `nixos-rebuild`:
   with `boot.loader.efi.canTouchEfiVariables = true`, and drop the GRUB block.
 - BIOS machines: keep GRUB but point `boot.loader.grub.device` at the actual disk
   (e.g. `/dev/nvme0n1` / `/dev/sda`), not `/dev/vda`.
-
+- To enable memtest add `boot.loader.systemd-boot.memtest86.enable = true;`

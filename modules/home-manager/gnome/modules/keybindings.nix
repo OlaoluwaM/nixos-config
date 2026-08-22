@@ -2,7 +2,7 @@
 
 let
   cfg = config.local.gnome;
-  enableAsusRogKeybindings = config.local.capabilities.input.asusRogKeys;
+  enableAsusRogKeybindings = config.local.capabilities.hardware.asusRog;
   gvariant = lib.hm.gvariant;
   emptyStringArray = gvariant.mkEmptyArray gvariant.type.string;
   customKeybindingSchema = "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings";

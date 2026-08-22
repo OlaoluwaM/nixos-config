@@ -37,6 +37,7 @@ in
     (lib.mkIf enableDesktop {
       security.polkit.enable = true;
 
+      services.gnome.gnome-keyring.enable = true;
       programs.seahorse.enable = true;
     })
 
