@@ -272,6 +272,7 @@ in
     unstable.httpie
 
     unstable.imagemagick
+    unstable.impression
     unstable.inxi
     unstable.python3Packages.ipython
 
