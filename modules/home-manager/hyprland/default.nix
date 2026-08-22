@@ -163,6 +163,10 @@ in
       commands.caffeineScript
       commands.screenrecordScript
       commands.screenshotScript
+      # On PATH for manual terminal use, same as grim/slurp below; the
+      # keybound path goes through commands.screenrecordScript, whose own
+      # runtimeInputs (commands.nix) already pull this in independently.
+      gpu-screen-recorder
       grim
       jq
       libnotify
@@ -175,7 +179,6 @@ in
       satty
       slurp
       wayland-pipewire-idle-inhibit
-      wf-recorder
       # TUIs behind the shell's escape-hatch rows: wifitui for the wifi
       # details view (local.hyprland.silere.wifiEditCommand, themed by the
       # catppuccin mocha theme.toml declared below), bluetui for the
