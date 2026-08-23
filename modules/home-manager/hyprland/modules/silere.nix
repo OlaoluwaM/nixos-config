@@ -633,7 +633,12 @@ in
       type = lib.types.addCheck lib.types.str (
         v: builtins.stringLength v <= 128 && builtins.match ".*[\n\t\r].*" v == null
       );
-      default = "Berkeley Mono";
+      # Follow the profile-wide interface font (local.fonts.ui) instead of
+      # pinning a family here, so the bar can never drift from the rest of
+      # the desktop when that role changes. Nerd-Font icon glyphs are
+      # unaffected: fontconfig's named-family fallback (fontconfig.nix)
+      # resolves them through Symbols Nerd Font regardless of the text face.
+      default = config.local.fonts.ui.family;
       description = "UI font family. Must be free of newlines/tabs and at most 128 characters, matching the shell's own validation.";
     };
 
