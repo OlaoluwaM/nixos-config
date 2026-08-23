@@ -633,12 +633,14 @@ in
       type = lib.types.addCheck lib.types.str (
         v: builtins.stringLength v <= 128 && builtins.match ".*[\n\t\r].*" v == null
       );
-      # Follow the profile-wide interface font (local.fonts.ui) instead of
-      # pinning a family here, so the bar can never drift from the rest of
-      # the desktop when that role changes. Nerd-Font icon glyphs are
-      # unaffected: fontconfig's named-family fallback (fontconfig.nix)
-      # resolves them through Symbols Nerd Font regardless of the text face.
-      default = config.local.fonts.ui.family;
+      # Follow the profile-wide monospace font (local.fonts.mono, Berkeley
+      # Mono) rather than pinning a family here, so the bar tracks the role
+      # instead of drifting when it changes. The mono role, not ui: the bar is
+      # the one dense, data-like surface (clock digits, workspace glyphs)
+      # where the mono face is the deliberate look. Nerd-Font icon glyphs are
+      # unaffected: fontconfig's per-glyph fallback resolves them through
+      # Symbols Nerd Font regardless of the text face.
+      default = config.local.fonts.mono.family;
       description = "UI font family. Must be free of newlines/tabs and at most 128 characters, matching the shell's own validation.";
     };
 
