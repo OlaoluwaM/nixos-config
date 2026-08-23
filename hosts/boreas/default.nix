@@ -192,8 +192,11 @@ in
   # merges additively instead of becoming a second source of truth.
   #
   # This must NOT replace the driver set globally: nvidia-vaapi-driver stays
-  # in extraPackages (it's decode-only) because Firefox's NVDEC path still
-  # depends on it.
+  # in extraPackages (it's decode-only) so NVDEC decode remains available as
+  # a per-invocation opt-in (LIBVA_DRIVER_NAME=nvidia <app>). Firefox NVDEC
+  # was deliberately dropped as a goal (2026-08-23): it needed the session-wide
+  # LIBVA override plus a disabled RDD sandbox, and iGPU decode through
+  # intel-media-driver lets the dGPU sleep instead.
   hardware.graphics.extraPackages = [ pkgs.intel-media-driver ];
 
   # gpu-screen-recorder's KMS capture path (used by the Hyprland profile's

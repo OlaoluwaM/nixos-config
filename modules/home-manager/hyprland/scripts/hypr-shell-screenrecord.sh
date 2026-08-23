@@ -17,14 +17,13 @@ state_dir="${XDG_RUNTIME_DIR:-/tmp}/hypr-shell"
 mkdir -p "$state_dir" 2>/dev/null || true
 state_file="$state_dir/recording"
 
-# The login shell exports LIBVA_DRIVER_NAME=nvidia session-wide (for Firefox
-# NVDEC), which overrides libva's per-device driver choice everywhere -- it is
-# why vainfo reports the decode-only NVIDIA shim on BOTH render nodes even
-# with intel-media-driver installed. Inherited here it would make
-# gpu-screen-recorder's VAAPI init fail on the Intel iGPU and fall back to
-# software encoding, defeating the whole point of the hardware path. Unset it
-# for this script only so libva resolves the driver by device again (iHD for
-# the Intel node the compositor renders on).
+# The session no longer exports LIBVA_DRIVER_NAME=nvidia (the shell-env
+# export was removed when Firefox NVDEC was abandoned in favor of iGPU
+# decode), but keep this guard: the variable overrides libva's per-device
+# driver choice everywhere, so inherited from a per-invocation opt-in or a
+# stale session it would point the encoder at the decode-only NVIDIA shim,
+# fail VAAPI init on the Intel iGPU, and drop to software encoding. Unset
+# means libva resolves the driver by device (iHD for the Intel node).
 unset LIBVA_DRIVER_NAME
 
 mkdir -p "$screenrecord_dir"
