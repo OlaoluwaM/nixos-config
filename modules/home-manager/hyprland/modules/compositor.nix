@@ -255,12 +255,11 @@ in
               passes = 3;
               vibrancy = 0.4;
             };
-            shadow = {
-              enabled = true;
-              range = 12;
-              render_power = 2;
-              color = "rgba(${stripHash theme.shadowColor})";
-            };
+            # Window shadows off (2026-08-23): the flat look won. The old
+            # tuning (range 12, render_power 2, theme.shadowColor) is gone
+            # with the toggle rather than left as dead keys; theme.shadowColor
+            # itself stays defined in theme.nix for any surface that wants it.
+            shadow.enabled = false;
           };
 
           animations = {
