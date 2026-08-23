@@ -44,7 +44,7 @@ let
     };
 
     templates."silere-shell" = {
-      input_path = "${cfg.commands.silereShellPackage}/share/silere-shell/assets/matugen-theme.json";
+      input_path = "${cfg.commands.silereShellPackage}/share/silere-shell/matugen/matugen-theme.json";
       output_path = "${config.xdg.configHome}/matugen/silere-shell.json";
       mode = "Dark";
       type = "SchemeContent";

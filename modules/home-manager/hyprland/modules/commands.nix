@@ -114,9 +114,9 @@ in
         internal = true;
         description = ''
           Packaged silere-shell derivation (see silere.nix), exposed so other
-          Hyprland module files can reach its bundled assets -- e.g.
+          Hyprland module files can reach its bundled files -- e.g.
           wallpaper.nix's matugen template, which ships under this
-          package's share/silere-shell/assets/.
+          package's share/silere-shell/matugen/.
         '';
       };
 

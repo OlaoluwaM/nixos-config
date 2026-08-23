@@ -101,8 +101,8 @@ let
   '';
 
   # Plain copy of the same file set upstream's packaging/aur/PKGBUILD
-  # installs (shell.qml, config, modules, services, assets, scripts -- see
-  # that PKGBUILD's package() step). No build step, no patching beyond the
+  # installs (shell.qml, config, modules, services, assets, matugen, scripts
+  # -- see that PKGBUILD's package() step). No build step, no patching beyond the
   # GeneratedDefaults.qml substitution below: this is a derivation instead
   # of a direct `inputs.silere-shell` source reference only because that
   # substitution needs an install phase to hook into.
@@ -119,7 +119,7 @@ let
 
       dest="$out/share/silere-shell"
       install -dm755 "$dest"
-      cp -a shell.qml config modules services assets scripts "$dest/"
+      cp -a shell.qml config modules services assets matugen scripts "$dest/"
 
       # Overwrite the fork's checked-in GeneratedDefaults.qml with the
       # Nix-rendered one. cp -a above carried the original over read-only

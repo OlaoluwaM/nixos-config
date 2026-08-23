@@ -18,7 +18,6 @@ if [ ! -f "$src" ] || [ ! -r "$src" ]; then
 fi
 
 awww img "$src" --transition-type grow --transition-duration 2 --transition-fps 60
-matugen image "$src" --source-color-index 0 -q
 
 stable="$HYPR_WALLPAPER_PATH"
 stable_dir="$(dirname -- "$stable")"
@@ -46,3 +45,10 @@ esac
 
 mv -f "$tmp" "$stable"
 trap - EXIT
+
+# The retint runs last, after the stable path is already in sync with awww.
+# This script runs under `set -e`, so an ordering the other way around lets
+# a matugen failure (e.g. a template input missing from the shell package)
+# strand hyprlock on a stale image after the live desktop already swapped --
+# the lock screen must not depend on the theming pipeline being healthy.
+matugen image "$src" --source-color-index 0 -q
