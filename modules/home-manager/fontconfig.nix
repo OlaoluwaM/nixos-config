@@ -135,6 +135,14 @@ in
       name = "Berkeley Mono Medium";
       size = 10;
       fallbacks = [
+        # Symbols leads so Nerd-Font icon codepoints (the shell bar, terminal
+        # prompts) resolve here at full size. Several installed fonts cover
+        # that private-use area and fontconfig's unguided pick was Cascadia
+        # Code NF, whose icons are drawn at half the ink (57px vs 116px for
+        # the U+F1EB wifi glyph at pointsize 100). Symbols matches the Nerd
+        # patched-font size exactly, and carries no regular text glyphs, so
+        # ordinary fallback still lands on Noto/DejaVu below.
+        "Symbols Nerd Font"
         "Noto Sans Mono"
         "DejaVu Sans Mono"
       ];
