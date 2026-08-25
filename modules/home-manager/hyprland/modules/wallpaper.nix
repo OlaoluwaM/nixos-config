@@ -59,7 +59,7 @@ let
       output_path = "${config.xdg.dataHome}/vicinae/themes/matugen.toml";
       post_hook = "${lib.getExe' config.programs.vicinae.package "vicinae"} theme set matugen";
       mode = "Dark";
-      type = "SchemeContent";
+      type = "SchemeTonalSpot";
     };
   };
 
