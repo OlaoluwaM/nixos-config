@@ -242,6 +242,8 @@ in
           decoration = {
             rounding = 14;
             rounding_power = 3.5;
+            dim_inactive = true;
+            dim_strength = 0.1;
             blur = {
               enabled = true;
               # Frosted-glass tuning for the shell's layer surfaces (the only
