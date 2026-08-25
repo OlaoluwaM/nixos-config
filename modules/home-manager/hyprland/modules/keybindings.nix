@@ -148,7 +148,7 @@ let
     # home/olaolu/default.nix (dark-mode env) applies, matching GNOME.
     (mkDef {
       keys = "${mod} + S";
-      dsp = execDispatcher "gtk-launch slack";
+      dsp = execDispatcher "slack";
       desc = "Open Slack";
       group = "Applications";
     })
@@ -356,6 +356,30 @@ let
       keys = "${mod} + SHIFT + V";
       dsp = "hl.dsp.window.float()";
       desc = "Toggle floating";
+      group = "Windows";
+    })
+    (mkDef {
+      keys = "CTRL + ${mod} + Left";
+      dsp = "hl.dsp.window.swap({ direction = \"l\" })";
+      desc = "Swap window left";
+      group = "Windows";
+    })
+    (mkDef {
+      keys = "CTRL + ${mod} + Right";
+      dsp = "hl.dsp.window.swap({ direction = \"r\" })";
+      desc = "Swap window right";
+      group = "Windows";
+    })
+    (mkDef {
+      keys = "CTRL + ${mod} + Up";
+      dsp = "hl.dsp.window.swap({ direction = \"u\" })";
+      desc = "Swap window up";
+      group = "Windows";
+    })
+    (mkDef {
+      keys = "CTRL + ${mod} + Down";
+      dsp = "hl.dsp.window.swap({ direction = \"d\" })";
+      desc = "Swap window down";
       group = "Windows";
     })
   ]
