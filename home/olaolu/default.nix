@@ -318,7 +318,6 @@ in
     ]))
 
     unstable.rainfrog
-    unstable.readest
     unstable.rip2
     unstable.ripgrep
     unstable.ripgrep-all
@@ -360,6 +359,7 @@ in
       "im.riot.Riot"
       "org.gnome.DejaDup"
       "it.mijorus.gearlever"
+      "com.bilingify.readest"
       "com.bitwarden.desktop"
       "com.github.tchx84.Flatseal"
       "io.github.flattool.Warehouse"
