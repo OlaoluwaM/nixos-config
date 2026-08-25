@@ -145,6 +145,7 @@ in
     ../../modules/home-manager/lazygit.nix
     ../../modules/home-manager/lsd.nix
     ../../modules/home-manager/neovim.nix
+    ../../modules/home-manager/obs-studio.nix
     ../../modules/home-manager/ssh.nix
     ../../modules/home-manager/vscode.nix
     ../../modules/home-manager/yazi.nix
@@ -409,6 +410,7 @@ in
   local.lazygit.enable = true;
   local.lsd.enable = true;
   local.neovim.enable = true;
+  local.obsStudio.enable = true;
   local.ssh.enable = true;
   local.yazi.enable = true;
 
@@ -425,27 +427,6 @@ in
 
   local.desktop.profile = hostConfig.desktopProfile;
   local.theme.preset = "catppuccin-mocha";
-
-  programs.obs-studio = {
-    enable = true;
-
-    package = (
-      unstable.obs-studio.override {
-        cudaSupport = config.local.capabilities.graphics.cuda;
-      }
-    );
-
-    plugins = with unstable.obs-studio-plugins; [
-      wlrobs
-      obs-backgroundremoval
-      obs-pipewire-audio-capture
-      obs-vaapi
-      obs-gstreamer
-      obs-vkcapture
-      obs-noise
-      obs-aitum-multistream
-    ];
-  };
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   home.stateVersion = "26.05";
