@@ -19,7 +19,7 @@ python3Packages.buildPythonApplication {
     owner = "jacob-bd";
     repo = "gemini-notebook-mcp-cli";
     rev = "v${version}";
-    hash = "sha256-V5yZNVjMETMF5AZ9zC/Ol9VccRZYVaDmznNKpUZr+vg=";
+    hash = "sha256-FrtNs9ckQJZ0hEHbKVecoXQkT9veXrHchnwVCxWE5vA=";
   };
 
   build-system = with python3Packages; [
