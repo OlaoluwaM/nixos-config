@@ -72,6 +72,7 @@ let
         readonly property string dndPresets:          ${qml sc.dndPresets}
         readonly property string wifiEditCommand:     ${qml sc.wifiEditCommand}
         readonly property string btEditCommand:       ${qml sc.btEditCommand}
+        readonly property string systemMonitorCommand: ${qml sc.systemMonitorCommand}
         readonly property bool   barShowCaffeine:     ${qml sc.barShowCaffeine}
         readonly property bool   trayWidget:          ${qml sc.trayWidget}
         readonly property bool   neutralTheme:        ${qml sc.neutralTheme}
@@ -427,6 +428,22 @@ in
       # fork's generic default is blueman-manager.
       default = "kitty --class bluetui-tile bluetui";
       description = "Command template the bluetooth details view launches for deep device management.";
+    };
+
+    systemMonitorCommand = lib.mkOption {
+      type = lib.types.str;
+      # Same launch-template mechanism as wifiEditCommand, behind the vitals
+      # tiles (the menu's SYSTEM strip and the bar's hot chips). {widget} is
+      # the clicked tile's view in bottom's --default_widget_type vocabulary
+      # (cpu/mem/temp/disk/battery), and --expanded opens that view maximized,
+      # so a temps click lands on temps, a CPU click on CPU. bottom finds its
+      # own config (bottom.nix; lavender selection accent to match wifitui's
+      # Primary), so no --config flag rides along. Tiles like bluetui on
+      # purpose; the class is targeting-only, no compositor rule attached.
+      # The fork ships this key empty, which keeps the tiles inert on
+      # non-Nix installs.
+      default = "kitty --class btm-tile btm --default_widget_type {widget} --expanded";
+      description = "Command template the vitals tiles launch, opened on the clicked tile's monitor view.";
     };
 
     keybindsFile = lib.mkOption {
