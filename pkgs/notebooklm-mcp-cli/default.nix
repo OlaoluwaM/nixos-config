@@ -5,9 +5,9 @@
   ...
 }:
 
-# Derivation for https://github.com/jacob-bd/notebooklm-mcp-cli
+# Derivation for https://github.com/jacob-bd/gemini-notebook-mcp-cli
 let
-  version = "0.6.9";
+  version = "0.9.14";
 in
 
 python3Packages.buildPythonApplication {
@@ -17,7 +17,7 @@ python3Packages.buildPythonApplication {
 
   src = fetchFromGitHub {
     owner = "jacob-bd";
-    repo = "notebooklm-mcp-cli";
+    repo = "gemini-notebook-mcp-cli";
     rev = "v${version}";
     hash = "sha256-V5yZNVjMETMF5AZ9zC/Ol9VccRZYVaDmznNKpUZr+vg=";
   };
@@ -44,7 +44,7 @@ python3Packages.buildPythonApplication {
 
   meta = {
     description = "Unified CLI and MCP server for Google NotebookLM";
-    homepage = "https://github.com/jacob-bd/notebooklm-mcp-cli";
+    homepage = "https://github.com/jacob-bd/gemini-notebook-mcp-cli";
     license = lib.licenses.mit;
     mainProgram = "nlm";
   };
