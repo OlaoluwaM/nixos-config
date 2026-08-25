@@ -8,6 +8,7 @@
 
 let
   cfg = config.local.hyprland;
+  dpms = action: "${pkgs.hyprland}/bin/hyprctl dispatch 'hl.dsp.dpms({ action = \"${action}\" })'";
 in
 {
   config = lib.mkIf cfg.enable {
@@ -46,13 +47,15 @@ in
           # actually configures if that ever changes.
           lock_cmd = "${config.programs.hyprlock.package}/bin/hyprlock";
 
-          # before_sleep_cmd runs before suspend/sleep. Locking before sleep
-          # means the machine should ask for a password after waking.
-          before_sleep_cmd = "${pkgs.systemd}/bin/loginctl lock-session";
+          # before_sleep_cmd runs before suspend/sleep. Lock the session, then
+          # power off the displays before the machine enters suspend. This
+          # gives lid-close the same immediate blanking step as idle display
+          # timeout instead of waiting for the kernel to enter the sleep state.
+          before_sleep_cmd = "${pkgs.systemd}/bin/loginctl lock-session && ${dpms "disable"}";
 
           # after_sleep_cmd runs after resume. DPMS is the display power
-          # management signal; this tries to make sure screens are powered on.
-          after_sleep_cmd = "${pkgs.hyprland}/bin/hyprctl dispatch dpms on";
+          # management signal; this makes sure screens are powered on again.
+          after_sleep_cmd = dpms "enable";
 
           # Wait until the lock screen reports that the session is locked before
           # allowing suspend to continue.
@@ -87,8 +90,8 @@ in
           }
           {
             timeout = 660;
-            on-timeout = "${pkgs.hyprland}/bin/hyprctl dispatch dpms off";
-            on-resume = "${pkgs.hyprland}/bin/hyprctl dispatch dpms on";
+            on-timeout = dpms "disable";
+            on-resume = dpms "enable";
           }
           {
             timeout = 900;
