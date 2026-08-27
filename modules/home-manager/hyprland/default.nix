@@ -33,6 +33,7 @@
 #   service)
 # - modules/wallpaper.nix: the wallpaper pipeline (awww + matugen + hyprlock's
 #   stable path) and the Vicinae wallpaper commands
+# - modules/zathura.nix: MuPDF-backed document viewing and its glass theme
 #
 # silere-shell is the sole shell for this profile -- there is no backend
 # option, unlike the old Caffyne/Quickshell split this profile tore down.
@@ -71,6 +72,7 @@ in
     ./modules/session-services.nix
     ./modules/silere.nix
     ./modules/wallpaper.nix
+    ./modules/zathura.nix
     ../vicinae.nix
   ];
 
@@ -170,9 +172,9 @@ in
       grim
       jq
       libnotify
-      # Image viewer and PDF reader for the session; GNOME ships equivalents as
-      # part of the desktop, Hyprland has to bring its own. These two are the
-      # defaults declared in xdg.mimeApps below.
+      # Image viewer for the session. GNOME ships an equivalent as part of the
+      # desktop, while Hyprland has to bring its own. Zathura is packaged by
+      # modules/zathura.nix; both defaults are declared in xdg.mimeApps below.
       loupe
       mission-center
       papers
@@ -218,8 +220,8 @@ in
     # xdg.mimeApps set that desktop.nix enables. GNOME gets these as stock
     # desktop defaults; outside GNOME they must be declared, or xdg-open falls
     # back to whatever app happens to advertise the type (opening a directory
-    # in VS Code, say). Loupe, Papers, and Nautilus are installed above;
-    # Celluloid and Gapless come from home.packages.
+    # in VS Code, say). Zathura comes from modules/zathura.nix; Loupe,
+    # Nautilus, Celluloid, and Gapless come from home.packages.
     xdg.mimeApps.defaultApplications =
       lib.genAttrs [
         "image/png"
@@ -248,7 +250,7 @@ in
         "audio/x-wav"
       ] (_: "com.github.neithern.g4music.desktop")
       // {
-        "application/pdf" = "org.gnome.Papers.desktop";
+        "application/pdf" = "org.pwmt.zathura-pdf-mupdf.desktop";
         "inode/directory" = "org.gnome.Nautilus.desktop";
       };
 
