@@ -359,6 +359,7 @@ in
     packages = [
       "im.riot.Riot"
       "org.gnome.DejaDup"
+      "io.m51.Gelly"
       "it.mijorus.gearlever"
       "com.bilingify.readest"
       "com.bitwarden.desktop"
