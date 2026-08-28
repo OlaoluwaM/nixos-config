@@ -54,6 +54,7 @@ let
         readonly property real   barWidth:            ${qml sc.barWidth}
         readonly property bool   barFitGaps:          ${qml sc.barFitGaps}
         readonly property int    barHeight:           ${qml sc.barHeight}
+        readonly property int    barIconSize:         ${qml sc.barIconSize}
         readonly property bool   barShadow:           ${qml sc.barShadow}
         readonly property bool   barBorderVisible:    ${qml sc.barBorderVisible}
         readonly property bool   barShowMedia:        ${qml sc.barShowMedia}
@@ -248,6 +249,14 @@ in
       description = "Bar height in pixels.";
     };
 
+    # bounds mirror the fork's _schema clamp for barIconSize; the loader
+    # clamps silently, so a value outside them would lie about itself
+    barIconSize = lib.mkOption {
+      type = lib.types.ints.between 10 20;
+      default = 12;
+      description = "Bar widget glyph size in pixels.";
+    };
+
     barShadow = lib.mkOption {
       type = lib.types.bool;
       default = false;
@@ -342,6 +351,9 @@ in
       # dnd rides just after it: the two self-set session modes read as one
       # run at the cluster's head, and like recording the pill only exists
       # while the mode is on, so it costs nothing the rest of the time.
+      # airplane closes the zone to the right of the clock, by request --
+      # the tail spot the normalizer's auto-append gave it, kept deliberate
+      # here; it too exists only while the mode is on.
       # traypopup sits ahead of both: the collapsed tray pill only exists
       # while SNI items exist, so most of the time it costs nothing. The
       # inline "tray" key stays listed but dormant (trayWidget=false).
@@ -349,7 +361,7 @@ in
       # zone as one capture cluster -- they share the "privacy" meta group,
       # so no divider splits them. vitals moved to the left zone (see
       # barWidgetOrderLeft).
-      default = "tray,recording,privacy,traypopup,caffeine,dnd,network,bluetooth,volume,brightness,battery,clock";
+      default = "tray,recording,privacy,traypopup,caffeine,dnd,network,bluetooth,volume,brightness,battery,clock,airplane";
       description = "Bar widgets in the right zone, comma-separated in order.";
     };
 
