@@ -259,6 +259,7 @@ in
     unstable.cheat # Creating an overlay would involve more effort than I am willing to expend
 
     unstable.discord
+    unstable.devbox
 
     unstable.fastfetch
     unstable.fd
