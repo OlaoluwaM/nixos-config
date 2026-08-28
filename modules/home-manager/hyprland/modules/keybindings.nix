@@ -653,6 +653,16 @@ let
       desc = "Cycle the power profile";
       group = "Hardware";
     })
+    # The key wearing the airplane glyph on this keyboard, bound as a plain
+    # F-key like F4/F5 above. No GNOME counterpart to keep parity with.
+    # Pure IPC with no script fallback -- the latch lives in the shell, so
+    # with the shell down there is no airplane state to flip.
+    (mkDef {
+      keys = "F12";
+      dsp = execDispatcher "${silereIpc} airplane toggle";
+      desc = "Toggle airplane mode";
+      group = "Hardware";
+    })
   ];
 
   # Chords the viewer should list that this module does not bind: hyprshell's
