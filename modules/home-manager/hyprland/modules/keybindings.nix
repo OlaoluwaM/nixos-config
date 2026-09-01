@@ -43,7 +43,7 @@ let
   vicinaeCommand = lib.getExe' config.programs.vicinae.package "vicinae";
   brightnessCommand = lib.getExe pkgs.brightnessctl;
   wpctlCommand = lib.getExe' pkgs.wireplumber "wpctl";
-  qsCommand = lib.getExe' pkgs.quickshell "qs";
+  qsCommand = lib.getExe' commands.quickshellPackage "qs";
   colloidAppIcons = "${pkgs.colloid-icon-theme}/share/icons/Colloid-Dark/apps/scalable";
   # `qs ipc` locates the running instance by config path, and this shell runs
   # from a Nix store path (silere.nix's ExecStart -p flag), not the default

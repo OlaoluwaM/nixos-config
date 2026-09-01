@@ -29,6 +29,14 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # silere-shell v0.9.0 requires Quickshell 0.3.1. Stable and the locked
+    # unstable snapshot still package 0.3.0, so pin the official release and
+    # keep it on this flake's Nixpkgs package set.
+    quickshell = {
+      url = "git+https://git.outfoxxed.me/quickshell/quickshell.git?ref=refs/tags/v0.3.1";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # My fork of s3rven/silere-shell, the Quickshell/QML bar for the Hyprland
     # profile. Fork-side NixOS-compat commits land on custom-branch. Upstream
     # ships no flake and its packaging/ directory is AUR-only, so this is

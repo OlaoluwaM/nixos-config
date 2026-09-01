@@ -61,7 +61,7 @@ let
       # `qs ipc` for the preset-aware toggle path. Same package silere.nix's
       # service runs the shell with, so the CLI can never skew from the
       # instance it is calling into.
-      pkgs.quickshell
+      cfg.commands.quickshellPackage
     ];
     # `qs ipc` locates the running instance by config path, and the shell
     # runs from a store path via -p, not the default config dir -- a bare
@@ -118,6 +118,12 @@ in
           wallpaper.nix's matugen template, which ships under this
           package's share/silere-shell/matugen/.
         '';
+      };
+
+      quickshellPackage = lib.mkOption {
+        type = lib.types.package;
+        internal = true;
+        description = "Quickshell package shared by the shell service and every IPC consumer.";
       };
 
       wallpaperSetScript = lib.mkOption {

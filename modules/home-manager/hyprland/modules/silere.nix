@@ -22,6 +22,7 @@ let
   cfg = config.local.hyprland;
   sc = cfg.silere;
   hyprlandSessionTarget = config.wayland.systemd.target;
+  quickshellPackage = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
 
   # QML-safe literal for a Nix bool/int/real/string: JSON and QML/JS literal
   # syntax agree on all four (true/false, bare numbers, double-quoted
@@ -218,7 +219,7 @@ in
     };
 
     barRadius = lib.mkOption {
-      type = lib.types.ints.between 0 28;
+      type = lib.types.ints.between 0 22;
       # design-locked at 9 after live comparison: at 14 the radius reaches the
       # surface-height/2 clamp in Bar.qml and the end caps render as a full
       # pill; 9 keeps the capsule-free rounded-rectangle look this rice wants.
@@ -707,17 +708,20 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    local.hyprland.commands.silereShellPackage = silereShellSrc;
+    local.hyprland.commands = {
+      inherit quickshellPackage;
+      silereShellPackage = silereShellSrc;
+    };
 
-    home.packages = with pkgs; [
-      quickshell
+    home.packages = [
+      quickshellPackage
 
       # Qt runtime support the QML shell needs to render under Wayland.
-      qt6.qtwayland
-      qt6.qtdeclarative
-      qt6.qtsvg
-      qt6.qtimageformats
-      libsForQt5.qtwayland
+      pkgs.qt6.qtwayland
+      pkgs.qt6.qtdeclarative
+      pkgs.qt6.qtsvg
+      pkgs.qt6.qtimageformats
+      pkgs.libsForQt5.qtwayland
     ];
 
     systemd.user.services.silere-shell = {
@@ -733,7 +737,7 @@ in
       Install.WantedBy = [ hyprlandSessionTarget ];
 
       Service = {
-        ExecStart = "${lib.getExe' pkgs.quickshell "qs"} -p ${silereShellSrc}/share/silere-shell/shell.qml";
+        ExecStart = "${lib.getExe' quickshellPackage "qs"} -p ${silereShellSrc}/share/silere-shell/shell.qml";
         Restart = "on-failure";
         Environment = [ "PATH=${silereShellPath}" ];
       };
