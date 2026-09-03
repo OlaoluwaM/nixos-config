@@ -6,8 +6,10 @@ Hyprland is the program that draws and moves windows. This kind of program is
 called a compositor. The desktop also uses:
 
 - `silere-shell` for the bar, menus, popups, and wallpaper picker.
-- Vicinae for the app launcher and clipboard history.
-- hyprshell for the Alt+Tab window switcher.
+- Vicinae for the app launcher, clipboard history, and Alt+Tab window
+  switcher.
+- An available hyprshell switcher module, currently disabled while Vicinae is
+  being evaluated for Alt+Tab.
 - hyprlock for the lock screen.
 - hypridle for lock, screen-off, and sleep timers.
 - hyprsunset for warmer screen colors at night.
@@ -31,7 +33,8 @@ Each file has one main job:
 - `modules/keybindings.nix` holds the normal keyboard and mouse shortcuts.
 - `modules/hyprlock.nix` controls the lock screen.
 - `modules/hypridle.nix` controls what happens when the computer is left alone.
-- `modules/hyprshell.nix` packages and starts the Alt+Tab switcher.
+- `modules/hyprshell.nix` packages and starts the dedicated Alt+Tab switcher;
+  its import is currently commented out in `default.nix`.
 - `modules/hyprsunset.nix` controls the night color schedule.
 - `modules/session-services.nix` starts the media idle blocker, Caffeine, and
   the KDE Connect tray icon.
@@ -55,8 +58,8 @@ Home Manager writes `~/.config/hypr/hyprland.lua`. That file starts
 `hyprland-session.target`. A target is a named group of background programs.
 This target starts and stops the desktop programs together.
 
-The group includes the shell, launcher, wallpaper services, idle tools,
-Alt+Tab switcher, KDE Connect icon, and keyring.
+The group includes the shell, Vicinae, wallpaper services, idle tools, KDE
+Connect icon, and keyring.
 
 This desktop does not use UWSM.
 
@@ -71,8 +74,9 @@ from the same place.
 - Press `Super+Space`, or tap `Super`, to open Vicinae.
 - Press `Alt+Tab` to switch windows.
 
-hyprshell owns `Alt+Tab` itself. This is the one normal shortcut that does not
-come from `modules/keybindings.nix`.
+`modules/keybindings.nix` maps `Alt+Tab` to Vicinae's searchable window list.
+The former hyprshell module remains in the tree, with its import commented out
+in `default.nix` for an easy rollback.
 
 ## Helper Scripts
 

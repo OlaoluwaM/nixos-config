@@ -23,9 +23,8 @@
 #      key here; Super+/ opens the viewer).
 # Entries with `viewer = false` bind without cluttering the viewer (the 20
 # generated workspace chords collapse into two synthetic rows instead), and
-# `viewerExtras` documents chords this module does not own -- the hyprshell
-# switcher registers its own binds with the daemon, and gestures are not
-# binds at all -- so the viewer still lists them.
+# `viewerExtras` documents generated chords and gestures that do not have a
+# one-to-one entry in `bindDefs`, so the viewer still lists them.
 #
 # AGENTS.md's rule to keep equivalent GNOME and Hyprland keybindings on the
 # same chord applies here: before changing a binding, check the GNOME
@@ -315,6 +314,15 @@ let
     })
 
     # -- Windows -----------------------------------------------------------
+    # Vicinae's window switcher replaces the dynamic Alt+Tab binds from the
+    # disabled hyprshell module. Unlike hyprshell's hold-and-cycle switcher,
+    # this opens Vicinae's searchable window list for explicit selection.
+    (mkDef {
+      keys = "ALT + Tab";
+      dsp = execDispatcher "${vicinaeCommand} 'vicinae://launch/wm/switch-windows'";
+      desc = "Switch windows";
+      group = "Windows";
+    })
     (mkDef {
       keys = "${mod} + SHIFT + Q";
       dsp = "hl.dsp.window.close()";
@@ -665,16 +673,10 @@ let
     })
   ];
 
-  # Chords the viewer should list that this module does not bind: hyprshell's
-  # daemon registers the switcher binds itself (hyprshell.nix), the workspace
-  # number chords collapse from twenty generated binds into two rows, and the
-  # swipe is a gesture, not a bind.
+  # Chords the viewer should list that do not have a one-to-one `bindDefs`
+  # entry: the workspace number chords collapse from twenty generated binds
+  # into two rows, and the swipe is a gesture, not a bind.
   viewerExtras = [
-    {
-      keys = "ALT + Tab";
-      desc = "Switch windows";
-      group = "Workspaces";
-    }
     {
       keys = "${mod} + 1–9, 0";
       desc = "Switch to workspace 1–10";
