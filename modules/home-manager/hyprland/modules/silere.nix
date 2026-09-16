@@ -72,6 +72,7 @@ let
         readonly property string caffeineUnit:        ${qml sc.caffeineUnit}
         readonly property string caffeinePresets:     ${qml sc.caffeinePresets}
         readonly property string dndPresets:          ${qml sc.dndPresets}
+        readonly property bool   notifHistoryPersistent: ${qml sc.notifHistoryPersistent}
         readonly property string wifiEditCommand:     ${qml sc.wifiEditCommand}
         readonly property string btEditCommand:       ${qml sc.btEditCommand}
         readonly property string systemMonitorCommand: ${qml sc.systemMonitorCommand}
@@ -408,6 +409,12 @@ in
       # not bound by this list -- it writes any 5-480 minute value directly.
       default = "15,30,60,0";
       description = "Comma-separated minutes for the DND timed presets (0 = until turned off).";
+    };
+
+    notifHistoryPersistent = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Initial default for keeping notification history across shell restarts; saved UI settings override it.";
     };
 
     barShowCaffeine = lib.mkOption {
