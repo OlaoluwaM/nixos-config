@@ -31,11 +31,6 @@ in
     # Catppuccin's fixed palette.
     catppuccin.vicinae.enable = false;
 
-    home.packages = [
-      goldfish
-      pkgs.file
-    ];
-
     programs.vicinae = {
       enable = true;
       # Home Manager's module defaults to pkgs.vicinae, which trails upstream
@@ -86,15 +81,22 @@ in
               default_language = "en";
             };
           };
+          "@dagimg-dot/vicinae-extension-wifi-commander-0" = {
+            preferences = {
+              network-cli-tool = "nmcli";
+            };
+          };
         };
       };
 
       extensions = [
         # Extensions can be found here: https://github.com/vicinaehq/extensions/tree/main/extensions
-        extensionPkgs.fuzzy-files
+        extensionPkgs.coffee
         extensionPkgs.hypr-keybinds
+        extensionPkgs.kde-connect
         extensionPkgs.nix
         extensionPkgs.player-pilot
+        extensionPkgs.protonvpn
         extensionPkgs.simple-bookmarks
         extensionPkgs.simple-dictionary
         extensionPkgs.supergenpass
