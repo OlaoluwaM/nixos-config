@@ -91,10 +91,10 @@ in
 
       extensions = [
         # Extensions can be found here: https://github.com/vicinaehq/extensions/tree/main/extensions
-        extensionPkgs.coffee
         extensionPkgs.hypr-keybinds
         extensionPkgs.kde-connect
         extensionPkgs.nix
+        extensionPkgs.number-converter
         extensionPkgs.player-pilot
         extensionPkgs.protonvpn
         extensionPkgs.simple-bookmarks
