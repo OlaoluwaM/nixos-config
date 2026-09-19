@@ -374,6 +374,12 @@ let
       group = "Windows";
     })
     (mkDef {
+      keys = "${mod} + J";
+      dsp = "hl.dsp.layout(\"togglesplit\")";
+      desc = "Toggle split orientation";
+      group = "Windows";
+    })
+    (mkDef {
       keys = "CTRL + ${mod} + Left";
       dsp = "hl.dsp.window.swap({ direction = \"l\" })";
       desc = "Swap window left";
