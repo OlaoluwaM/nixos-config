@@ -7,6 +7,7 @@
   unstable,
   hostConfig,
   pkgs,
+  lib,
   ...
 }:
 let
@@ -86,7 +87,12 @@ in
   networking.networkmanager.enable = true;
 
   # Set your time zone.
-  time.timeZone = "America/Chicago";
+  # mkDefault so automatic-timezoned, which sets this to null, can take over when enabled.
+  time.timeZone = lib.mkDefault "America/Chicago";
+
+  # Follow the system time zone from geolocation (geoclue via BeaconDB, from nearby
+  # Wi-Fi networks). The shell's TimeZoneWatch picks up each switch live.
+  services.automatic-timezoned.enable = true;
 
   # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
