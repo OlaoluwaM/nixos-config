@@ -16,6 +16,8 @@ let
 
   homeLinks = {
     ".claude/CLAUDE.md".source = mkSourcePath "claude-code/CLAUDE.md";
+    # Temporarily managed by home.activation.linkClaudeSettings below.
+    # ".claude/settings.json".source = mkSourcePath "claude-code/settings.json";
     ".ghci".source = mkSourcePath "haskell/.ghci";
     ".noti.yaml".source = mkSourcePath "noti/noti.yaml";
     ".stack/config.yaml".source = mkSourcePath "stack/config.yaml";
@@ -45,6 +47,22 @@ in
 
   config = lib.mkIf cfg.enable {
     home.file = homeLinks;
+
+    # Temporary workaround for https://github.com/anthropics/claude-code/issues/78162.
+    # Claude's settings writer reportedly resolves only one symlink hop before
+    # creating its temporary file. Home Manager's intermediate store link makes
+    # that write fail with EROFS even though the final dotfile is writable.
+    # Link directly after Home Manager removes the old managed link. Once fixed
+    # upstream, remove this activation step and restore the home.file entry above.
+    home.activation.linkClaudeSettings = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+      claudeSettingsTarget=${lib.escapeShellArg "${home}/.claude/settings.json"}
+      if [[ -e "$claudeSettingsTarget" && ! -L "$claudeSettingsTarget" ]]; then
+        echo "Refusing to replace non-symlink $claudeSettingsTarget" >&2
+        exit 1
+      fi
+      run mkdir -p $VERBOSE_ARG ${lib.escapeShellArg "${home}/.claude"}
+      run ln -sfnT $VERBOSE_ARG ${lib.escapeShellArg "${cfg.dotsPath}/claude-code/settings.json"} "$claudeSettingsTarget"
+    '';
 
     home.sessionVariables = {
       DOTS = cfg.dotsPath;
