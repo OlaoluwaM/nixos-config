@@ -16,8 +16,6 @@ let
 
   homeLinks = {
     ".claude/CLAUDE.md".source = mkSourcePath "claude-code/CLAUDE.md";
-    ".claude/settings.json".source = mkSourcePath "claude-code/settings.json";
-    ".codex/config.toml".source = mkSourcePath "codex/config.toml";
     ".ghci".source = mkSourcePath "haskell/.ghci";
     ".noti.yaml".source = mkSourcePath "noti/noti.yaml";
     ".stack/config.yaml".source = mkSourcePath "stack/config.yaml";
