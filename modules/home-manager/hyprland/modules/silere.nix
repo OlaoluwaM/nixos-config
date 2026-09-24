@@ -73,6 +73,7 @@ let
         readonly property string caffeinePresets:     ${qml sc.caffeinePresets}
         readonly property string dndPresets:          ${qml sc.dndPresets}
         readonly property bool   notifHistoryPersistent: ${qml sc.notifHistoryPersistent}
+        readonly property bool   mediaRemoteArt:      ${qml sc.mediaRemoteArt}
         readonly property string wifiEditCommand:     ${qml sc.wifiEditCommand}
         readonly property string btEditCommand:       ${qml sc.btEditCommand}
         readonly property string systemMonitorCommand: ${qml sc.systemMonitorCommand}
@@ -415,6 +416,12 @@ in
       type = lib.types.bool;
       default = true;
       description = "Initial default for keeping notification history across shell restarts; saved UI settings override it.";
+    };
+
+    mediaRemoteArt = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Initial default for loading cover art a player links over HTTPS (Spotify's covers); saved UI settings override it.";
     };
 
     barShowCaffeine = lib.mkOption {
