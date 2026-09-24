@@ -162,7 +162,7 @@ let
       pkgs.bash
       pkgs.brightnessctl
       pkgs.coreutils
-      pkgs.inotify-tools # inotifywait: Screenshot.qml's underline-glow watcher
+      pkgs.inotify-tools # inotifywait: the Screenshot, Recording and TimeZoneWatch watchers
       pkgs.libnotify # notify-send
       pkgs.systemd # systemctl, loginctl, busctl
       # hyprsunset itself is never spawned or killed from here anymore (see
