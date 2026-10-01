@@ -86,6 +86,8 @@ let
         readonly property string fontFamily:          ${qml sc.fontFamily}
         readonly property real   uiScale:             ${qml sc.uiScale}
         readonly property bool   clock12h:            ${qml sc.clock12h}
+        readonly property string calendarWeekStart:   ${qml sc.calendarWeekStart}
+        readonly property bool   calendarWeekNumbers: ${qml sc.calendarWeekNumbers}
         readonly property bool   showSeconds:         ${qml sc.showSeconds}
         readonly property bool   osdEnabled:          ${qml sc.osdEnabled}
         readonly property int    osdTimeout:          ${qml sc.osdTimeout}
@@ -705,6 +707,23 @@ in
       type = lib.types.bool;
       default = false;
       description = "Show seconds in the clock.";
+    };
+
+    calendarWeekStart = lib.mkOption {
+      type = lib.types.enum [
+        "monday"
+        "sunday"
+        "locale"
+      ];
+      # Upstream ships "monday"; this desktop's week starts on Sunday.
+      default = "sunday";
+      description = "First day of the week in the calendar popup; \"locale\" follows the system locale.";
+    };
+
+    calendarWeekNumbers = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Show ISO week numbers in the calendar popup.";
     };
 
     # -- OSD -------------------------------------------------------------------
