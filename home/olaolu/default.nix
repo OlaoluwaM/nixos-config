@@ -161,6 +161,16 @@ in
   home.packages = with pkgs; [
     # Packages from stable channel
     acpi
+    # Yanki syncs flashcards from Obsidian over AnkiConnect. The Nix wrapper
+    # locks add-on config, so Obsidian's origin has to be allowed here.
+    (unstable.anki.withAddons [
+      (unstable.ankiAddons.anki-connect.withConfig {
+        config.webCorsOriginList = [
+          "http://localhost"
+          "app://obsidian.md"
+        ];
+      })
+    ])
     atool
 
     # Video player: GTK frontend over mpv, replacing VLC. The Hyprland
