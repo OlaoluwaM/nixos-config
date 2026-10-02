@@ -63,7 +63,9 @@ let
   # silere's session-end script runs hyprshutdown with --no-exit and only goes on
   # to reboot or power off when it finished. Stock hyprshutdown exits 0 on Cancel
   # too, and the log it falls back on can be forged by an app's window class, so
-  # this patch makes Cancel exit 2.
+  # this patch makes Cancel exit 2. It also ends with _Exit: returning from main
+  # runs mesa's exit handlers, which segfault on some exits and replace a finished
+  # run's 0 with SIGSEGV, so the script refused to reboot after apps had closed.
   hyprshutdownPackage = pkgs.hyprshutdown.overrideAttrs (old: {
     patches = (old.patches or [ ]) ++ [ ./hyprshutdown-cancel-exit-status.patch ];
   });

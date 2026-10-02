@@ -1,4 +1,4 @@
-hyprshutdown: exit 2 when the user cancels
+hyprshutdown: exit 2 when the user cancels, and always deliver the status
 
 hyprshutdown exits 0 whether every app closed, the user forced them closed or
 the user pressed Cancel, so a caller that runs a reboot or power off after it
@@ -9,10 +9,24 @@ log lines. Exit 2 on Cancel, and 1 when the UI backend fails to start (the
 status was ignored before), so the outcome comes from something app text
 can't touch.
 
+Once the UI has run, returning from main runs mesa's exit handlers, which
+segfault on some exits (glsl_type_singleton_decref freeing into a corrupted
+heap) and replace the status with SIGSEGV. End with _Exit after flushing
+stdout instead, so the status always reaches the caller.
+
 diff --git a/src/main.cpp b/src/main.cpp
 --- a/src/main.cpp
 +++ b/src/main.cpp
-@@ -91,7 +91,7 @@
+@@ -9,6 +9,8 @@
+ #include <hyprutils/cli/ArgumentParser.hpp>
+ #include <hyprutils/os/Process.hpp>
+ 
++#include <cstdio>
++#include <cstdlib>
+ #include <print>
+ 
+ using namespace Hyprutils::OS;
+@@ -91,7 +93,7 @@
      // Capture VT switch option before running UI
      auto vtSwitch = parser.getInt("vt");
  
@@ -21,17 +35,20 @@ diff --git a/src/main.cpp b/src/main.cpp
  
      // VT switch for NVIDIA+SDDM: after Hyprland exits, the display may not
      // automatically switch back to the greeter's VT, causing a black screen.
-@@ -103,5 +103,10 @@
+@@ -103,5 +105,13 @@
          proc.runAsync();
      }
  
 -    return 0;
 +    // Exit 0 for every ending would make Cancel indistinguishable from apps closing; a
 +    // caller deciding whether to go on and reboot needs a status app text can't forge.
-+    if (!RAN)
-+        return 1;
++    const int STATUS = !RAN ? 1 : g_ui->m_cancelled ? 2 : 0;
 +
-+    return g_ui->m_cancelled ? 2 : 0;
++    // Once the UI has run, mesa's exit handlers (glsl_type_singleton_decref) free into a
++    // corrupted heap and segfault on some exits, which loses this status. Nothing is left
++    // to clean up that the kernel won't, so skip them.
++    std::fflush(stdout);
++    std::_Exit(STATUS);
  }
 diff --git a/src/ui/UI.cpp b/src/ui/UI.cpp
 --- a/src/ui/UI.cpp
