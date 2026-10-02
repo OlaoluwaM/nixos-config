@@ -17,6 +17,7 @@ let
     "${userDirs.pictures}"
     "${dataHome}/fonts"
     "${dataHome}/zoxide" # _ZO_DATA_DIR (see dotfiles.nix)
+    dataHome # Just in case
     "${home}/sys-bak"
     "${userDirs.videos}/useful-stuff"
     userDirs.documents
@@ -55,6 +56,20 @@ in
     services.flatpak.packages = [
       dejaDupAppId
     ];
+
+    # Hyprland doesn't provide the interface required to autostart flatpak apps on login so we use a systemd user service instead. This is a workaround until Hyprland implements the required interface.
+    systemd.user.services.deja-dup-monitor = lib.mkIf config.local.hyprland.enable {
+      Unit = {
+        Description = "Deja Dup backup scheduler";
+        PartOf = [ config.wayland.systemd.target ];
+        After = [ config.wayland.systemd.target ];
+      };
+
+      Install.WantedBy = [ config.wayland.systemd.target ];
+
+      Service.ExecStart =
+        "${flatpak} run --user " + "--command=/app/libexec/deja-dup/deja-dup-monitor ${dejaDupAppId}";
+    };
 
     #
     # Configure the Flatpak's own GSettings store.
