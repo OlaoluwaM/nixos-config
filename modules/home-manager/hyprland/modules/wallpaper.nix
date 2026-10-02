@@ -184,7 +184,12 @@ in
         Unit = {
           Description = "Restore the last wallpaper into awww";
           After = [ "hypr-shell-awww.service" ];
-          Requires = [ "hypr-shell-awww.service" ];
+          # BindsTo, not Requires: Requires only follows a stop job, so a
+          # daemon that dies (hyprshutdown SIGTERMs it, and a cancel leaves it
+          # down) would leave this active(exited) and a restarted daemon blank.
+          # Bound, it goes inactive with the daemon and pushes the wallpaper
+          # again when silere's session-end script starts the two back up.
+          BindsTo = [ "hypr-shell-awww.service" ];
           PartOf = [ config.wayland.systemd.target ];
         };
 

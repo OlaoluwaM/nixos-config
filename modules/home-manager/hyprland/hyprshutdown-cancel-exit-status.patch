@@ -1,0 +1,61 @@
+hyprshutdown: exit 2 when the user cancels
+
+hyprshutdown exits 0 whether every app closed, the user forced them closed or
+the user pressed Cancel, so a caller that runs a reboot or power off after it
+(with --no-exit) can't tell a cancel from a finish. Its log can't settle it
+either: Cancel logs nothing, the last 150 ms check can already read zero apps,
+and app classes are logged verbatim, so a class containing a newline can forge
+log lines. Exit 2 on Cancel, and 1 when the UI backend fails to start (the
+status was ignored before), so the outcome comes from something app text
+can't touch.
+
+diff --git a/src/main.cpp b/src/main.cpp
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -91,7 +91,7 @@
+     // Capture VT switch option before running UI
+     auto vtSwitch = parser.getInt("vt");
+ 
+-    g_ui->run();
++    const bool RAN = g_ui->run();
+ 
+     // VT switch for NVIDIA+SDDM: after Hyprland exits, the display may not
+     // automatically switch back to the greeter's VT, causing a black screen.
+@@ -103,5 +103,10 @@
+         proc.runAsync();
+     }
+ 
+-    return 0;
++    // Exit 0 for every ending would make Cancel indistinguishable from apps closing; a
++    // caller deciding whether to go on and reboot needs a status app text can't forge.
++    if (!RAN)
++        return 1;
++
++    return g_ui->m_cancelled ? 2 : 0;
+ }
+diff --git a/src/ui/UI.cpp b/src/ui/UI.cpp
+--- a/src/ui/UI.cpp
++++ b/src/ui/UI.cpp
+@@ -208,6 +208,10 @@
+ }
+ 
+ void CUI::exit(bool closeHl) {
++    // a timer tick can still land between Cancel and the backend going away; it must not
++    // turn a cancel back into a finish
++    if (!closeHl)
++        m_cancelled = true;
+     g_ui->m_states.clear();
+ 
+     g_ui->backend()->addIdle([this, closeHl] {
+diff --git a/src/ui/UI.hpp b/src/ui/UI.hpp
+--- a/src/ui/UI.hpp
++++ b/src/ui/UI.hpp
+@@ -70,6 +70,8 @@
+     bool                       m_noExit = false;
+     std::optional<std::string> m_postExitCmd;
+     std::string                m_shutdownLabel;
++    // set when the run ends without closing Hyprland, so main can report a cancel
++    bool                       m_cancelled = false;
+ 
+   private:
+     void                           registerOutput(const SP<Hyprtoolkit::IOutput>& mon);
