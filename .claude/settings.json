@@ -4,8 +4,5 @@
       "type": "url",
       "url": "https://qt-docs-mcp.qt.io/mcp"
     }
-  },
-  "enabledPlugins": {
-    "qt-development-skills@claude-plugins-official": true
   }
 }
