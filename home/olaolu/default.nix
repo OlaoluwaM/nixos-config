@@ -111,6 +111,7 @@ in
     # You can also split up your configuration and import pieces of it here:
     # ./nvim.nix
     ../../modules/home-manager/atuin.nix
+    ../../modules/home-manager/antiburn.nix
     ../../modules/home-manager/bat.nix
     ../../modules/home-manager/bottom.nix
     ../../modules/home-manager/deja-dup.nix
@@ -171,7 +172,6 @@ in
         ];
       })
     ])
-    (callPackage ../../pkgs/antiburn { })
     atool
 
     # Video player: GTK frontend over mpv, replacing VLC. The Hyprland
@@ -395,6 +395,7 @@ in
   };
 
   local.atuin.enable = true;
+  local.antiburn.enable = true;
   local.bat.enable = true;
   local.bottom.enable = true;
   local.dejaDup.enable = true;

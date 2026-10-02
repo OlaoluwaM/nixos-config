@@ -45,6 +45,8 @@ Each file has one main job:
 - `modules/zathura.nix` configures the PDF viewer and its Matugen glass theme.
 - `scripts/` holds the Bash code used by the helper commands.
 - `../vicinae.nix` sets up Vicinae and starts it with this desktop.
+- `../antiburn.nix` installs Antiburn and configures background startup for
+  the selected desktop when `local.antiburn.enable` is enabled.
 
 ## How Login Works
 
@@ -61,6 +63,12 @@ This target starts and stops the desktop programs together.
 
 The group includes the shell, Vicinae, wallpaper services, idle tools, KDE
 Connect icon, and keyring.
+
+When Antiburn is enabled, the shared `../antiburn.nix` module adds
+`antiburn.service` to this group. Under GNOME, the same module creates an
+XDG autostart entry instead. Both launch the Nix AppImage wrapper with
+`--background`. Keep Antiburn's own "Launch at login" setting disabled so
+Home Manager owns its startup configuration.
 
 This desktop does not use UWSM.
 

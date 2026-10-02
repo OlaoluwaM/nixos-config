@@ -7,27 +7,10 @@
 
 let
   cfg = config.local.hyprland;
-  antiburnPackage = pkgs.callPackage ../../../../pkgs/antiburn { };
 in
 {
   config = lib.mkIf cfg.enable {
     systemd.user.services = {
-      # Startup Antiburn at login. Doing so from the app won't persist across logins like it should.
-      antiburn = {
-        Unit = {
-          Description = "Antiburn session usage monitor";
-          PartOf = [ config.wayland.systemd.target ];
-          After = [ config.wayland.systemd.target ];
-        };
-
-        Install.WantedBy = [ config.wayland.systemd.target ];
-
-        Service = {
-          ExecStart = "${lib.getExe antiburnPackage} --background";
-          Restart = "on-failure";
-          RestartSec = 5;
-        };
-      };
 
       # Watch PipeWire, the desktop's audio and video system. While media is playing, ask hypridle, the idle timer, to leave the session (Hyprland) unlocked. Restart the watcher if it fails.
       hypr-shell-media-idle-inhibit = {
