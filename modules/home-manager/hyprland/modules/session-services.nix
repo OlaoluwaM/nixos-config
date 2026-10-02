@@ -7,14 +7,29 @@
 
 let
   cfg = config.local.hyprland;
+  antiburnPackage = pkgs.callPackage ../../../../pkgs/antiburn { };
 in
 {
   config = lib.mkIf cfg.enable {
-    # Extra Hyprland-session user services that do not have dedicated Home
-    # Manager modules in this config.
     systemd.user.services = {
-      # Block idle while PipeWire reports active media playback, so videos,
-      # calls, and similar media do not let hypridle lock the session.
+      # Startup Antiburn at login. Doing so from the app won't persist across logins like it should.
+      antiburn = {
+        Unit = {
+          Description = "Antiburn session usage monitor";
+          PartOf = [ config.wayland.systemd.target ];
+          After = [ config.wayland.systemd.target ];
+        };
+
+        Install.WantedBy = [ config.wayland.systemd.target ];
+
+        Service = {
+          ExecStart = "${lib.getExe antiburnPackage} --background";
+          Restart = "on-failure";
+          RestartSec = 5;
+        };
+      };
+
+      # Watch PipeWire, the desktop's audio and video system. While media is playing, ask hypridle, the idle timer, to leave the session (Hyprland) unlocked. Restart the watcher if it fails.
       hypr-shell-media-idle-inhibit = {
         Unit = {
           Description = "Inhibit idle while PipeWire media is playing";
@@ -29,12 +44,11 @@ in
         };
       };
 
-      # Manual Caffeine is shared session infrastructure; hypridle respects
-      # its systemd idle inhibitor. The toggle helper users actually invoke
-      # (the caffeineScript writeShellApplication) lives in commands.nix --
-      # two halves of one feature, split along the module axis deliberately:
-      # this file owns the always-on inhibitor unit, commands.nix owns the
-      # packaged command that flips it.
+      # Caffeine keeps the session from going idle until you turn it off.
+      # systemd-inhibit holds that request while "sleep infinity" runs;
+      # stopping the service releases it, so hypridle can act again.
+      # commands.nix packages the helper that starts and stops this service.
+      # It also stops with the Hyprland session, so it cannot outlive logout.
       hypr-shell-caffeine = {
         Unit = {
           Description = "Manual Hyprland idle inhibitor";
@@ -46,12 +60,7 @@ in
         };
       };
 
-      # KDE Connect's session half. The package + firewall ports come from
-      # programs.kdeconnect in modules/nixos/hyprland.nix; GNOME/KDE would
-      # autostart the indicator via XDG autostart, which nothing in this
-      # profile processes, so it gets an explicit unit on the session target
-      # instead. The indicator D-Bus-activates kdeconnectd itself and
-      # registers the SNI item the shell's tray popup lists.
+      # Start KDE Connect's tray icon when you log into Hyprland.
       kdeconnect-indicator = {
         Unit = {
           Description = "KDE Connect tray indicator";

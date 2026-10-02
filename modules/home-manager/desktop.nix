@@ -170,6 +170,17 @@ in
         XCURSOR_THEME = cursorTheme.name;
       };
 
+      # User services such as Vicinae do not source hm-session-vars.sh.
+      # Give them and the applications they launch the same cursor settings.
+      systemd.user.sessionVariables = {
+        inherit (config.home.sessionVariables)
+          XCURSOR_SIZE
+          XCURSOR_THEME
+          HYPRCURSOR_SIZE
+          HYPRCURSOR_THEME
+          ;
+      };
+
       qt = {
         enable = true;
         platformTheme.name = "adwaita";
