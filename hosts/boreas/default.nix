@@ -165,6 +165,9 @@ in
   # Allow unpatched dynamically linked Linux executables to use nix-ld. The "NixOS cannot run dynamically linked executables intended for generic linux environments out of the box" issue is more or less resolved by enabling this.
   programs.nix-ld.enable = true;
 
+  # Enable AppImage support. This is needed for some applications that are distributed as AppImages
+  programs.appimage.enable = true;
+
   # Enable docker with CDI support for the NVIDIA container toolkit.
   virtualisation.docker = {
     enable = true;

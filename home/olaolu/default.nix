@@ -171,6 +171,7 @@ in
         ];
       })
     ])
+    (callPackage ../../pkgs/antiburn { })
     atool
 
     # Video player: GTK frontend over mpv, replacing VLC. The Hyprland
