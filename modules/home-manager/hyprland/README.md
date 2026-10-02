@@ -47,6 +47,7 @@ Each file has one main job:
 - `../vicinae.nix` sets up Vicinae and starts it with this desktop.
 - `../antiburn.nix` installs Antiburn and configures background startup for
   the selected desktop when `local.antiburn.enable` is enabled.
+- `../deja-dup.nix` starts the Flatpak backup scheduler with this desktop.
 
 ## How Login Works
 
@@ -69,6 +70,11 @@ When Antiburn is enabled, the shared `../antiburn.nix` module adds
 XDG autostart entry instead. Both launch the Nix AppImage wrapper with
 `--background`. Keep Antiburn's own "Launch at login" setting disabled so
 Home Manager owns its startup configuration.
+
+When Déjà Dup is enabled, `deja-dup-monitor.service` also starts with the
+session. It runs the Flatpak's scheduler without opening the app window.
+This supplies login startup because the configured Hyprland portals lack
+the Background interface. Déjà Dup keeps control of the backup schedule.
 
 This desktop does not use UWSM.
 
