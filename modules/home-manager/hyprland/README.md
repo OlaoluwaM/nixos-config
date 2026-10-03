@@ -26,11 +26,12 @@ Each file has one main job:
   and choose files.
 - `default.nix` joins the Home Manager files together. It also sets shared
   apps, file defaults, and the desktop session group.
-- `modules/commands.nix` packages the helper scripts and shares their paths
+- `modules/commands.nix` packages shared helper scripts and shares their paths
   with the other files.
 - `modules/compositor.nix` controls screens, the mouse, the keyboard, window
   rules, borders, blur, and animations.
 - `modules/keybindings.nix` holds the normal keyboard and mouse shortcuts.
+- `modules/power.nix` routes Vicinae power commands through the shell countdown.
 - `modules/hyprlock.nix` controls the lock screen.
 - `modules/hypridle.nix` controls what happens when the computer is left alone.
 - `modules/hyprshell.nix` packages and starts the dedicated Alt+Tab switcher;
@@ -103,8 +104,28 @@ makes the programs that each script needs available.
 - `hypr-shell-record` records an area, screen, or window.
 - `hypr-shell-caffeine` turns Caffeine on or off so the computer can stay
   awake.
+- `hypr-shell-power-request` asks the shell to show its power countdown for
+  Vicinae and reports failed requests.
 - `wallpaper-set` applies one image to the desktop, shell colors, and lock
   screen.
+
+## Power Commands
+
+Vicinae's Reboot, Power Off, and Log Out commands request the shell's 60-second
+countdown over IPC through `modules/power.nix`. The countdown replaces Vicinae's
+confirmation prompt. Cancelling it runs no power action; confirming or waiting
+for it to finish runs the shell's session-end helper and patched `hyprshutdown`.
+An unavailable shell or a refused request does not end the session. IPC waits
+at most five seconds before timing out (with one further second to force-stop
+the client). A timeout cannot cancel a request already delivered; the countdown
+may still start. Failure feedback falls back to Hyprland's notification when
+the shell's notification server cannot respond. A second accepted request
+replaces the action and starts a new 60-second countdown. Lock, suspend, and
+hibernate keep Vicinae's default behavior.
+
+This integration requires a silere-shell revision that exposes the `power` IPC
+target. Commit and push the fork change, then re-lock the `silere-shell` input
+before deploying this configuration.
 
 ## Lock, Screen-Off, and Sleep
 

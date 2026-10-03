@@ -26,6 +26,7 @@
 # - modules/hyprshell.nix: the available, currently-disabled hyprshell
 #   Alt-Tab window switcher daemon
 # - modules/keybindings.nix: every Hyprland key chord
+# - modules/power.nix: Vicinae power requests through the shell countdown
 # - modules/hyprlock.nix: lock-screen look and behavior
 # - modules/hypridle.nix: idle locking behavior
 # - modules/hyprsunset.nix: display color temperature schedule
@@ -83,6 +84,7 @@ in
     # ./modules/hyprshell.nix
     ./modules/hyprsunset.nix
     ./modules/keybindings.nix
+    ./modules/power.nix
     ./modules/session-services.nix
     ./modules/silere.nix
     ./modules/wallpaper.nix
