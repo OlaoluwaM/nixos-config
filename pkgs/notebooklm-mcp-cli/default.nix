@@ -7,7 +7,7 @@
 
 # Derivation for https://github.com/jacob-bd/gemini-notebook-mcp-cli
 let
-  version = "0.9.14";
+  version = "0.15.2";
 in
 
 python3Packages.buildPythonApplication {
