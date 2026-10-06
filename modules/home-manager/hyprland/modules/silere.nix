@@ -72,7 +72,9 @@ let
         readonly property string caffeineUnit:        ${qml sc.caffeineUnit}
         readonly property string caffeinePresets:     ${qml sc.caffeinePresets}
         readonly property string dndPresets:          ${qml sc.dndPresets}
+        readonly property int    notifMaxVisible:     ${qml sc.notifMaxVisible}
         readonly property bool   notifHistoryPersistent: ${qml sc.notifHistoryPersistent}
+        readonly property int    notifHistoryLimit:   ${qml sc.notifHistoryLimit}
         readonly property bool   mediaRemoteArt:      ${qml sc.mediaRemoteArt}
         readonly property string wifiEditCommand:     ${qml sc.wifiEditCommand}
         readonly property string btEditCommand:       ${qml sc.btEditCommand}
@@ -414,10 +416,24 @@ in
       description = "Comma-separated minutes for the DND timed presets (0 = until turned off).";
     };
 
+    # bounds mirror the fork's _schema clamp for notifMaxVisible
+    notifMaxVisible = lib.mkOption {
+      type = lib.types.ints.between 0 20;
+      default = 4;
+      description = "Initial default for how many notification popups show at once; saved UI settings override it.";
+    };
+
     notifHistoryPersistent = lib.mkOption {
       type = lib.types.bool;
       default = true;
       description = "Initial default for keeping notification history across shell restarts; saved UI settings override it.";
+    };
+
+    # bounds mirror the fork's _schema clamp for notifHistoryLimit
+    notifHistoryLimit = lib.mkOption {
+      type = lib.types.ints.between 5 100;
+      default = 50;
+      description = "Initial default for how many entries notification history keeps; saved UI settings override it.";
     };
 
     mediaRemoteArt = lib.mkOption {
