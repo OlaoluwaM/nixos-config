@@ -110,6 +110,7 @@ in
 
     # You can also split up your configuration and import pieces of it here:
     # ./nvim.nix
+    ../../modules/home-manager/anki.nix
     ../../modules/home-manager/atuin.nix
     ../../modules/home-manager/antiburn.nix
     ../../modules/home-manager/bat.nix
@@ -162,16 +163,6 @@ in
   home.packages = with pkgs; [
     # Packages from stable channel
     acpi
-    # Yanki syncs flashcards from Obsidian over AnkiConnect. The Nix wrapper
-    # locks add-on config, so Obsidian's origin has to be allowed here.
-    (unstable.anki.withAddons [
-      (unstable.ankiAddons.anki-connect.withConfig {
-        config.webCorsOriginList = [
-          "http://localhost"
-          "app://obsidian.md"
-        ];
-      })
-    ])
     atool
 
     # Video player: GTK frontend over mpv, replacing VLC. The Hyprland
@@ -394,6 +385,7 @@ in
     dotsPath = "${config.xdg.userDirs.desktop}/${hostConfig.dotfilesRelativePath}";
   };
 
+  local.anki.enable = true;
   local.atuin.enable = true;
   local.antiburn.enable = true;
   local.bat.enable = true;
