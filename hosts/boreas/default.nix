@@ -39,6 +39,7 @@ in
     # Import your generated (nixos-generate-config) hardware configuration
     ./hardware-configuration.nix
     ../../modules/nixos/desktop.nix
+    ../../modules/nixos/gc.nix
     ../../modules/nixos/custom-firewall-config.nix
   ];
 
@@ -49,6 +50,8 @@ in
       allowUnfree = true;
     };
   };
+
+  local.gc.enable = true;
 
   nix = {
     settings = {
