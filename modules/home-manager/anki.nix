@@ -27,6 +27,18 @@ in
             "app://obsidian.md"
           ];
         })
+        # Keys not listed keep FSRS Helper's defaults.
+        (unstable.ankiAddons.fsrs4anki-helper.withConfig {
+          config = {
+            # Most reviews happen on the phone, where add-ons don't run, so
+            # siblings are spread out when the desktop syncs those reviews in.
+            auto_disperse_after_sync = true;
+            show_steps_stats = true;
+            # Hides the "Rate add-on" menu item, whose click handler writes
+            # this flag back and so trips the locked-config warning.
+            has_rated = true;
+          };
+        })
       ])
     ];
   };
