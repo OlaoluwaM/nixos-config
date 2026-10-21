@@ -125,6 +125,14 @@ in
     alsa.enable = true;
     alsa.support32Bit = true;
     pulse.enable = true;
+    # Bluetooth headsets keep the mode picked in Silere's Sound settings. With
+    # autoswitch on, WirePlumber adds a stand-in headset mic and flips the
+    # headset into call audio whenever an app records from it.
+    wireplumber.extraConfig."51-bluetooth-manual-profile" = {
+      "wireplumber.settings" = {
+        "bluetooth.autoswitch-to-headset-profile" = false;
+      };
+    };
     # If you want to use JACK applications, uncomment this
     #jack.enable = true;
 
