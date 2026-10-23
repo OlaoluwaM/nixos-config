@@ -150,11 +150,11 @@ in
         image ${lib.escapeShellArg cfg.wallpaper} --source-color-index 0 -q
     '';
 
-    # Replaces the fork installer's role here (scripts/install.sh normally
-    # writes this file's [templates.silere-shell] table itself). Home Manager
-    # links the generated TOML into Matugen's standard config location.
-    # silere-shell's MatugenPalette.qml watches output_path and repaints when
-    # Matugen rewrites it, so no shell restart is needed.
+    # The fork ships no installer, so this is the only writer of Matugen's
+    # [templates.silere-shell] table. Home Manager links the generated TOML
+    # into Matugen's standard config location. silere-shell's
+    # MatugenPalette.qml watches output_path and repaints when Matugen
+    # rewrites it, so no shell restart is needed.
     xdg.configFile."matugen/config.toml".source = matugenConfig;
 
     systemd.user.services = {
