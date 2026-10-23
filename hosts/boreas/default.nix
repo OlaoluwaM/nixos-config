@@ -259,6 +259,28 @@ in
   # second profile daemon would let both services write the same state.
   services.power-profiles-daemon.enable = false;
 
+  # The nixos-hardware laptop profile for boreas enables TLP, whose stock
+  # RUNTIME_PM_ON_AC="on" writes power/control=on to every PCI device while
+  # plugged in, the dGPU and its root port included, so the dGPU never
+  # runtime-suspended on AC. "auto" lets it sleep again. Qualifier: this is
+  # not GPU-specific. Every PCI device gets runtime PM on AC, so a device that
+  # misbehaves when suspended (a USB controller dropping a peripheral, the
+  # Wi-Fi card) would surface here first; RUNTIME_PM_DENYLIST is the
+  # per-device escape hatch if one does.
+  services.tlp.settings = {
+    RUNTIME_PM_ON_AC = "auto";
+
+    # Lets asusd hold responsibility over these instead of tlp. Stock tlp
+    # writes the platform profile and CPU energy preference on every AC/battery
+    # transition. This is also done by asusd through profile the
+    # battery-profile-threshold script. So, an empty value makes tlp skip the
+    # setting and avoids overlap between the two services.
+    PLATFORM_PROFILE_ON_AC = "";
+    PLATFORM_PROFILE_ON_BAT = "";
+    CPU_ENERGY_PERF_POLICY_ON_AC = "";
+    CPU_ENERGY_PERF_POLICY_ON_BAT = "";
+  };
+
   # asusd probes ASUS firmware that does not exist inside the QEMU dry-run
   # guest. Skip the unit cleanly there instead of letting it restart-loop.
   systemd.services.asusd.unitConfig.ConditionVirtualization = false;
@@ -313,7 +335,10 @@ in
   # This service owns the custom policy and uses asusctl to ask asusd to apply
   # it. asusd's built-in AC/battery switching remains disabled above. The timer
   # catches threshold crossings while discharging, and the udev rule provides
-  # immediate AC plug/unplug response.
+  # immediate AC plug/unplug response. A run acts only when the battery bracket
+  # (AC, above 65%, 36-65%, 35% and below) differs from the one it last
+  # applied, so a profile picked by hand stays until the next crossing, and
+  # each switch costs one dGPU wake, so fewer switches is the point.
   systemd.services.battery-profile-threshold =
     let
       # asusd.service is condition-skipped in the VM; a wanted unit that
@@ -339,6 +364,9 @@ in
 
       serviceConfig = {
         Type = "oneshot";
+        # This way, the last applied bracket outlives each run and clears with /run at boot
+        RuntimeDirectory = "battery-profile-threshold";
+        RuntimeDirectoryPreserve = "yes";
       };
 
       script = builtins.readFile ./scripts/battery-profile-threshold.sh;
@@ -358,10 +386,10 @@ in
   # a 3-minute lag after a power-source change. Kicking the same idempotent
   # oneshot from udev cannot conflict with the timer — both runs compute the
   # target from the current battery state, and a second run exits early once
-  # the profile already matches. RUN+= (not SYSTEMD_WANTS) because the adapter
-  # device never disappears; plug/unplug is a "change" uevent on it, which
-  # SYSTEMD_WANTS would only honor once. --no-block keeps the udev event
-  # handler from waiting on the service.
+  # the bracket is unchanged or the profile already matches. RUN+= (not
+  # SYSTEMD_WANTS) because the adapter device never disappears; plug/unplug
+  # is a "change" uevent on it, which SYSTEMD_WANTS would only honor once.
+  # --no-block keeps the udev event handler from waiting on the service.
   #
   # A VM guest typically has no Mains power_supply device, so the rule simply
   # never fires there.
