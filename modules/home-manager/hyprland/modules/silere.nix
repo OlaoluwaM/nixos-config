@@ -575,8 +575,9 @@ in
     tempHotThreshold = lib.mkOption {
       type = lib.types.ints.between 50 105;
       # Well below the fork's 90: this laptop throttles late, and the point
-      # is early awareness, not shutdown protection.
-      default = 65;
+      # is early awareness, not shutdown protection. 70 sits above the
+      # i9-13900H's routine boost swing now that the shell averages its reads.
+      default = 70;
       description = "CPU temperature (deg C) above which the bar's temp chip appears.";
     };
 
