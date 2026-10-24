@@ -29,19 +29,17 @@ stable_dir="$(dirname -- "$stable")"
 tmp="$(mktemp "$stable_dir/.wallpaper-set.XXXXXX.png")"
 trap 'rm -f "$tmp"' EXIT
 
-# A source that's already .png already has that guaranteed pixel format --
-# the same extension-matches-format assumption the comment above relies on
-# for the stable path -- so skip magick's full re-encode (a needless pass
-# over a 4K image on every single pick) and just copy the bytes. Anything
-# else still goes through magick to make that guarantee true.
-case "$src" in
-*.[Pp][Nn][Gg])
+# A source that already holds PNG pixels has the guaranteed format the comment
+# above relies on, so skip magick's full re-encode (a needless pass over a 4K
+# image on every single pick) and just copy the bytes. Decided by content, not
+# by name: a few wallpapers named .png carry JPEG bytes, and copying those by
+# extension put JPEG data at a path that promises PNG. Anything else goes
+# through magick to make the promise true.
+if [ "$(magick identify -format '%m' "${src}[0]" 2>/dev/null)" = "PNG" ]; then
 	cp -- "$src" "$tmp"
-	;;
-*)
+else
 	magick "$src" "$tmp"
-	;;
-esac
+fi
 
 mv -f "$tmp" "$stable"
 trap - EXIT
