@@ -255,7 +255,16 @@ in
               # gray.
               size = 8;
               passes = 3;
-              vibrancy = 0.4;
+              # Lifted with the shell's adaptive glass (fork ADR 0004): the
+              # shell thins and lifts its panes over dark wallpapers, and
+              # these give the blur behind them something to show. Static
+              # and global on purpose -- a per-wallpaper hyprctl push would be
+              # lost on reload and would adapt on a different clock from the
+              # shell -- so the values sit where the mid-dark band of the
+              # collection reads as frost without washing out bright ones.
+              vibrancy = 0.6;
+              vibrancy_darkness = 0.3;
+              brightness = 1.1;
             };
             # Window shadows off (2026-08-23): the flat look won. The old
             # tuning (range 12, render_power 2, theme.shadowColor) is gone
