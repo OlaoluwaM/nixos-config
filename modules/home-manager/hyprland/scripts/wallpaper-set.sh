@@ -79,8 +79,8 @@ sample_glass() {
 	local image="$1"
 	local out_dir="${XDG_CONFIG_HOME:-$HOME/.config}/silere-shell"
 	local size width height fit top bottom field tmp_json
-	# the focused monitor's mode; a compositor that is not answering falls back
-	# to the panel this profile ships on, which only skews the strip height
+	# The focused monitor's mode. A compositor that is not answering falls back
+	# to the panel this profile ships on, which only skews the strip height.
 	size="$(hyprctl monitors -j 2>/dev/null \
 		| jq -r 'first(.[] | select(.focused)) | "\(.width)x\(.height)"' 2>/dev/null)" || size=""
 	case "$size" in
@@ -90,8 +90,8 @@ sample_glass() {
 	width="${size%x*}"
 	height="${size#*x}"
 	fit="$(mktemp "${TMPDIR:-/tmp}/wallpaper-set.XXXXXX.miff")" || return 1
-	# the source, not the stable PNG: magick reads by content, so a mislabelled
-	# file samples fine, and the first frame covers animated formats
+	# The source, not the stable PNG: magick reads by content, so a mislabelled
+	# file samples fine, and the first frame covers animated formats.
 	if ! magick "${image}[0]" -alpha off -resize "${width}x${height}^" -gravity Center \
 		-extent "${width}x${height}" +repage "$fit"; then
 		rm -f "$fit"

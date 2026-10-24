@@ -509,8 +509,8 @@ in
       # wallpaper picker instead of the recording pill: the picker's click-
       # to-apply action, its Random button, the Super+Shift+W toggle chord,
       # and a terminal `wallpaper-set` invocation all run this one command,
-      # so awww's swap, matugen's retint, and the hyprlock stable-path
-      # convert can never fall out of step across entry points. The shell
+      # so awww's swap, the hyprlock stable-path convert, matugen's retint,
+      # and the glass sample can never fall out of step across entry points. The shell
       # appends the chosen image's absolute path as this command's one
       # argument -- this value is a bare launch template, not a full shell
       # line. The fork ships this key empty, which keeps the whole picker

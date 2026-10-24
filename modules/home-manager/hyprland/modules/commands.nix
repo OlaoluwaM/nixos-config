@@ -135,9 +135,9 @@ in
           silere.nix can point the shell's wallpaperCommand setting at this
           exact binary -- the picker, its Random button, the Super+Shift+W
           chord, and a terminal `wallpaper-set` invocation then all funnel
-          through the one script, so awww's swap, matugen's retint, and the
-          hyprlock stable-path convert can never be applied out of step with
-          each other.
+          through the one script, so awww's swap, the hyprlock stable-path
+          convert, matugen's retint, and the glass sample can never be
+          applied out of step with each other.
         '';
       };
 

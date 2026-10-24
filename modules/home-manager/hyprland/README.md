@@ -106,8 +106,8 @@ makes the programs that each script needs available.
   awake.
 - `hypr-shell-power-request` asks the shell to show its power countdown for
   Vicinae and reports failed requests.
-- `wallpaper-set` applies one image to the desktop, shell colors, and lock
-  screen.
+- `wallpaper-set` applies one image to the desktop, shell colors, lock
+  screen, and the shell's glass sample.
 
 ## Power Commands
 
