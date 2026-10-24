@@ -114,6 +114,11 @@ let
       unstable.matugen
       pkgs.imagemagick
       pkgs.coreutils
+      # hyprctl + jq: the glass sampler cover-fits the image to the focused
+      # monitor's mode, the same way the screenshot and record scripts in
+      # commands.nix read their capture geometry.
+      pkgs.hyprland
+      pkgs.jq
     ];
     runtimeEnv.HYPR_WALLPAPER_PATH = cfg.wallpaper;
     text = builtins.readFile ../scripts/wallpaper-set.sh;

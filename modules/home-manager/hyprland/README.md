@@ -148,10 +148,17 @@ When an image is picked, `wallpaper-set <image-path>` does this:
 1. It checks that the image can be read.
 2. It gives the image to awww. awww uses a two-second `grow` animation at 60
    frames per second.
-3. It gives the image to Matugen. Matugen builds the dark `SchemeContent`
+3. It converts the image to PNG and saves it at
+   `~/.config/hypr/wallpapers/default.png` for hyprlock. An image that is
+   already PNG by content is copied as it is.
+4. It gives the image to Matugen. Matugen builds the dark `SchemeContent`
    colors used by `silere-shell`.
-4. It converts the image to PNG and saves it at
-   `~/.config/hypr/wallpapers/default.png` for hyprlock.
+5. It samples the image for the shell's adaptive glass: mean luminance,
+   texture and tone for the strip under a top bar, the strip under a bottom
+   bar, and the whole picture, measured after cover-fitting the image to the
+   focused monitor. The result goes to `~/.config/silere-shell/glass.json`.
+   This step runs last and never fails the script; a bad sample leaves the
+   shell on its previous one.
 
 Home Manager creates the PNG the first time if it does not exist. It does not
 replace a wallpaper that is already there. At login, the restore service gives

@@ -2,8 +2,9 @@
 
 # Usage: wallpaper-set <image-path>
 #
-# Updates, in order: the live desktop background (awww), the shell's
-# matugen-derived theme, and the stable path hyprlock reads.
+# Updates, in order: the live desktop background (awww), the stable path
+# hyprlock reads, the shell's matugen-derived theme, and the wallpaper sample
+# the shell's adaptive glass follows.
 
 if [ "$#" -ne 1 ]; then
 	echo "usage: wallpaper-set <image-path>" >&2
@@ -50,3 +51,67 @@ trap - EXIT
 # strand hyprlock on a stale image after the live desktop already swapped --
 # the lock screen must not depend on the theming pipeline being healthy.
 matugen image "$src" --source-color-index 0 -q
+
+# One region of the fitted frame as a JSON object: mean luminance, standard
+# deviation (how busy it is) and its one-pixel tone. Every magick call is
+# checked by hand because `set -e` is off inside a function called under `||`.
+sample_region() {
+	local fit="$1" gravity="$2" crop="$3"
+	local stats tone
+	stats="$(magick "$fit" -gravity "$gravity" -crop "$crop" +repage -colorspace Gray \
+		-format '%[fx:mean] %[fx:standard_deviation]' info:)" || return 1
+	tone="$(magick "$fit" -gravity "$gravity" -crop "$crop" +repage -scale '1x1!' \
+		-format '%[hex:u.p{0,0}]' info:)" || return 1
+	case "$stats $tone" in
+	[0-9.]*\ [0-9.]*\ [0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]) ;;
+	*) return 1 ;;
+	esac
+	printf '{"luminance":%s,"noise":%s,"tone":"#%s"}' "${stats% *}" "${stats#* }" "$tone"
+}
+
+# The shell's adaptive glass (fork ADR 0004) follows a sample of the wallpaper:
+# the strip under a top bar, the strip under a bottom bar, and the whole
+# picture, measured on the image cover-fitted to the focused monitor the way
+# awww shows it. The sample goes to the shell's own config directory, beside
+# the settings it already watches, through the same tmp-and-rename the stable
+# path uses so the shell never reads a half-written file.
+sample_glass() {
+	local image="$1"
+	local out_dir="${XDG_CONFIG_HOME:-$HOME/.config}/silere-shell"
+	local size width height fit top bottom field tmp_json
+	# the focused monitor's mode; a compositor that is not answering falls back
+	# to the panel this profile ships on, which only skews the strip height
+	size="$(hyprctl monitors -j 2>/dev/null \
+		| jq -r 'first(.[] | select(.focused)) | "\(.width)x\(.height)"' 2>/dev/null)" || size=""
+	case "$size" in
+	[1-9]*x[1-9]*) ;;
+	*) size="2560x1600" ;;
+	esac
+	width="${size%x*}"
+	height="${size#*x}"
+	fit="$(mktemp "${TMPDIR:-/tmp}/wallpaper-set.XXXXXX.miff")" || return 1
+	# the source, not the stable PNG: magick reads by content, so a mislabelled
+	# file samples fine, and the first frame covers animated formats
+	if ! magick "${image}[0]" -alpha off -resize "${width}x${height}^" -gravity Center \
+		-extent "${width}x${height}" +repage "$fit"; then
+		rm -f "$fit"
+		return 1
+	fi
+	top="$(sample_region "$fit" North "${width}x64+0+0")" || { rm -f "$fit"; return 1; }
+	bottom="$(sample_region "$fit" South "${width}x64+0+0")" || { rm -f "$fit"; return 1; }
+	field="$(sample_region "$fit" NorthWest "${width}x${height}+0+0")" || { rm -f "$fit"; return 1; }
+	rm -f "$fit"
+	mkdir -p "$out_dir" || return 1
+	tmp_json="$(mktemp "$out_dir/.glass.XXXXXX.json")" || return 1
+	if ! printf '{"version":1,"source":%s,"top":%s,"bottom":%s,"field":%s}\n' \
+		"$(jq -Rn --arg s "$image" '$s')" "$top" "$bottom" "$field" > "$tmp_json"; then
+		rm -f "$tmp_json"
+		return 1
+	fi
+	mv -f "$tmp_json" "$out_dir/glass.json"
+}
+
+# Last, and never fatal: the retint above is what the lock screen and the
+# palette depend on, so a sampling failure must not abort it. The shell keeps
+# its previous sample, the same failure mode a stale palette already has.
+sample_glass "$src" || echo "wallpaper-set: glass sample failed; the shell keeps its last sample" >&2
