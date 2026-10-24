@@ -95,6 +95,7 @@ let
         readonly property int    osdTimeout:          ${qml sc.osdTimeout}
         readonly property bool   glassSurfaces:       ${qml sc.glassSurfaces}
         readonly property real   glassOpacity:        ${qml sc.glassOpacity}
+        readonly property bool   glassAdaptive:       ${qml sc.glassAdaptive}
         readonly property real   barOpacity:          ${qml sc.barOpacity}
         readonly property bool   popupMatchBarOpacity: ${qml sc.popupMatchBarOpacity}
         readonly property bool   wsDynamic:           ${qml sc.wsDynamic}
@@ -613,6 +614,18 @@ in
       # per-user, so a persisted slider value shadows this default.
       default = 0.60;
       description = "Alpha of glass popup surfaces (0.5-0.95); lower shows more frost.";
+    };
+
+    glassAdaptive = lib.mkOption {
+      type = lib.types.bool;
+      # The fork moves every glass surface along a thickness ladder driven
+      # by the wallpaper sample wallpaper-set writes (fork ADR 0004):
+      # thinner and lifted over dark wallpapers, thicker over bright ones,
+      # with glassOpacity and barOpacity as the centre of each ladder. The
+      # fork ships this off because a stock install has no sampler; this
+      # profile owns wallpaper-set, so it turns the sampler's consumer on.
+      default = true;
+      description = "Let glass thickness follow the wallpaper sample wallpaper-set writes.";
     };
 
     barOpacity = lib.mkOption {
