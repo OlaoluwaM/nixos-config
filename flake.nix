@@ -13,6 +13,12 @@
     # Flatpak
     nix-flatpak.url = "github:gmodena/nix-flatpak/?ref=latest";
 
+    # Interactive flake input selection.
+    snowfall-flake = {
+      url = "github:snowfallorg/flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Other stuff
     claude-code.url = "github:sadjow/claude-code-nix";
     codex-cli.url = "github:sadjow/codex-cli-nix";

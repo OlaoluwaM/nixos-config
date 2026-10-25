@@ -3,6 +3,7 @@
 # Based off: https://github.com/Misterio77/nix-starter-configs/blob/main/minimal/home-manager/home.nix
 {
   hostConfig,
+  inputs,
   config,
   pkgs,
   unstable,
@@ -182,6 +183,7 @@ in
 
     fish
     fdupes
+    inputs.snowfall-flake.packages.${pkgs.stdenv.hostPlatform.system}.default
 
     gapless
     gcc
