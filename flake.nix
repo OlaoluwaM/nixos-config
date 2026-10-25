@@ -14,8 +14,9 @@
     nix-flatpak.url = "github:gmodena/nix-flatpak/?ref=latest";
 
     # Interactive flake input selection.
+    # Personal fork, with current Snowfall Lib compatibility fixes.
     snowfall-flake = {
-      url = "github:snowfallorg/flake";
+      url = "github:OlaoluwaM/snowfall-flake";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
