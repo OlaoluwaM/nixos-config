@@ -19,6 +19,12 @@ in
           enable = true;
           compositor = "hyprland"; # or "cagebreak", "sway", "mango", "hyprland" (0.55+)
         };
+
+        systemd.tmpfiles.rules = [
+          "d /var/lib/greeter/.cache/sysc-greet 0700 greeter greeter -"
+          ''f /var/lib/greeter/.cache/sysc-greet/preferences 0600 greeter greeter - {"session":"Hyprland"}''
+        ];
+
       })
 
       (lib.mkIf (!cfg.enable) {
