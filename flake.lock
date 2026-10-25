@@ -407,11 +407,11 @@
         "snowfall-lib": "snowfall-lib"
       },
       "locked": {
-        "lastModified": 1792940981,
-        "narHash": "sha256-X+N6+geGiEPBnN9vihUpjgzb7YElGz9Dqn3d4oQxloA=",
+        "lastModified": 1792950325,
+        "narHash": "sha256-c5SC6fSS+sYlW1khwibx0fuKwQI2bnQC8es/E76jvvU=",
         "owner": "OlaoluwaM",
         "repo": "snowfall-flake",
-        "rev": "a4c18279adf75e773e920ed83a7f110a1a8ea4f3",
+        "rev": "9ace25e616b2de05db06e60db513b2095d3a8c05",
         "type": "github"
       },
       "original": {
