@@ -7,7 +7,7 @@
 
 # Derivation for https://github.com/jacob-bd/gemini-notebook-mcp-cli
 let
-  version = "0.15.2";
+  version = "0.15.7";
 in
 
 python3Packages.buildPythonApplication {
@@ -19,7 +19,7 @@ python3Packages.buildPythonApplication {
     owner = "jacob-bd";
     repo = "gemini-notebook-mcp-cli";
     rev = "v${version}";
-    hash = "sha256-FrtNs9ckQJZ0hEHbKVecoXQkT9veXrHchnwVCxWE5vA=";
+    hash = "sha256-Fl9RHeDG+S69eyZuXiljl0mxusksLq2rWTw4Slu6CnM=";
   };
 
   build-system = with python3Packages; [
@@ -36,6 +36,9 @@ python3Packages.buildPythonApplication {
     fastmcp
     pyyaml
     typing-extensions
+    filelock
+    questionary
+    tomlkit
   ];
 
   pythonImportsCheck = [
