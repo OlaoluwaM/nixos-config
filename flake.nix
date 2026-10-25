@@ -20,6 +20,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    sysc-greet = {
+      url = "github:Nomadcxx/sysc-greet";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Other stuff
     claude-code.url = "github:sadjow/claude-code-nix";
     codex-cli.url = "github:sadjow/codex-cli-nix";
@@ -64,6 +69,7 @@
       home-manager,
       nix-flatpak,
       catppuccin,
+      sysc-greet,
       ...
     }@inputs:
 
@@ -142,7 +148,8 @@
           modules = [
             nixos-hardware.nixosModules.asus-zephyrus-gu603h
             ./hosts/boreas
-
+            sysc-greet.nixosModules.default
+            
             # Integrate Home Manager into the NixOS configuration so a normal
             # nixos-rebuild also activates the user's Home Manager configuration.
             home-manager.nixosModules.home-manager
