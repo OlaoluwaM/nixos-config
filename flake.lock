@@ -518,11 +518,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1792933042,
-        "narHash": "sha256-8U/WQyq82E0DeBjB1yHeENaTnog22K+I4A++RGQ5Hqs=",
+        "lastModified": 1792991883,
+        "narHash": "sha256-lx5PcyB1r7WpTa7hDQBN1/BcB7Cvaus9AOvkwKRN9yo=",
         "owner": "Nomadcxx",
         "repo": "sysc-greet",
-        "rev": "9cd11a800f59466ea71ff9f2e0b1ebca8dfa23ba",
+        "rev": "6cd45de5a1774e99f4ba942a16afbc6a123bb5e0",
         "type": "github"
       },
       "original": {
