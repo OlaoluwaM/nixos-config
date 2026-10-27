@@ -379,8 +379,8 @@ ready_file="$ready_dir/ready"
 # would never see the exit. QT_LOGGING_RULES passes through from the caller's
 # environment: hypridle's, or Hyprland's for the shell's Lock entries.
 # --no-detailed-logs keeps Quickshell's PAM helper from relaying PAM's prompt
-# text into the journal, and stops Quickshell writing a detailed log file to
-# the runtime directory for every lock.
+# text into the journal, and keeps the per-instance log Quickshell still writes
+# to the runtime directory sparse.
 setsid systemd-cat -t silere-lock env \
 	SILERE_LOCK_WRAPPER=1 \
 	SILERE_LOCK_READY_FILE="$ready_file" \

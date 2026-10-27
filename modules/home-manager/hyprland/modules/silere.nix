@@ -822,8 +822,16 @@ in
       #
       # Through the profile (home.packages below), not a store path: the
       # wrapper starts this package's lock.qml, so a store path here would
-      # make the package depend on itself.
-      default = "${config.home.profileDirectory}/bin/silere-lock";
+      # make the package depend on itself. A profile path can be missing for
+      # a while, though: after a rollback to a generation without the wrapper,
+      # the shell still running from this one points at it until its service
+      # restarts. Then it falls back to asking whatever lock that generation
+      # has, rather than not locking at all.
+      default =
+        let
+          wrapper = "${config.home.profileDirectory}/bin/silere-lock";
+        in
+        "[ -x ${wrapper} ] && exec ${wrapper}; exec ${pkgs.systemd}/bin/loginctl lock-session";
       description = "Command the shell's Lock entries run; empty keeps the shell's built-in choice.";
     };
   };
