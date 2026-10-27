@@ -7,12 +7,12 @@
 
 # Beginner orientation:
 #
-# This module packages the shared helper scripts other Hyprland modules
-# launch (screenshot, screenrecord, manual caffeine/idle-inhibit toggle, the
-# silere-lock wrapper every session lock goes through) and
-# declares the local.hyprland.commands option tree those modules read them
-# back from. See the long comment on that option block below for why it
-# exists as an option tree instead of a plain `let` value.
+# This module packages the shared helper scripts other Hyprland modules launch
+# (screenshot, screenrecord, manual caffeine/idle-inhibit toggle, the
+# silere-lock wrapper every session lock goes through) and declares the
+# local.hyprland.commands option tree those modules read them back from. See
+# the long comment on that option block below for why it exists as an option
+# tree instead of a plain `let` value.
 let
   cfg = config.local.hyprland;
 
@@ -99,21 +99,6 @@ let
     };
     text = builtins.readFile ../scripts/silere-lock.sh;
   };
-
-  # The shell menu's Lock entries (silere.nix's lockCommand). They run the
-  # wrapper directly rather than asking hypridle through `loginctl
-  # lock-session`: logind answers that request by emitting a signal, so its
-  # success says nothing about whether a running, subscribed hypridle picked
-  # it up, and a menu Lock that silently does nothing leaves the desktop open.
-  # The wrapper's guard keeps this from ever making a second lock. A bare path
-  # with no arguments, which the shell's `sh -c` runs as it is.
-  lockRequestScript = pkgs.writeShellApplication {
-    name = "silere-lock-request";
-    runtimeInputs = [ lockScript ];
-    text = ''
-      exec silere-lock
-    '';
-  };
 in
 {
   options.local.hyprland = {
@@ -144,12 +129,6 @@ in
         type = lib.types.package;
         internal = true;
         description = "silere-lock, the wrapper every session lock goes through (hypridle's lock_cmd and the shell menu's Lock).";
-      };
-
-      lockRequestScript = lib.mkOption {
-        type = lib.types.package;
-        internal = true;
-        description = "Lock request the shell menu runs: the silere-lock wrapper, directly.";
       };
 
       screenshotScript = lib.mkOption {
@@ -225,7 +204,6 @@ in
     local.hyprland.commands = {
       inherit
         caffeineScript
-        lockRequestScript
         lockScript
         screenshotScript
         screenrecordScript

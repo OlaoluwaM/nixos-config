@@ -810,16 +810,20 @@ in
 
     lockCommand = lib.mkOption {
       type = lib.types.str;
-      # The command the menu's Lock entries run: the silere-lock wrapper itself,
-      # which idle, Super+L and suspend reach through hypridle (see
-      # lockRequestScript in commands.nix for why the menu skips hypridle).
-      # The fork ships this key empty, which keeps its own choice: hyprlock,
-      # else loginctl lock-session.
+      # The command the menu's Lock entries run: the silere-lock wrapper
+      # (commands.nix) itself, which idle, Super+L and suspend reach through
+      # hypridle. The menu skips hypridle because `loginctl lock-session` only
+      # makes logind emit a signal, so its success says nothing about whether
+      # a running, subscribed hypridle picked it up, and a menu Lock that
+      # silently does nothing leaves the desktop open; the wrapper's guard
+      # keeps the two routes from ever making a second lock. The fork ships
+      # this key empty, which keeps its own choice: hyprlock, else loginctl
+      # lock-session.
       #
       # Through the profile (home.packages below), not a store path: the
       # wrapper starts this package's lock.qml, so a store path here would
       # make the package depend on itself.
-      default = "${config.home.profileDirectory}/bin/silere-lock-request";
+      default = "${config.home.profileDirectory}/bin/silere-lock";
       description = "Command the shell's Lock entries run; empty keeps the shell's built-in choice.";
     };
   };
@@ -834,7 +838,7 @@ in
       quickshellPackage
 
       # lockCommand's target, by profile path (see that option).
-      cfg.commands.lockRequestScript
+      cfg.commands.lockScript
 
       # Qt runtime support the QML shell needs to render under Wayland.
       pkgs.qt6.qtwayland

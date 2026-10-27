@@ -36,15 +36,15 @@ in
         general = {
           # lock_cmd is what hypridle runs when something asks the session to
           # lock, including loginctl lock-session from idle, Super+L and
-          # suspend (the shell menu runs the wrapper itself; see
-          # lockRequestScript in commands.nix). Every request runs the
-          # silere-lock wrapper (commands.nix), and the wrapper decides: it
-          # moves the lock into a scope of its own so a hypridle restart
-          # cannot kill it, skips the request when a lock is already up, and
-          # otherwise starts the lock local.hyprland.lockScreen picks: the
-          # hyprlock the profile themes (config.programs.hyprlock.package), or
-          # silere-shell's own lock with that hyprlock as its fallback. It has
-          # to decide, rather than leave duplicates to Hyprland, because
+          # suspend (the shell menu runs the wrapper itself; see lockCommand
+          # in silere.nix). Every request runs the silere-lock wrapper
+          # (commands.nix), and the wrapper decides: it moves the lock into a
+          # scope of its own so a hypridle restart cannot kill it, skips the
+          # request when a lock is already up, and otherwise starts the lock
+          # local.hyprland.lockScreen picks: the hyprlock the profile themes
+          # (config.programs.hyprlock.package), or silere-shell's own lock
+          # with that hyprlock as its fallback. It has to decide, rather than
+          # leave duplicates to Hyprland, because
           # misc:allow_session_lock_restore (compositor.nix) lets a second
           # client take over a lock.
           lock_cmd = lib.getExe cfg.commands.lockScript;
