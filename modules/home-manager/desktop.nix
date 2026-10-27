@@ -57,6 +57,7 @@ in
     {
       local.gnome.enable = cfg.profile == "gnome";
       local.hyprland.enable = cfg.profile == "hyprland";
+      local.hyprland.lockScreen = "follow-shell";
     }
 
     (lib.mkIf (cfg.profile != "none") {
