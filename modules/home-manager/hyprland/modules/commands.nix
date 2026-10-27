@@ -99,27 +99,18 @@ let
     text = builtins.readFile ../scripts/silere-lock.sh;
   };
 
-  # The shell menu's Lock entries (silere.nix's lockCommand). Going through
-  # loginctl lock-session gives the menu the same path and environment as
-  # every other lock, but nothing answers it while hypridle is down (it
-  # restarts 10s after a failure), so the menu then starts the wrapper itself
-  # rather than doing nothing. The same goes for a user manager or logind
-  # that fails or stalls: each answer gets 2s, and anything short of a
-  # delivered request falls back to the wrapper. Should both lock, the
-  # wrapper's guard lets only one through. A bare path, no arguments: it runs
-  # the same whether the shell splits the command or hands it to sh -c.
+  # The shell menu's Lock entries (silere.nix's lockCommand). They run the
+  # wrapper directly rather than asking hypridle through `loginctl
+  # lock-session`: logind answers that request by emitting a signal, so its
+  # success says nothing about whether a running, subscribed hypridle picked
+  # it up, and a menu Lock that silently does nothing leaves the desktop open.
+  # The wrapper's guard keeps this from ever making a second lock. A bare path,
+  # no arguments: it runs the same whether the shell splits the command or
+  # hands it to sh -c.
   lockRequestScript = pkgs.writeShellApplication {
     name = "silere-lock-request";
-    runtimeInputs = [
-      lockScript
-      pkgs.coreutils
-      pkgs.systemd
-    ];
+    runtimeInputs = [ lockScript ];
     text = ''
-      if timeout 2 systemctl --user is-active -q hypridle.service &&
-        timeout 2 loginctl lock-session; then
-        exit 0
-      fi
       exec silere-lock
     '';
   };

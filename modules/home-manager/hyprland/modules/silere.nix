@@ -810,11 +810,11 @@ in
 
     lockCommand = lib.mkOption {
       type = lib.types.str;
-      # The command the menu's Lock entries run. It asks hypridle to lock, like
-      # idle, Super+L and suspend do, so every lock goes through the
-      # silere-lock wrapper (see lockRequestScript in commands.nix for the
-      # case where hypridle is down). The fork ships this key empty, which
-      # keeps its own choice: hyprlock, else loginctl lock-session.
+      # The command the menu's Lock entries run: the silere-lock wrapper itself,
+      # which idle, Super+L and suspend reach through hypridle (see
+      # lockRequestScript in commands.nix for why the menu skips hypridle).
+      # The fork ships this key empty, which keeps its own choice: hyprlock,
+      # else loginctl lock-session.
       #
       # Through the profile (home.packages below), not a store path: the
       # wrapper starts this package's lock.qml, so a store path here would
