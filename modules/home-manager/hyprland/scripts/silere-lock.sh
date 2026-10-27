@@ -51,30 +51,60 @@ locked_state() {
 # take the lock down with it. In scope mode systemd-run returns the command's
 # own status, so the inner run touches a marker first: no marker means
 # systemd-run itself failed (an unreachable user bus, say), and the session
-# still has to lock, unscoped.
-if [ -z "${SILERE_LOCK_SCOPE_MARKER:-}" ]; then
+# still has to lock, unscoped. A user manager that stalls (a daemon-reload
+# mid-switch) must not stall the lock either, since a suspend waits for it
+# only up to logind's InhibitDelayMaxSec, so the scope gets 2s to start.
+#
+# Giving up must not leave two wrappers: a scope that starts late would lock
+# alongside the unscoped run. Each side writes its flag before reading the
+# other's (the inner run "started", the outer one "abandoned"), so at least
+# one of them sees the other. An inner run that sees "abandoned" exits 75 at
+# once; an outer run that sees "started" waits for the inner one, and locks
+# unscoped itself only if that inner run exited 75.
+if [ -z "${SILERE_LOCK_SCOPE_DIR:-}" ]; then
 	scope_dir=""
 	rc=0
 	scope_dir="$(mktemp -d "$runtime_dir/silere-lock-scope.XXXXXX")" || rc=$?
 	if [ "$rc" -eq 0 ]; then
-		marker="$scope_dir/started"
-		rc=0
-		SILERE_LOCK_SCOPE_MARKER="$marker" systemd-run --user --scope --collect --quiet -- "$0" "$@" || rc=$?
-		started=0
-		if [ -e "$marker" ]; then
-			started=1
+		SILERE_LOCK_SCOPE_DIR="$scope_dir" systemd-run --user --scope --collect --quiet -- "$0" "$@" &
+		run_pid=$!
+		i=0
+		while [ ! -e "$scope_dir/started" ] && kill -0 "$run_pid" 2>/dev/null && [ "$i" -lt 20 ]; do
+			sleep 0.1
+			i=$((i + 1))
+		done
+		if [ ! -e "$scope_dir/started" ] && kill -0 "$run_pid" 2>/dev/null; then
+			: >"$scope_dir/abandoned" || true
 		fi
-		rm -rf -- "$scope_dir" || true
-		if [ "$rc" -eq 0 ] || [ "$started" -eq 1 ]; then
-			exit "$rc"
+		if [ -e "$scope_dir/started" ]; then
+			# systemd-run exec'd into the inner run, so this waits out the whole lock
+			rc=0
+			wait "$run_pid" || rc=$?
+			if [ "$rc" -ne 75 ]; then
+				rm -rf -- "$scope_dir" || true
+				exit "$rc"
+			fi
+			log warning "the scope started after this run gave up on it; locking without a scope"
+		elif [ -e "$scope_dir/abandoned" ]; then
+			# the directory stays: a scope that starts late must still find "abandoned"
+			log warning "systemd-run did not start a scope within 2s; locking without a scope"
+		else
+			rc=0
+			wait "$run_pid" || rc=$?
+			rm -rf -- "$scope_dir" || true
+			log warning "systemd-run failed with status $rc; locking without a scope"
 		fi
-		log warning "systemd-run failed with status $rc; locking without a scope"
 	else
 		log warning "could not create a scope marker in $runtime_dir; locking without a scope"
 	fi
 else
-	: >"$SILERE_LOCK_SCOPE_MARKER" || true
-	unset SILERE_LOCK_SCOPE_MARKER
+	: >"$SILERE_LOCK_SCOPE_DIR/started" || true
+	if [ -e "$SILERE_LOCK_SCOPE_DIR/abandoned" ]; then
+		rm -rf -- "$SILERE_LOCK_SCOPE_DIR" || true
+		log info "this scope started after its run gave up on it and locked without one; leaving the lock to that run"
+		exit 75
+	fi
+	unset SILERE_LOCK_SCOPE_DIR
 fi
 
 # 2. One lock at a time. The flock sits on a dedicated descriptor, held for
@@ -105,9 +135,10 @@ if [ "$guarded" -eq 1 ]; then
 		# The holder may be a lock that is ending: the user has just unlocked and
 		# its wrapper is still letting go. A request then must lock again once it
 		# has, not be dropped. Supervision stops a client still running 2s after
-		# an unlock, so 5s covers the teardown. While the holder's own client is
-		# still starting the session reads unlocked too; this request then waits
-		# out the 5s and leaves the lock to it.
+		# an unlock and every wait in a teardown is bounded, so the holder always
+		# lets go; this request keeps waiting until it does, or until the session
+		# reads locked, which means a lock (the holder's own client, still starting
+		# when this request came in) has the session after all.
 		locked=""
 		locked="$(locked_state)" || locked=""
 		if [ "$locked" != false ]; then
@@ -115,12 +146,22 @@ if [ "$guarded" -eq 1 ]; then
 			exit 0
 		fi
 		log info "the session reads unlocked while a lock holds the guard; waiting for it to end"
-		rc=0
-		flock -w 5 "$lockfd" || rc=$?
-		if [ "$rc" -ne 0 ]; then
-			log warning "a lock still held the guard after 5s; leaving the session to it"
-			exit 0
-		fi
+		while :; do
+			rc=0
+			flock -w 1 "$lockfd" || rc=$?
+			if [ "$rc" -eq 0 ]; then
+				break
+			elif [ "$rc" -ne 1 ]; then
+				log warning "flock failed with status $rc; locking anyway"
+				break
+			fi
+			locked=""
+			locked="$(locked_state)" || locked=""
+			if [ "$locked" = true ]; then
+				log info "the session locked while this request waited; nothing to do"
+				exit 0
+			fi
+		done
 	elif [ "$rc" -ne 0 ]; then
 		log warning "flock failed with status $rc; locking anyway"
 	fi
@@ -227,6 +268,28 @@ reads_unlocked() {
 	return 1
 }
 
+# systemd-cat can also stall after the probe, before it exec's its command,
+# and a launcher that never becomes hyprlock would be supervised as if it
+# were one, behind a lock that may already be dead. So it gets 1s to stop
+# being systemd-cat (one that has already exited is left to supervise to
+# report). The test is on names hyprlock is not: systemd-cat's, and this
+# wrapper's, which the child carries until it execs at all. hyprlock's own
+# name is not tested, since a wrapped build changes it.
+read -r self_comm <"/proc/$$/comm" || self_comm=""
+became_hyprlock() {
+	local i=0 comm
+	while [ "$i" -lt 10 ]; do
+		comm=""
+		{ read -r comm <"/proc/$1/comm"; } 2>/dev/null || return 0
+		if [ "$comm" != systemd-cat ] && [ "$comm" != "$self_comm" ]; then
+			return 0
+		fi
+		sleep 0.1 {lockfd}>&- || true
+		i=$((i + 1))
+	done
+	return 1
+}
+
 # Lock with hyprlock and stay with it until the session is unlocked. A
 # hyprlock that dies while locked leaves Hyprland's lockdead screen, which
 # only a new client can clear (misc:allow_session_lock_restore lets it take
@@ -236,16 +299,25 @@ reads_unlocked() {
 # hyprlock runs bare without it; a start that fails anyway exits non-zero and
 # is retried like a crash.
 lock_with_hyprlock() {
-	local attempt=1 rc i
+	local attempt=1 rc i client
 	while :; do
 		rc=0
 		timeout 1 systemd-cat -t silere-lock true {lockfd}>&- || rc=$?
 		if [ "$rc" -eq 0 ]; then
 			systemd-cat -t silere-lock hyprlock {lockfd}>&- &
+			client=$!
+			if ! became_hyprlock "$client"; then
+				log warning "systemd-cat did not start hyprlock within 1s; starting it without the journal"
+				kill -KILL "$client" 2>/dev/null || true
+				wait "$client" 2>/dev/null || true
+				hyprlock {lockfd}>&- &
+				client=$!
+			fi
 		else
 			hyprlock {lockfd}>&- &
+			client=$!
 		fi
-		supervise "$!" 0 0
+		supervise "$client" 0 0
 		if [ "$lingered" -eq 1 ]; then
 			log warning "hyprlock was still running after the unlock; stopped it"
 			return 0
