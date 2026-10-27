@@ -282,14 +282,16 @@ ready_file="$ready_dir/ready"
 # crash handler has to be off from the environment: it starts before
 # lock.qml's pragmas apply, and its relaunch keeps the PID, so this wrapper
 # would never see the exit. QT_LOGGING_RULES passes through from hypridle's
-# environment.
+# environment. --no-detailed-logs keeps Quickshell's PAM helper from relaying
+# PAM's prompt text into the journal, and drops a detailed log file in the
+# runtime directory for every lock.
 setsid systemd-cat -t silere-lock env \
 	SILERE_LOCK_WRAPPER=1 \
 	SILERE_LOCK_READY_FILE="$ready_file" \
 	NO_COLOR=1 \
 	QS_DISABLE_CRASH_HANDLER=1 \
 	PATH="$SILERE_SHELL_PATH" \
-	"$SILERE_LOCK_QS" -p "$SILERE_LOCK_QML" {lockfd}>&- &
+	"$SILERE_LOCK_QS" --no-detailed-logs -p "$SILERE_LOCK_QML" {lockfd}>&- &
 pid=$!
 
 # 4. Confirm it: up to 3s for the ready file. `hyprctl locked` is no
