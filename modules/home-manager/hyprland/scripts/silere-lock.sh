@@ -23,18 +23,19 @@ runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$UID}"
 # other child. stderr is the last resort, and it is often a journal stream
 # too, so it can be gone exactly when the journal is: a failed or broken write
 # there must never abort the lock. SIGPIPE is ignored only in that subshell,
-# so no lock client inherits it.
+# so no lock client inherits it. A journal that hangs instead of failing must
+# not hold up the lock either, so each write gets a second.
 log() {
 	local priority="$1"
 	shift
 	if [ -n "${lockfd:-}" ]; then
-		systemd-cat -t silere-lock -p "$priority" printf '%s\n' "$*" {lockfd}>&- && return 0
+		timeout 1 systemd-cat -t silere-lock -p "$priority" printf '%s\n' "$*" {lockfd}>&- && return 0
 	else
-		systemd-cat -t silere-lock -p "$priority" printf '%s\n' "$*" && return 0
+		timeout 1 systemd-cat -t silere-lock -p "$priority" printf '%s\n' "$*" && return 0
 	fi
 	(
 		trap '' PIPE
-		printf 'silere-lock: %s\n' "$*" >&2
+		timeout 1 printf 'silere-lock: %s\n' "$*" >&2
 	) || true
 }
 
@@ -101,8 +102,25 @@ if [ "$guarded" -eq 1 ]; then
 	rc=0
 	flock -n "$lockfd" || rc=$?
 	if [ "$rc" -eq 1 ]; then
-		log info "a lock is already running; nothing to do"
-		exit 0
+		# The holder may be a lock that is ending: the user has just unlocked and
+		# its wrapper is still letting go. A request then must lock again once it
+		# has, not be dropped. Supervision stops a client still running 2s after
+		# an unlock, so 5s covers the teardown. While the holder's own client is
+		# still starting the session reads unlocked too; this request then waits
+		# out the 5s and leaves the lock to it.
+		locked=""
+		locked="$(locked_state)" || locked=""
+		if [ "$locked" != false ]; then
+			log info "a lock is already running; nothing to do"
+			exit 0
+		fi
+		log info "the session reads unlocked while a lock holds the guard; waiting for it to end"
+		rc=0
+		flock -w 5 "$lockfd" || rc=$?
+		if [ "$rc" -ne 0 ]; then
+			log warning "a lock still held the guard after 5s; leaving the session to it"
+			exit 0
+		fi
 	elif [ "$rc" -ne 0 ]; then
 		log warning "flock failed with status $rc; locking anyway"
 	fi
@@ -153,7 +171,9 @@ stop_client() {
 # that has been seen locked can linger: before its lock request the session
 # reads unlocked too, so one that never gets that far within 10s is stopped
 # as failed instead, and until then the session is checked five times a
-# second, so a quick unlock is not missed. Sets status.
+# second, so a quick unlock is not missed. Both calls need Hyprland to answer
+# "false": an unanswered query proves nothing, and stopping a client that may
+# hold the lock would leave the lockdead screen. Sets status.
 supervise() {
 	local target="$1" group="$2" seen="$3" i=0 unlocked=0 state
 	lingered=0
@@ -174,7 +194,7 @@ supervise() {
 				stop_client "$target" "$group"
 				return 0
 			fi
-			if [ "$seen" -eq 0 ] && [ "$i" -ge 100 ]; then
+			if [ "$seen" -eq 0 ] && [ "$i" -ge 100 ] && [ "$state" = false ]; then
 				stop_client "$target" "$group"
 				status=124
 				return 0
@@ -191,8 +211,8 @@ supervise() {
 }
 
 # An unlock clears `hyprctl locked` at once, so give it up to 1s. A lock
-# request in that second finds the flock still held and is dropped; the user
-# is unlocking at that moment.
+# request in that second finds the flock still held and the session unlocked,
+# so it waits for this wrapper to let go and then locks (step 2).
 reads_unlocked() {
 	local i=0 state
 	while [ "$i" -le 10 ]; do
@@ -219,7 +239,7 @@ lock_with_hyprlock() {
 	local attempt=1 rc i
 	while :; do
 		rc=0
-		systemd-cat -t silere-lock true {lockfd}>&- || rc=$?
+		timeout 1 systemd-cat -t silere-lock true {lockfd}>&- || rc=$?
 		if [ "$rc" -eq 0 ]; then
 			systemd-cat -t silere-lock hyprlock {lockfd}>&- &
 		else
