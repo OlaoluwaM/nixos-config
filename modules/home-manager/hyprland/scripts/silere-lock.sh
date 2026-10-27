@@ -33,6 +33,30 @@ log() {
 	fi
 }
 
+# The end of every path that locks with hyprlock. systemd-cat exits without
+# running its command when it cannot open a journal stream, which would leave
+# the session unlocked, so the journal is tried first and hyprlock runs bare
+# without it.
+run_hyprlock() {
+	local rc=0
+	if [ -n "${lockfd:-}" ]; then
+		systemd-cat -t silere-lock true {lockfd}>&- || rc=$?
+	else
+		systemd-cat -t silere-lock true || rc=$?
+	fi
+	if [ "$rc" -eq 0 ]; then
+		exec systemd-cat -t silere-lock hyprlock
+	fi
+	exec hyprlock
+}
+
+# A hung compositor must not hang the lock. timeout runs on the clock, unlike
+# the waits below, but only fails safe: a missed answer reads as unlocked
+# before a lock starts, and as still locked after one ends.
+locked_state() {
+	timeout 2 hyprctl locked 2>/dev/null {lockfd}>&-
+}
+
 # 1. A scope of its own. hypridle runs lock_cmd inside hypridle.service, which
 # restarts on failure and whenever its settings change, and a restart would
 # take the lock down with it. In scope mode systemd-run returns the command's
@@ -73,7 +97,7 @@ exec {lockfd}>"$runtime_dir/silere-lock.lock" || rc=$?
 if [ "$rc" -ne 0 ]; then
 	unset lockfd
 	log warning "falling back to hyprlock: could not open $runtime_dir/silere-lock.lock"
-	exec systemd-cat -t silere-lock hyprlock
+	run_hyprlock
 fi
 
 # flock locks the inherited descriptor itself, so it is the one child that
@@ -93,7 +117,7 @@ rc=0
 pgrep -x -u "$UID" hyprlock >/dev/null {lockfd}>&- || rc=$?
 if [ "$rc" -eq 0 ]; then
 	locked=""
-	locked="$(hyprctl locked 2>/dev/null {lockfd}>&-)" || locked=""
+	locked="$(locked_state)" || locked=""
 	if [ "$locked" = true ]; then
 		log info "hyprlock is already running and the session is locked; nothing to do"
 		exit 0
@@ -101,10 +125,10 @@ if [ "$rc" -eq 0 ]; then
 fi
 
 # exec keeps the PID and the lock descriptor, and systemd-cat files
-# hyprlock's own output under the same tag.
+# hyprlock's own output under the same tag (run_hyprlock).
 if [ "${SILERE_LOCK_SCREEN:-hyprlock}" != follow-shell ]; then
 	log info "locking with hyprlock"
-	exec systemd-cat -t silere-lock hyprlock
+	run_hyprlock
 fi
 
 # Hand the session to hyprlock, which misc:allow_session_lock_restore lets
@@ -118,7 +142,7 @@ fall_back() {
 	if [ -n "$ready_dir" ]; then
 		rm -rf -- "$ready_dir" {lockfd}>&- || true
 	fi
-	exec systemd-cat -t silere-lock hyprlock
+	run_hyprlock
 }
 
 # 3. Start the shell's lock. The ready file lives in a fresh directory so a
@@ -210,7 +234,7 @@ log info "the shell's lock exited with status 0"
 i=0
 while :; do
 	locked=""
-	locked="$(hyprctl locked 2>/dev/null {lockfd}>&-)" || locked=""
+	locked="$(locked_state)" || locked=""
 	if [ "$locked" = false ]; then
 		break
 	fi
