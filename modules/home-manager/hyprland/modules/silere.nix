@@ -116,7 +116,9 @@ let
 
   # Plain copy of the same file set upstream's packaging/aur/PKGBUILD
   # installs (shell.qml, config, modules, services, assets, matugen, scripts
-  # -- see that PKGBUILD's package() step). No build step, no patching beyond the
+  # -- see that PKGBUILD's package() step), plus the fork's lock.qml, the
+  # lock screen's own entry point beside shell.qml that the silere-lock
+  # wrapper starts (commands.nix). No build step, no patching beyond the
   # GeneratedDefaults.qml substitution below: this is a derivation instead
   # of a direct `inputs.silere-shell` source reference only because that
   # substitution needs an install phase to hook into.
@@ -133,7 +135,7 @@ let
 
       dest="$out/share/silere-shell"
       install -dm755 "$dest"
-      cp -a shell.qml config modules services assets matugen scripts "$dest/"
+      cp -a shell.qml lock.qml config modules services assets matugen scripts "$dest/"
 
       # Overwrite the fork's checked-in GeneratedDefaults.qml with the
       # Nix-rendered one. cp -a above carried the original over read-only
@@ -813,7 +815,11 @@ in
       # silere-lock wrapper (see lockRequestScript in commands.nix for the
       # case where hypridle is down). The fork ships this key empty, which
       # keeps its own choice: hyprlock, else loginctl lock-session.
-      default = lib.getExe cfg.commands.lockRequestScript;
+      #
+      # Through the profile (home.packages below), not a store path: the
+      # wrapper starts this package's lock.qml, so a store path here would
+      # make the package depend on itself.
+      default = "${config.home.profileDirectory}/bin/silere-lock-request";
       description = "Command the shell's Lock entries run; empty keeps the shell's built-in choice.";
     };
   };
@@ -826,6 +832,9 @@ in
 
     home.packages = [
       quickshellPackage
+
+      # lockCommand's target, by profile path (see that option).
+      cfg.commands.lockRequestScript
 
       # Qt runtime support the QML shell needs to render under Wayland.
       pkgs.qt6.qtwayland

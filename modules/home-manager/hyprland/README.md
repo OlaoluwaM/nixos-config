@@ -140,6 +140,38 @@ hypridle watches for keyboard and mouse use.
 Video or audio playback can block these timers. Caffeine can also block them
 until the user turns it off.
 
+Every lock goes through the `silere-lock` script: the timers, `Super+L`,
+sleep, and the shell menu's Lock entries. `local.hyprland.lockScreen` picks
+the lock screen it starts:
+
+- `"hyprlock"` (the default) starts hyprlock.
+- `"follow-shell"` starts the lock screen of `silere-shell`. If that lock does
+  not come up within 3 seconds, or stops before you unlock, hyprlock takes
+  over. The session stays locked.
+
+To go back to hyprlock, set `local.hyprland.lockScreen = "hyprlock";` and
+rebuild.
+
+### Debugging the lock
+
+Each lock writes to the journal under one tag:
+
+```sh
+# Every lock, step by step
+journalctl --user -t silere-lock
+
+# Only the problems, such as each change to hyprlock
+journalctl --user -t silere-lock -p warning
+
+# The requests that started a lock
+journalctl --user -u hypridle.service
+```
+
+The shell's lock writes all its lines at one priority. Use `-g WARN` to see
+only its warnings. To see its debug lines, run
+`systemctl --user set-environment QT_LOGGING_RULES="silere.lock.debug=true"`,
+then restart hypridle.
+
 ## Wallpapers
 
 The wallpaper picker reads `$WALLPAPERS_DIR`. If that value is not set, it

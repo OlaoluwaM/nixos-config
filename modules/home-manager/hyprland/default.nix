@@ -106,6 +106,24 @@ in
         persist the value without retaining an obsolete store generation.
       '';
     };
+
+    # Every lock goes through the silere-lock wrapper either way (see
+    # hypridle.nix); this only picks what it starts. hyprlock stays the
+    # default until silere-shell's own lock is proven on this machine, so
+    # going back is this one line.
+    lockScreen = lib.mkOption {
+      type = lib.types.enum [
+        "hyprlock"
+        "follow-shell"
+      ];
+      default = "hyprlock";
+      description = ''
+        Which lock screen the session uses. "hyprlock" runs hyprlock.
+        "follow-shell" runs silere-shell's own lock and falls back to
+        hyprlock whenever that lock fails to come up or ends without an
+        unlock.
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {

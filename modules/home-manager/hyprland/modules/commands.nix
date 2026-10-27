@@ -85,9 +85,17 @@ let
       pkgs.procps
       # systemd-run for the lock's own scope, systemd-cat for its journal tag.
       pkgs.systemd
-      # flock.
+      # flock, and setsid for the shell lock's own process group.
       pkgs.util-linux
     ];
+    runtimeEnv = {
+      SILERE_LOCK_SCREEN = cfg.lockScreen;
+      # By absolute path: the lock runs with the shell's own PATH, which has
+      # no qs on it.
+      SILERE_LOCK_QS = lib.getExe' cfg.commands.quickshellPackage "qs";
+      SILERE_LOCK_QML = "${cfg.commands.silereShellPackage}/share/silere-shell/lock.qml";
+      SILERE_SHELL_PATH = cfg.commands.silereShellPath;
+    };
     text = builtins.readFile ../scripts/silere-lock.sh;
   };
 
@@ -95,7 +103,7 @@ let
   # loginctl lock-session gives the menu the same path and environment as
   # every other lock, but nothing answers it while hypridle is down (it
   # restarts 10s after a failure), so the menu then starts the wrapper itself
-  # rather than doing nothing. A bare store path, no arguments: it runs the
+  # rather than doing nothing. A bare path, no arguments: it runs the
   # same whether the shell splits the command or hands it to sh -c.
   lockRequestScript = pkgs.writeShellApplication {
     name = "silere-lock-request";
