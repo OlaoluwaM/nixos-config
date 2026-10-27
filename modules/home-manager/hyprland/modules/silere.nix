@@ -808,16 +808,19 @@ in
 
     lockCommand = lib.mkOption {
       type = lib.types.str;
-      # The command the menu's Lock entries run. Empty keeps the fork's own
-      # choice: hyprlock, else loginctl lock-session.
-      default = "";
+      # The command the menu's Lock entries run. It asks hypridle to lock, like
+      # idle, Super+L and suspend do, so every lock goes through the
+      # silere-lock wrapper (see lockRequestScript in commands.nix for the
+      # case where hypridle is down). The fork ships this key empty, which
+      # keeps its own choice: hyprlock, else loginctl lock-session.
+      default = lib.getExe cfg.commands.lockRequestScript;
       description = "Command the shell's Lock entries run; empty keeps the shell's built-in choice.";
     };
   };
 
   config = lib.mkIf cfg.enable {
     local.hyprland.commands = {
-      inherit quickshellPackage;
+      inherit quickshellPackage silereShellPath;
       silereShellPackage = silereShellSrc;
     };
 

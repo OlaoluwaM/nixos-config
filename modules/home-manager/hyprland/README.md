@@ -108,6 +108,8 @@ makes the programs that each script needs available.
   Vicinae and reports failed requests.
 - `wallpaper-set` applies one image to the desktop, shell colors, lock
   screen, and the shell's glass sample.
+- `silere-lock` starts the lock screen. hypridle runs it for every lock
+  request. It makes sure that only one lock runs at a time.
 
 ## Power Commands
 

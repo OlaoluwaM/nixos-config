@@ -285,6 +285,11 @@ in
             disable_hyprland_logo = true;
             disable_splash_rendering = true;
             focus_on_activate = true;
+            # Hyprland keeps the session locked when a lock client dies, but
+            # without this it refuses every new client, and the dead lock is
+            # unrecoverable. The silere-lock wrapper (hypridle.nix) relies on
+            # it to hand a failed lock to hyprlock.
+            allow_session_lock_restore = true;
           };
         };
 

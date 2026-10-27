@@ -50,6 +50,13 @@ in
       silere-lock = { };
     };
 
+    # hypridle holds suspend back until the session is locked (inhibit_sleep
+    # in hypridle.nix) with a logind delay inhibitor, and logind ignores that
+    # inhibitor after InhibitDelayMaxSec (5s by default). A cold start of the
+    # shell's lock, its 3s confirmation window and a hyprlock fallback can
+    # together take longer, so allow 10s.
+    services.logind.settings.Login.InhibitDelayMaxSec = 10;
+
     # Nautilus uses GVfs for trash, removable devices, and common virtual file
     # systems. GNOME enables this for us; Hyprland does not.
     services.gvfs.enable = true;

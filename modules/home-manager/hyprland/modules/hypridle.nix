@@ -35,17 +35,16 @@ in
       settings = {
         general = {
           # lock_cmd is what hypridle runs when something asks the session to
-          # lock, including loginctl lock-session. Run hyprlock for every
-          # request so a terminating or unrelated process cannot hide a fresh
-          # lock request. Hyprland rejects duplicate session-lock clients while
-          # preserving the valid lock client.
-          #
-          # Use the same hyprlock the profile installs and themes
-          # (config.programs.hyprlock.package, set in hyprlock.nix) instead of
-          # pkgs.hyprlock directly. Both resolve to the same package today,
-          # but pkgs.hyprlock would silently drift from whatever this profile
-          # actually configures if that ever changes.
-          lock_cmd = "${config.programs.hyprlock.package}/bin/hyprlock";
+          # lock, including loginctl lock-session from idle, Super+L, suspend
+          # and the shell menu. Every request runs the silere-lock wrapper
+          # (commands.nix), and the wrapper decides: it moves the lock into a
+          # scope of its own so a hypridle restart cannot kill it, skips the
+          # request when a lock is already up, and otherwise starts the same
+          # hyprlock the profile themes (config.programs.hyprlock.package).
+          # It has to decide, rather than leave duplicates to Hyprland, because
+          # misc:allow_session_lock_restore (compositor.nix) lets a second
+          # client take over a lock.
+          lock_cmd = lib.getExe cfg.commands.lockScript;
 
           # before_sleep_cmd runs before suspend/sleep. Lock the session, then
           # power off the displays before the machine enters suspend. This
@@ -57,21 +56,22 @@ in
           # management signal; this makes sure screens are powered on again.
           after_sleep_cmd = dpms "enable";
 
-          # Wait until the lock screen reports that the session is locked before
-          # allowing suspend to continue.
+          # Wait until the session is locked before allowing suspend to
+          # continue.
           #
-          # 2 ("auto"), not 3 ("wait until locked"), deliberately. Both pick
-          # hypridle's lock-notify path for this exact pair of commands: auto
-          # selects it when lock_cmd mentions hyprlock and before_sleep_cmd
-          # mentions lock-session, which is what we generate below. The
-          # difference is the failure mode. hypridle's `case 3` only assigns a
-          # behaviour when the compositor advertises hyprland-lock-notify-v1
-          # and has no else branch, so on a compositor without that protocol it
-          # falls through to "no sleep inhibitor at all" and the machine can
-          # suspend before hyprlock is up. `case 2` falls back to a normal
-          # logind delay inhibitor instead. Same behaviour today on Hyprland
-          # 0.55.4, safer if the protocol ever goes away.
-          inhibit_sleep = 2;
+          # 3 ("wait until locked"), because 2 ("auto") no longer picks that
+          # path here: auto only waits for lock-notify when lock_cmd mentions
+          # hyprlock, and lock_cmd is the silere-lock wrapper. Hyprland
+          # sends lock-notify for any session-lock client, so the wait holds
+          # for hyprlock and the shell's lock alike, and the session becoming
+          # locked releases the inhibitor. The cost: hypridle's `case 3` has
+          # no else branch, so on a compositor without
+          # hyprland-lock-notify-v1 it takes no sleep inhibitor at all. That
+          # is not this profile; Hyprland 0.55.4 has the protocol.
+          #
+          # The inhibitor is a logind delay inhibitor, capped by logind's
+          # InhibitDelayMaxSec (raised in modules/nixos/hyprland.nix).
+          inhibit_sleep = 3;
 
           # Keep hypridle wired into the inhibitor mechanisms used by browsers,
           # media players, wayland-pipewire-idle-inhibit, and the manual

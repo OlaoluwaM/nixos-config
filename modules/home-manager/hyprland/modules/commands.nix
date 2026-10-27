@@ -8,7 +8,8 @@
 # Beginner orientation:
 #
 # This module packages the shared helper scripts other Hyprland modules
-# launch (screenshot, screenrecord, manual caffeine/idle-inhibit toggle) and
+# launch (screenshot, screenrecord, manual caffeine/idle-inhibit toggle, the
+# silere-lock wrapper every session lock goes through) and
 # declares the local.hyprland.commands option tree those modules read them
 # back from. See the long comment on that option block below for why it
 # exists as an option tree instead of a plain `let` value.
@@ -71,6 +72,44 @@ let
     runtimeEnv.SILERE_SHELL_QML = "${cfg.commands.silereShellPackage}/share/silere-shell/shell.qml";
     text = builtins.readFile ../scripts/hypr-shell-caffeine.sh;
   };
+
+  # hypridle's lock_cmd. Its header comment holds the rules it keeps.
+  lockScript = pkgs.writeShellApplication {
+    name = "silere-lock";
+    runtimeInputs = [
+      pkgs.coreutils
+      # hyprctl: whether the session reads locked.
+      pkgs.hyprland
+      config.programs.hyprlock.package
+      # pgrep: a hyprlock started outside the wrapper.
+      pkgs.procps
+      # systemd-run for the lock's own scope, systemd-cat for its journal tag.
+      pkgs.systemd
+      # flock.
+      pkgs.util-linux
+    ];
+    text = builtins.readFile ../scripts/silere-lock.sh;
+  };
+
+  # The shell menu's Lock entries (silere.nix's lockCommand). Going through
+  # loginctl lock-session gives the menu the same path and environment as
+  # every other lock, but nothing answers it while hypridle is down (it
+  # restarts 10s after a failure), so the menu then starts the wrapper itself
+  # rather than doing nothing. A bare store path, no arguments: it runs the
+  # same whether the shell splits the command or hands it to sh -c.
+  lockRequestScript = pkgs.writeShellApplication {
+    name = "silere-lock-request";
+    runtimeInputs = [
+      lockScript
+      pkgs.systemd
+    ];
+    text = ''
+      if systemctl --user is-active -q hypridle.service; then
+        exec loginctl lock-session
+      fi
+      exec silere-lock
+    '';
+  };
 in
 {
   options.local.hyprland = {
@@ -95,6 +134,18 @@ in
         type = lib.types.package;
         internal = true;
         description = "Manual idle-inhibitor helper used by the Hyprland session.";
+      };
+
+      lockScript = lib.mkOption {
+        type = lib.types.package;
+        internal = true;
+        description = "silere-lock, the wrapper every session lock goes through (hypridle's lock_cmd).";
+      };
+
+      lockRequestScript = lib.mkOption {
+        type = lib.types.package;
+        internal = true;
+        description = "Lock request the shell menu runs: loginctl lock-session, or the wrapper directly while hypridle is down.";
       };
 
       screenshotScript = lib.mkOption {
@@ -124,6 +175,17 @@ in
         type = lib.types.package;
         internal = true;
         description = "Quickshell package shared by the shell service and every IPC consumer.";
+      };
+
+      silereShellPath = lib.mkOption {
+        type = lib.types.str;
+        internal = true;
+        description = ''
+          The curated PATH the silere-shell service runs with (defined in
+          silere.nix), exposed so the lock process the lock wrapper starts
+          resolves the same tools as the bar: its font scan needs fc-list,
+          and its probes should agree with the bar's.
+        '';
       };
 
       wallpaperSetScript = lib.mkOption {
@@ -159,6 +221,8 @@ in
     local.hyprland.commands = {
       inherit
         caffeineScript
+        lockRequestScript
+        lockScript
         screenshotScript
         screenrecordScript
         ;
