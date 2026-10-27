@@ -824,9 +824,9 @@ in
       # wrapper starts this package's lock.qml, so a store path here would
       # make the package depend on itself. A profile path can be missing for
       # a while, though: after a rollback to a generation without the wrapper,
-      # the shell still running from this one points at it until its service
-      # restarts. Then it falls back to asking whatever lock that generation
-      # has, rather than not locking at all.
+      # the newer generation's shell keeps running, and pointing at it, until
+      # its service restarts. Then it asks the rolled-back generation's lock
+      # through loginctl, rather than not locking at all.
       default =
         let
           wrapper = "${config.home.profileDirectory}/bin/silere-lock";

@@ -109,8 +109,9 @@ makes the programs that each script needs available.
 - `wallpaper-set` applies one image to the desktop, shell colors, lock
   screen, and the shell's glass sample.
 - `silere-lock` starts the lock screen. hypridle runs it for idle, `Super+L`
-  and sleep, and the shell menu's Lock entries run it directly. It makes sure
-  that only one lock runs at a time.
+  and sleep, and the shell menu's Lock entries run it directly (or ask
+  `loginctl lock-session` while the profile has no `silere-lock`, as after a
+  rollback). It makes sure that only one lock runs at a time.
 
 ## Power Commands
 
