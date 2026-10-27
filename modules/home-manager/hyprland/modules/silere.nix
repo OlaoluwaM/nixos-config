@@ -107,6 +107,10 @@ let
         readonly property string keybindsFile:        ${qml sc.keybindsFile}
         readonly property string wallpaperCommand:     ${qml sc.wallpaperCommand}
         readonly property string wallpapersDir:        ${qml sc.wallpapersDir}
+        readonly property string lockFontFamily:       ${qml sc.lockFontFamily}
+        readonly property bool   lockPowerButton:      ${qml sc.lockPowerButton}
+        readonly property string lockWallpaper:        ${qml sc.lockWallpaper}
+        readonly property string lockCommand:          ${qml sc.lockCommand}
     }
   '';
 
@@ -767,6 +771,47 @@ in
       type = lib.types.ints.between 500 10000;
       default = 2000;
       description = "How long the OSD stays visible, in milliseconds.";
+    };
+
+    # -- Lock screen -----------------------------------------------------------
+    # The shell's own lock (lock.qml, its own short-lived process per lock)
+    # reads these. hyprlock stays configured in hyprlock.nix as its fallback.
+    lockFontFamily = lib.mkOption {
+      # Same schema constraint as fontFamily above, checked the same way.
+      type = lib.types.addCheck lib.types.str (
+        v: builtins.stringLength v <= 128 && builtins.match ".*[\n\t\r].*" v == null
+      );
+      # Plain "JetBrains Mono", never "JetBrainsMono Nerd Font": fontconfig.nix
+      # aliases the Nerd name to Berkeley Mono for the bar, so only the plain
+      # family reaches the real face (installed there for this reason). The
+      # fork's empty default means the same family; spelling it out keeps the
+      # choice visible here.
+      default = "JetBrains Mono";
+      description = "Lock screen font family. Must be free of newlines/tabs and at most 128 characters, matching the shell's own validation.";
+    };
+
+    lockPowerButton = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Show the power button (suspend, reboot, power off) on the lock screen.";
+    };
+
+    lockWallpaper = lib.mkOption {
+      type = lib.types.str;
+      # The same stable path hyprlock reads (hyprlock.nix). wallpaper-set
+      # renames each new image over it, so the lock always shows the current
+      # wallpaper without a store path pinned into the build. The fork ships
+      # this key empty, which leaves the lock on its plain background.
+      default = cfg.wallpaper;
+      description = "Image the lock screen blurs behind its content.";
+    };
+
+    lockCommand = lib.mkOption {
+      type = lib.types.str;
+      # The command the menu's Lock entries run. Empty keeps the fork's own
+      # choice: hyprlock, else loginctl lock-session.
+      default = "";
+      description = "Command the shell's Lock entries run; empty keeps the shell's built-in choice.";
     };
   };
 

@@ -166,6 +166,11 @@ in
       noto-fonts
       dejavu_fonts
       noto-fonts-color-emoji
+      # The silere lock screen's default face (lockFontFamily in silere.nix).
+      # It asks for plain "JetBrains Mono", which no alias here touches, so the
+      # real family has to be installed; the "JetBrainsMono Nerd Font" name
+      # below stays aliased to Berkeley Mono for the bar.
+      jetbrains-mono
     ];
 
     fonts.fontconfig = {

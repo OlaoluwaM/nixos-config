@@ -41,8 +41,13 @@ in
     # This does not install hyprlock or hypridle. It only allows a PAM service
     # named `hyprlock` to authenticate the user at the lock screen. The actual
     # lock/idle programs are configured in Home Manager.
+    #
+    # `silere-lock` does the same for silere-shell's own lock screen, which
+    # authenticates under its own service name. Without it that lock comes up
+    # but can never accept a password.
     security.pam.services = {
       hyprlock = { };
+      silere-lock = { };
     };
 
     # Nautilus uses GVfs for trash, removable devices, and common virtual file
