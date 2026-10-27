@@ -161,7 +161,7 @@ Each lock writes to the journal under one tag:
 # Every lock, step by step
 journalctl --user -t silere-lock
 
-# Only the problems, such as each change to hyprlock
+# Only the problems, such as each fallback to hyprlock
 journalctl --user -t silere-lock -p warning
 
 # The requests that came through hypridle (idle, Super+L, sleep)
@@ -171,8 +171,9 @@ journalctl --user -u hypridle.service
 The shell's lock writes all its lines at one priority. Use `-g WARN` to see
 only its warnings. To see its debug lines, run
 `systemctl --user set-environment QT_LOGGING_RULES="silere.lock.debug=true"`,
-then restart hypridle. The menu's Lock starts the lock from the shell's
-environment, so restart `silere-shell.service` too for those.
+then restart hypridle and lock with `Super+L`. The menu's Lock starts the
+lock through Hyprland, in Hyprland's environment, which that setting does not
+reach.
 
 ## Wallpapers
 

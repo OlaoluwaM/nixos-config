@@ -46,15 +46,16 @@ locked_state() {
 	timeout 2 hyprctl locked 2>/dev/null {lockfd}>&-
 }
 
-# 1. A scope of its own. hypridle runs lock_cmd inside hypridle.service, and
-# the shell's Lock entries run this inside silere-shell.service; either
+# 1. A scope of its own. hypridle runs lock_cmd inside hypridle.service, which
 # restarts on failure and whenever its settings change, and a restart would
-# take the lock down with it. In scope mode systemd-run returns the command's
-# own status, so the inner run touches a marker first: no marker means
-# systemd-run itself failed (an unreachable user bus, say), and the session
-# still has to lock, unscoped. A user manager that stalls (a daemon-reload
-# mid-switch) must not stall the lock either, since a suspend waits for it
-# only up to logind's InhibitDelayMaxSec, so the scope gets 2s to start.
+# take the lock down with it. (The shell's Lock entries start this through
+# Hyprland's exec instead, and get a scope the same way.) In scope mode
+# systemd-run returns the command's own status, so the inner run touches a
+# marker first: no marker means systemd-run itself failed (an unreachable user
+# bus, say), and the session still has to lock, unscoped. A user manager that
+# stalls (a daemon-reload mid-switch) must not stall the lock either, since a
+# suspend waits for it only up to logind's InhibitDelayMaxSec, so the scope
+# gets 2s to start.
 #
 # Giving up must not leave two wrappers: a scope that starts late would lock
 # alongside the unscoped run. Each side writes its flag before reading the
@@ -376,9 +377,10 @@ ready_file="$ready_dir/ready"
 # crash handler has to be off from the environment: it starts before
 # lock.qml's pragmas apply, and its relaunch keeps the PID, so this wrapper
 # would never see the exit. QT_LOGGING_RULES passes through from the caller's
-# environment (hypridle's, or the shell's for its Lock entries). --no-detailed-logs keeps Quickshell's PAM helper from relaying
-# PAM's prompt text into the journal, and drops a detailed log file in the
-# runtime directory for every lock.
+# environment: hypridle's, or Hyprland's for the shell's Lock entries.
+# --no-detailed-logs keeps Quickshell's PAM helper from relaying PAM's prompt
+# text into the journal, and stops Quickshell writing a detailed log file to
+# the runtime directory for every lock.
 setsid systemd-cat -t silere-lock env \
 	SILERE_LOCK_WRAPPER=1 \
 	SILERE_LOCK_READY_FILE="$ready_file" \

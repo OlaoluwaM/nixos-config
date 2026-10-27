@@ -108,7 +108,7 @@ in
     };
 
     # Every lock goes through the silere-lock wrapper either way (see
-    # hypridle.nix); this only picks what it starts. hyprlock stays the
+    # commands.nix); this only picks what it starts. hyprlock stays the
     # default until silere-shell's own lock is proven on this machine, so
     # going back is this one line.
     lockScreen = lib.mkOption {
