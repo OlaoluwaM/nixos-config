@@ -138,14 +138,15 @@ if [ "$guarded" -eq 1 ]; then
 		# an unlock and every wait in a teardown is bounded, so the holder always
 		# lets go; this request keeps waiting until it does, or until the session
 		# reads locked, which means a lock (the holder's own client, still starting
-		# when this request came in) has the session after all.
+		# when this request came in) has the session after all. Only an answered
+		# "true" ends a request: one Hyprland did not answer waits like "false".
 		locked=""
 		locked="$(locked_state)" || locked=""
-		if [ "$locked" != false ]; then
+		if [ "$locked" = true ]; then
 			log info "a lock is already running; nothing to do"
 			exit 0
 		fi
-		log info "the session reads unlocked while a lock holds the guard; waiting for it to end"
+		log info "the session does not read locked while a lock holds the guard; waiting for it to end"
 		while :; do
 			rc=0
 			flock -w 1 "$lockfd" || rc=$?

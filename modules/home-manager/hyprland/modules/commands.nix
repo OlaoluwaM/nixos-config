@@ -103,17 +103,22 @@ let
   # loginctl lock-session gives the menu the same path and environment as
   # every other lock, but nothing answers it while hypridle is down (it
   # restarts 10s after a failure), so the menu then starts the wrapper itself
-  # rather than doing nothing. A bare path, no arguments: it runs the
-  # same whether the shell splits the command or hands it to sh -c.
+  # rather than doing nothing. The same goes for a user manager or logind
+  # that fails or stalls: each answer gets 2s, and anything short of a
+  # delivered request falls back to the wrapper. Should both lock, the
+  # wrapper's guard lets only one through. A bare path, no arguments: it runs
+  # the same whether the shell splits the command or hands it to sh -c.
   lockRequestScript = pkgs.writeShellApplication {
     name = "silere-lock-request";
     runtimeInputs = [
       lockScript
+      pkgs.coreutils
       pkgs.systemd
     ];
     text = ''
-      if systemctl --user is-active -q hypridle.service; then
-        exec loginctl lock-session
+      if timeout 2 systemctl --user is-active -q hypridle.service &&
+        timeout 2 loginctl lock-session; then
+        exit 0
       fi
       exec silere-lock
     '';
