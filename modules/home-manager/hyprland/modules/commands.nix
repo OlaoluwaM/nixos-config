@@ -73,7 +73,8 @@ let
     text = builtins.readFile ../scripts/hypr-shell-caffeine.sh;
   };
 
-  # hypridle's lock_cmd. Its header comment holds the rules it keeps.
+  # hypridle's lock_cmd and the shell menu's Lock target. Its header comment
+  # holds the rules it keeps.
   lockScript = pkgs.writeShellApplication {
     name = "silere-lock";
     runtimeInputs = [
@@ -143,13 +144,13 @@ in
       lockScript = lib.mkOption {
         type = lib.types.package;
         internal = true;
-        description = "silere-lock, the wrapper every session lock goes through (hypridle's lock_cmd).";
+        description = "silere-lock, the wrapper every session lock goes through (hypridle's lock_cmd and the shell menu's Lock).";
       };
 
       lockRequestScript = lib.mkOption {
         type = lib.types.package;
         internal = true;
-        description = "Lock request the shell menu runs: loginctl lock-session, or the wrapper directly while hypridle is down.";
+        description = "Lock request the shell menu runs: the silere-lock wrapper, directly.";
       };
 
       screenshotScript = lib.mkOption {

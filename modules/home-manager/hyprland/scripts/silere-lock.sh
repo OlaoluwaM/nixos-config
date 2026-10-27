@@ -1,10 +1,10 @@
 # shellcheck shell=bash
 
 # Every lock in the session starts here: hypridle's lock_cmd runs this for
-# each `loginctl lock-session` (idle, Super+L, suspend, the shell's Lock
-# entries). It keeps three promises: a lock request never ends in an unlocked
-# session, a failure never leaves a session nobody can unlock, and there are
-# never two lock clients at once.
+# each `loginctl lock-session` (idle, Super+L, suspend), and the shell's Lock
+# entries run it directly. It keeps three promises: a lock request never ends
+# in an unlocked session, a failure never leaves a session nobody can unlock,
+# and there are never two lock clients at once.
 #
 # SILERE_LOCK_SCREEN picks the lock (local.hyprland.lockScreen): "hyprlock",
 # or "follow-shell" for silere-shell's own lock with hyprlock as its fallback.
@@ -46,7 +46,8 @@ locked_state() {
 	timeout 2 hyprctl locked 2>/dev/null {lockfd}>&-
 }
 
-# 1. A scope of its own. hypridle runs lock_cmd inside hypridle.service, which
+# 1. A scope of its own. hypridle runs lock_cmd inside hypridle.service, and
+# the shell's Lock entries run this inside silere-shell.service; either
 # restarts on failure and whenever its settings change, and a restart would
 # take the lock down with it. In scope mode systemd-run returns the command's
 # own status, so the inner run touches a marker first: no marker means
@@ -374,8 +375,8 @@ ready_file="$ready_dir/ready"
 # ID. qs gets the shell's own PATH so its probes agree with the bar's. The
 # crash handler has to be off from the environment: it starts before
 # lock.qml's pragmas apply, and its relaunch keeps the PID, so this wrapper
-# would never see the exit. QT_LOGGING_RULES passes through from hypridle's
-# environment. --no-detailed-logs keeps Quickshell's PAM helper from relaying
+# would never see the exit. QT_LOGGING_RULES passes through from the caller's
+# environment (hypridle's, or the shell's for its Lock entries). --no-detailed-logs keeps Quickshell's PAM helper from relaying
 # PAM's prompt text into the journal, and drops a detailed log file in the
 # runtime directory for every lock.
 setsid systemd-cat -t silere-lock env \

@@ -108,8 +108,9 @@ makes the programs that each script needs available.
   Vicinae and reports failed requests.
 - `wallpaper-set` applies one image to the desktop, shell colors, lock
   screen, and the shell's glass sample.
-- `silere-lock` starts the lock screen. hypridle runs it for every lock
-  request. It makes sure that only one lock runs at a time.
+- `silere-lock` starts the lock screen. hypridle runs it for idle, `Super+L`
+  and sleep, and the shell menu's Lock entries run it directly. It makes sure
+  that only one lock runs at a time.
 
 ## Power Commands
 
@@ -163,14 +164,15 @@ journalctl --user -t silere-lock
 # Only the problems, such as each change to hyprlock
 journalctl --user -t silere-lock -p warning
 
-# The requests that started a lock
+# The requests that came through hypridle (idle, Super+L, sleep)
 journalctl --user -u hypridle.service
 ```
 
 The shell's lock writes all its lines at one priority. Use `-g WARN` to see
 only its warnings. To see its debug lines, run
 `systemctl --user set-environment QT_LOGGING_RULES="silere.lock.debug=true"`,
-then restart hypridle.
+then restart hypridle. The menu's Lock starts the lock from the shell's
+environment, so restart `silere-shell.service` too for those.
 
 ## Wallpapers
 
