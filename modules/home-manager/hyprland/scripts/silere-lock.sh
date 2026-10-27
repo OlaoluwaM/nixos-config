@@ -20,34 +20,22 @@ runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$UID}"
 # Decisions go to the journal at real priorities, so
 # `journalctl --user -t silere-lock -p warning` lists every fallback. Once
 # the lock descriptor is open the logger runs with it closed, like every
-# child except hyprlock.
+# other child. stderr is the last resort, and it is often a journal stream
+# too, so it can be gone exactly when the journal is: a failed or broken write
+# there must never abort the lock. SIGPIPE is ignored only in that subshell,
+# so no lock client inherits it.
 log() {
 	local priority="$1"
 	shift
 	if [ -n "${lockfd:-}" ]; then
-		systemd-cat -t silere-lock -p "$priority" printf '%s\n' "$*" {lockfd}>&- ||
-			printf 'silere-lock: %s\n' "$*" >&2
+		systemd-cat -t silere-lock -p "$priority" printf '%s\n' "$*" {lockfd}>&- && return 0
 	else
-		systemd-cat -t silere-lock -p "$priority" printf '%s\n' "$*" ||
-			printf 'silere-lock: %s\n' "$*" >&2
+		systemd-cat -t silere-lock -p "$priority" printf '%s\n' "$*" && return 0
 	fi
-}
-
-# The end of every path that locks with hyprlock. systemd-cat exits without
-# running its command when it cannot open a journal stream, which would leave
-# the session unlocked, so the journal is tried first and hyprlock runs bare
-# without it.
-run_hyprlock() {
-	local rc=0
-	if [ -n "${lockfd:-}" ]; then
-		systemd-cat -t silere-lock true {lockfd}>&- || rc=$?
-	else
-		systemd-cat -t silere-lock true || rc=$?
-	fi
-	if [ "$rc" -eq 0 ]; then
-		exec systemd-cat -t silere-lock hyprlock
-	fi
-	exec hyprlock
+	(
+		trap '' PIPE
+		printf 'silere-lock: %s\n' "$*" >&2
+	) || true
 }
 
 # A hung compositor must not hang the lock. timeout runs on the clock, unlike
@@ -89,26 +77,35 @@ else
 fi
 
 # 2. One lock at a time. The flock sits on a dedicated descriptor, held for
-# the wrapper's whole life and through the exec into hyprlock. Every other
-# child gets it closed ({lockfd}>&-): anything that outlived the wrapper while
-# holding it would make every later lock request skip.
+# the wrapper's whole life, and the wrapper lives as long as any lock client
+# it started. Every child gets it closed ({lockfd}>&-): anything that outlived
+# the wrapper while holding it would make every later lock request skip.
 rc=0
 exec {lockfd}>"$runtime_dir/silere-lock.lock" || rc=$?
+guarded=1
 if [ "$rc" -ne 0 ]; then
-	unset lockfd
-	log warning "falling back to hyprlock: could not open $runtime_dir/silere-lock.lock"
-	run_hyprlock
+	# Lock unguarded rather than not at all. The descriptor still has to exist,
+	# since every child closes it.
+	guarded=0
+	rc=0
+	exec {lockfd}>/dev/null || rc=$?
+	if [ "$rc" -ne 0 ]; then
+		exec hyprlock
+	fi
+	log warning "could not open $runtime_dir/silere-lock.lock; locking without the one-lock guard"
 fi
 
-# flock locks the inherited descriptor itself, so it is the one child that
-# must keep it open.
-rc=0
-flock -n "$lockfd" || rc=$?
-if [ "$rc" -eq 1 ]; then
-	log info "a lock is already running; nothing to do"
-	exit 0
-elif [ "$rc" -ne 0 ]; then
-	log warning "flock failed with status $rc; locking anyway"
+if [ "$guarded" -eq 1 ]; then
+	# flock locks the inherited descriptor itself, so it is the one child that
+	# must keep it open.
+	rc=0
+	flock -n "$lockfd" || rc=$?
+	if [ "$rc" -eq 1 ]; then
+		log info "a lock is already running; nothing to do"
+		exit 0
+	elif [ "$rc" -ne 0 ]; then
+		log warning "flock failed with status $rc; locking anyway"
+	fi
 fi
 
 # A hyprlock started outside this wrapper only counts while the session
@@ -124,25 +121,147 @@ if [ "$rc" -eq 0 ]; then
 	fi
 fi
 
-# exec keeps the PID and the lock descriptor, and systemd-cat files
-# hyprlock's own output under the same tag (run_hyprlock).
-if [ "${SILERE_LOCK_SCREEN:-hyprlock}" != follow-shell ]; then
-	log info "locking with hyprlock"
-	run_hyprlock
-fi
-
-# Hand the session to hyprlock, which misc:allow_session_lock_restore lets
-# take over a lock whose client died. Only ever reached once nothing of the
-# shell's lock is left: Hyprland ignores a new lock client while an earlier
-# lock request is unconfirmed, so a hyprlock started too early could lose its
-# request and leave a lockdead screen nobody can clear.
 ready_dir=""
-fall_back() {
-	log warning "falling back to hyprlock: $1"
+cleanup() {
 	if [ -n "$ready_dir" ]; then
 		rm -rf -- "$ready_dir" {lockfd}>&- || true
 	fi
-	run_hyprlock
+}
+trap cleanup EXIT
+
+# Stop a lock client, and its process group when it has one, and reap it:
+# TERM, up to 1s, KILL. Sets status to how it ended.
+stop_client() {
+	local target="$1" group="$2" i=0
+	kill -TERM "$target" 2>/dev/null || true
+	while [ "$i" -lt 10 ] && kill -0 "$target" 2>/dev/null; do
+		sleep 0.1 {lockfd}>&- || true
+		i=$((i + 1))
+	done
+	kill -KILL "$target" 2>/dev/null || true
+	if [ "$group" -eq 1 ]; then
+		kill -KILL -- "-$target" 2>/dev/null || true
+	fi
+	status=0
+	wait "$target" 2>/dev/null || status=$?
+}
+
+# Wait for a lock client to end. A client that outlives the unlock would keep
+# the wrapper, and so the flock, alive and silently turn every later lock off,
+# so once the session has read unlocked on two checks a second apart while it
+# runs, it is stopped and the lock counts as over (lingered=1). Only a client
+# that has been seen locked can linger: before its lock request the session
+# reads unlocked too, so one that never gets that far within 10s is stopped
+# as failed instead, and until then the session is checked five times a
+# second, so a quick unlock is not missed. Sets status.
+supervise() {
+	local target="$1" group="$2" seen="$3" i=0 unlocked=0 state
+	lingered=0
+	while kill -0 "$target" 2>/dev/null; do
+		if [ $((i % 10)) -eq 9 ] || { [ "$seen" -eq 0 ] && [ $((i % 2)) -eq 1 ]; }; then
+			state=""
+			state="$(locked_state)" || state=""
+			if [ "$state" = true ]; then
+				seen=1
+				unlocked=0
+			elif [ "$state" = false ] && [ "$seen" -eq 1 ]; then
+				unlocked=$((unlocked + 1))
+			else
+				unlocked=0
+			fi
+			if [ "$unlocked" -ge 2 ]; then
+				lingered=1
+				stop_client "$target" "$group"
+				return 0
+			fi
+			if [ "$seen" -eq 0 ] && [ "$i" -ge 100 ]; then
+				stop_client "$target" "$group"
+				status=124
+				return 0
+			fi
+		fi
+		sleep 0.1 {lockfd}>&- || true
+		i=$((i + 1))
+	done
+	status=0
+	wait "$target" || status=$?
+	if [ "$group" -eq 1 ]; then
+		kill -KILL -- "-$target" 2>/dev/null || true
+	fi
+}
+
+# An unlock clears `hyprctl locked` at once, so give it up to 1s. A lock
+# request in that second finds the flock still held and is dropped; the user
+# is unlocking at that moment.
+reads_unlocked() {
+	local i=0 state
+	while [ "$i" -le 10 ]; do
+		state=""
+		state="$(locked_state)" || state=""
+		if [ "$state" = false ]; then
+			return 0
+		fi
+		sleep 0.1 {lockfd}>&- || true
+		i=$((i + 1))
+	done
+	return 1
+}
+
+# Lock with hyprlock and stay with it until the session is unlocked. A
+# hyprlock that dies while locked leaves Hyprland's lockdead screen, which
+# only a new client can clear (misc:allow_session_lock_restore lets it take
+# over), so it is restarted, a second apart, up to five times. systemd-cat
+# exits without running its command when it cannot open a journal stream,
+# which would leave the session unlocked, so the journal is tried first and
+# hyprlock runs bare without it; a start that fails anyway exits non-zero and
+# is retried like a crash.
+lock_with_hyprlock() {
+	local attempt=1 rc i
+	while :; do
+		rc=0
+		systemd-cat -t silere-lock true {lockfd}>&- || rc=$?
+		if [ "$rc" -eq 0 ]; then
+			systemd-cat -t silere-lock hyprlock {lockfd}>&- &
+		else
+			hyprlock {lockfd}>&- &
+		fi
+		supervise "$!" 0 0
+		if [ "$lingered" -eq 1 ]; then
+			log warning "hyprlock was still running after the unlock; stopped it"
+			return 0
+		fi
+		if [ "$status" -eq 0 ] && reads_unlocked; then
+			log info "hyprlock exited after an unlock"
+			return 0
+		fi
+		if [ "$attempt" -ge 5 ]; then
+			log err "hyprlock ended without an unlock $attempt times (last status $status); giving up"
+			exit 1
+		fi
+		log warning "hyprlock ended without an unlock (status $status); starting it again"
+		attempt=$((attempt + 1))
+		i=0
+		while [ "$i" -lt 10 ]; do
+			sleep 0.1 {lockfd}>&- || true
+			i=$((i + 1))
+		done
+	done
+}
+
+if [ "${SILERE_LOCK_SCREEN:-hyprlock}" != follow-shell ]; then
+	log info "locking with hyprlock"
+	lock_with_hyprlock
+	exit 0
+fi
+
+# Hand the session to hyprlock. Only ever reached once nothing of the shell's
+# lock is left: Hyprland ignores a new lock client while an earlier lock
+# request is unconfirmed, so a hyprlock started too early could lose its
+# request and leave a lockdead screen nobody can clear.
+fall_back() {
+	log warning "falling back to hyprlock: $1"
+	lock_with_hyprlock
+	exit 0
 }
 
 # 3. Start the shell's lock. The ready file lives in a fresh directory so a
@@ -173,21 +292,6 @@ setsid systemd-cat -t silere-lock env \
 	"$SILERE_LOCK_QS" -p "$SILERE_LOCK_QML" {lockfd}>&- &
 pid=$!
 
-# Kill the lock and everything it spawned, and reap it, before anything else
-# may lock: TERM, up to 1s, KILL, then the rest of its group.
-stop_lock() {
-	kill -TERM "$pid" 2>/dev/null || true
-	local i=0
-	while [ "$i" -lt 10 ] && kill -0 "$pid" 2>/dev/null; do
-		sleep 0.1 {lockfd}>&- || true
-		i=$((i + 1))
-	done
-	kill -KILL "$pid" 2>/dev/null || true
-	kill -KILL -- "-$pid" 2>/dev/null || true
-	status=0
-	wait "$pid" 2>/dev/null || status=$?
-}
-
 # 4. Confirm it: up to 3s for the ready file. `hyprctl locked` is no
 # substitute, since it reads true as soon as any client asks to lock, before
 # a frame, and stays true after that client dies.
@@ -211,7 +315,7 @@ while :; do
 	i=$((i + 1))
 done
 if [ "$ready" -eq 0 ]; then
-	stop_lock
+	stop_client "$pid" 1
 	fall_back "the shell's lock $reason (status $status)"
 fi
 log info "the shell's lock is up (ready after about $((i * 100))ms)"
@@ -219,30 +323,17 @@ log info "the shell's lock is up (ready after about $((i * 100))ms)"
 # 5. Wait for the end. Exit 0 means the user unlocked; anything else,
 # including a crash while locked, leaves Hyprland's lockdead screen for
 # hyprlock to take over.
-status=0
-wait "$pid" || status=$?
-kill -KILL -- "-$pid" 2>/dev/null || true
+supervise "$pid" 1 1
+if [ "$lingered" -eq 1 ]; then
+	log warning "the shell's lock was still running after the unlock; stopped it"
+	exit 0
+fi
 if [ "$status" -ne 0 ]; then
 	log warning "the shell's lock exited with status $status"
 	fall_back "the shell's lock ended without an unlock"
 fi
 log info "the shell's lock exited with status 0"
-
-# An unlock clears `hyprctl locked` at once, so give it up to 1s. A lock
-# request in that second finds the flock still held and is dropped; the user
-# is unlocking at that moment.
-i=0
-while :; do
-	locked=""
-	locked="$(locked_state)" || locked=""
-	if [ "$locked" = false ]; then
-		break
-	fi
-	if [ "$i" -ge 10 ]; then
-		log warning "the session still reads locked after the shell's lock exited 0"
-		fall_back "the session is still locked after an unlock"
-	fi
-	sleep 0.1 {lockfd}>&- || true
-	i=$((i + 1))
-done
-rm -rf -- "$ready_dir" {lockfd}>&- || true
+if ! reads_unlocked; then
+	log warning "the session still reads locked after the shell's lock exited 0"
+	fall_back "the session is still locked after an unlock"
+fi
