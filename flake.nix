@@ -41,7 +41,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Silere shell nd Hyprland v0.57+ require code on based on quickshell 0.32
+    # Silere shell and Hyprland v0.57+ require code based on quickshell 0.3.2
     quickshell = {
       url = "git+https://git.outfoxxed.me/quickshell/quickshell?rev=4befab5bc670218e1dac84e4b60470bf26dbadf4";
       inputs.nixpkgs.follows = "nixpkgs";
