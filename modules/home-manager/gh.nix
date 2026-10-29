@@ -13,8 +13,8 @@ let
   # home-manager builds that tree from packages whose pname matches the
   # extension name and whose executable sits at $out/bin/<pname>. Most of the
   # extensions used here are plain shell scripts that aren't in nixpkgs, so
-  # they are packaged inline, pinned to the revisions that were installed
-  # imperatively on Fedora.
+  # they are packaged inline, pinned to the revisions the old Fedora install
+  # had installed imperatively.
   mkShellExtension =
     {
       owner,

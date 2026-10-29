@@ -25,8 +25,8 @@ in
       # implementation: environments are cached in each project's .direnv/
       # (instant re-entry; only re-evaluates when flake.nix/flake.lock/.envrc
       # change) and registered as GC roots so `nix-collect-garbage` doesn't
-      # delete dev shells. Inert for non-nix .envrc files, so it's safe while
-      # still on Fedora.
+      # delete dev shells. Inert for .envrc files that don't use nix, so plain
+      # dotenv-style projects behave as before.
       nix-direnv.enable = true;
     };
   };

@@ -2,7 +2,7 @@
 
 ## Repository Shape
 
-This is a NixOS/Home Manager flake for the `boreas` (and other) machine.
+This is a NixOS/Home Manager flake for `boreas` currently (NixOS 26.05) and other machines.
 
 - `flake.nix`: flake inputs, host metadata, NixOS entrypoints, and standalone Home Manager entrypoints.
 - `hosts/boreas/`: host-specific NixOS configuration and hardware configuration.
@@ -46,9 +46,16 @@ nix build .#nixosConfigurations.boreas.config.system.build.toplevel --no-link
 nix build .#homeConfigurations.olaolu@boreas.activationPackage --no-link
 ```
 
-For Home Manager-only changes, at least evaluate or build `.#homeConfigurations.olaolu@boreas.activationPackage` when feasible. For NixOS module changes, evaluate or build the `boreas` system derivation when feasible.
+Build the Home Manager activation package for Home Manager-only changes and the `boreas` system derivation for NixOS module changes.
 
-**Never run `nixos-rebuild switch` or `home-manager switch` unprompted.** The user's daily driver is Fedora; nothing here is live on this host. Runtime verification happens when the user boots their separate NixOS installation on its own SSD, so build-level checks are the ceiling for agent verification.
+## Live Host
+
+Agent sessions run on `boreas` itself, so this config is the running system. Edits change nothing until a rebuild.
+
+- **Never run `nixos-rebuild` or `home-manager switch` yourself.** A rebuild needs sudo and changes the running desktop, so give Olaolu the exact command to run with `!`.
+- When a change touches the compositor, mesa, or other things the running session holds on to, recommend `nixos-rebuild boot` and a reboot instead of `switch`. Hyprland reloads `hyprland.lua` as soon as Home Manager rewrites it, so a `switch` hands the new config to the old binary.
+- Read-only checks against the live session (`hyprctl`, `journalctl --user`, `systemctl --user status`) are fine for verification. Ask before restarting or stopping session units.
+- `/etc/nix/nix.conf` and the rest of `/etc` are generated. Change `nix.settings` and the modules instead.
 
 ## Hyprland Profile
 
