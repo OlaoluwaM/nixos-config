@@ -2,7 +2,7 @@
 
 ## Repository Shape
 
-This is a NixOS/Home Manager flake for `boreas` currently (NixOS 26.05) and other machines.
+This is a NixOS/Home Manager flake for `boreas` (NixOS 26.05).
 
 - `flake.nix`: flake inputs, host metadata, NixOS entrypoints, and standalone Home Manager entrypoints.
 - `hosts/boreas/`: host-specific NixOS configuration and hardware configuration.
@@ -11,6 +11,8 @@ This is a NixOS/Home Manager flake for `boreas` currently (NixOS 26.05) and othe
 - `modules/home-manager/`: reusable Home Manager modules.
 - `modules/home-manager/hyprland/`: the Hyprland desktop profile. Its `README.md` is the detailed map: keybindings, silere-shell packaging, wallpaper pipeline, lock/idle.
 - `pkgs/`: local package definitions/derivations.
+
+Change the narrowest module that owns the behavior. Don't push host-specific choices into reusable modules unless the module already takes that host data as an argument.
 
 ## Working with the user
 
@@ -22,18 +24,15 @@ Olaolu owns this repo and is still learning Nix and this codebase by making the 
 - **Review on request.** Check correctness and fit with the surrounding code, explain each problem and why it matters, and leave the fix to Olaolu unless asked to make it.
 - **Teach the workflow.** When a check is worth running, give the command and what its output means instead of only reporting a result.
 - **Say what you see.** Mentoring doesn't mean holding back: name a real bug or risk plainly, then let Olaolu decide.
-- **Leave commits to Olaolu** unless asked to commit.
+- **Leave commits and rebuilds to Olaolu.** Commit only when asked. Never run `nixos-rebuild` or `home-manager switch`; give the exact command to run with `!`.
 
 ## The silere-shell Fork
 
-The Hyprland session's shell is **silere-shell**, a Quickshell/QML bar maintained as a fork of `s3rven/silere-shell`:
+The Hyprland session's shell is **silere-shell**, a Quickshell/QML bar forked from `s3rven/silere-shell`.
 
-- It comes in as the `silere-shell` flake input: `github:OlaoluwaM/silere-shell/custom-branch` with `flake = false`, meaning a plain pinned source tree. Packaging happens here, in `modules/home-manager/hyprland/modules/silere.nix`. The fork ships a `flake.nix` that only provides a dev shell; it must never grow `packages` or overlay outputs, because substituting the build-time defaults needs configuration knowledge only this repo has.
-- The local checkout lives at `~/Desktop/dev/silere-shell`, branch `custom-branch`. Shell and UI work happens **there**, not in this repo. After fork commits are pushed, re-lock deliberately with `nix flake update silere-shell`.
-- **GeneratedDefaults.qml is generated output.** In the built package it is rendered from the `local.hyprland.silere.*` options in `silere.nix`. Change the options or the render template, never the packaged file. The reasoning behind this mechanism is in [adrs/0001](adrs/0001-own-the-forks-defaults-from-nix-instead-of-writing-settings-json.md).
-- Nix-declared default values must stay inside the fork's `_schema` clamp table (`services/ShellSettings.qml`). The loader clamps out-of-bounds values without saying so.
-
-Fork working conventions (commit style, pre-commit gates including the settings contract between `GeneratedDefaults.qml` and the silere module's render, QML rules, and the upstream merge policy) live in the fork checkout's `AGENTS.md` and `README.md`. Read them there before fork work; don't restate them here.
+- It comes in as the `silere-shell` flake input (`flake = false`) and is packaged in `modules/home-manager/hyprland/modules/silere.nix`. Shell and UI work happens in the checkout at `~/Desktop/dev/silere-shell` (branch `custom-branch`); read its `AGENTS.md` and `README.md` first. After fork commits are pushed, re-lock with `nix flake update silere-shell`.
+- **`GeneratedDefaults.qml` is generated** from the `local.hyprland.silere.*` options in `silere.nix`. Change the options or the template, never the packaged file ([adrs/0001](adrs/0001-own-the-forks-defaults-from-nix-instead-of-writing-settings-json.md)).
+- Nix-declared defaults must stay inside the fork's `_schema` clamp table (`services/ShellSettings.qml`). The loader clamps out-of-bounds values without saying so.
 
 ## Source Of Truth
 
@@ -45,50 +44,39 @@ This repo intentionally runs stable Nixpkgs/Home Manager with selected packages 
 
 ## Nix Workflow
 
-Use `nixfmt` for Nix files. Keep module changes idiomatic and close to the existing style: small option sets, explicit imports, and host-specific data flowing through `hostConfig`.
-
-Useful verification commands, depending on the change:
+Use `nixfmt` for Nix files. Keep module changes close to the existing style: small option sets, explicit imports, and host-specific data flowing through `hostConfig`.
 
 ```sh
 nix flake check
-nix eval .#nixosConfigurations.boreas.config.system.build.toplevel.drvPath
+nix eval .#nixosConfigurations.boreas.config.system.build.toplevel.drvPath  # evaluate only; fast
 nix build .#nixosConfigurations.boreas.config.system.build.toplevel --no-link
 nix build .#homeConfigurations.olaolu@boreas.activationPackage --no-link
 ```
 
-Build the Home Manager activation package for Home Manager-only changes and the `boreas` system derivation for NixOS module changes.
+Home Manager is built into the NixOS config, so the system build is the check that matches `nixos-rebuild`, for every change. The standalone Home Manager build only matters for `home-manager switch`.
+
+To find out what a setting actually is, evaluate it instead of reading the modules: `nix eval .#nixosConfigurations.boreas.config.<option>` prints the final value after every module has contributed (for example `….config.nix.gc.dates`). Home Manager options sit under `….config.home-manager.users.olaolu.<option>`. Teach Olaolu this when a question is about a value.
 
 ## Live Host
 
 Agent sessions run on `boreas` itself, so this config is the running system. Edits change nothing until a rebuild.
 
-- **Never run `nixos-rebuild` or `home-manager switch` yourself.** A rebuild needs sudo and changes the running desktop, so give Olaolu the exact command to run with `!`.
-- When a change touches the compositor, mesa, or other things the running session holds on to, recommend `nixos-rebuild boot` and a reboot instead of `switch`. Hyprland reloads `hyprland.lua` as soon as Home Manager rewrites it, so a `switch` hands the new config to the old binary.
-- Read-only checks against the live session (`hyprctl`, `journalctl --user`, `systemctl --user status`) are fine for verification. Ask before restarting or stopping session units.
+- For changes to the compositor, mesa, or anything else the running session holds on to, recommend `nixos-rebuild boot` and a reboot instead of `switch`. Hyprland reloads `hyprland.lua` as soon as Home Manager rewrites it, so a `switch` hands the new config to the old binary.
+- Read-only checks against the live session (`hyprctl`, `journalctl --user`, `systemctl --user status`) are fine. Ask before restarting or stopping session units.
 - `/etc/nix/nix.conf` and the rest of `/etc` are generated. Change `nix.settings` and the modules instead.
 
 ## Hyprland Profile
-
-The Hyprland profile is deliberately a small, owned desktop setup rather than a copied rice. Keep changes aligned with the existing launch path:
 
 ```text
 greetd -> tuigreet -> Hyprland -> hyprland-session.target -> user services
 ```
 
-Hyprland starts the target itself. Home Manager's Hyprland systemd integration is deliberately off; see `compositor.nix` and the profile README before changing that.
-
-`hyprland-session.target` starts `silere-shell.service`, Vicinae, the awww wallpaper daemon and restore unit, hypridle, hyprsunset, and the idle-inhibit helpers. The profile README has the full list.
-
-Hyprland and its portal come from the tag-pinned `hyprland` flake input, not Nixpkgs. The profile README explains the pin, the portal override, and the mesa sync. Upgrade by bumping the tag, and check that lock, idle, and the shell still work with the new compositor. Don't move a single Hyprland ecosystem package on its own.
-
-Keybindings live in `modules/home-manager/hyprland/modules/keybindings.nix`, the single definition site for every chord. Keep equivalent GNOME and Hyprland keybindings on the same chord wherever practical. Before changing a binding in either profile, inspect the other profile and preserve parity unless a desktop-specific constraint requires an intentional difference.
-
-The stable wallpaper path (`local.hyprland.wallpaper`) is a **seeded user-writable file**, not a store symlink; `wallpaper-set` overwrites it in place. Don't convert it back to an `xdg.configFile` entry.
-
-Helper scripts under `modules/home-manager/hyprland/scripts/` are embedded with `pkgs.writeShellApplication`. Keep the existing convention: scripts use `# shellcheck shell=bash` and omit a direct shebang.
+- Hyprland starts the target itself. Home Manager's Hyprland systemd integration is deliberately off; read `compositor.nix` and the profile README before changing that.
+- Hyprland and its portal come from the tag-pinned `hyprland` flake input, not Nixpkgs; the profile README explains the pin, the portal override, and the mesa sync. Upgrade by bumping the tag and check that lock, idle, and the shell still work. Don't move a single Hyprland ecosystem package on its own.
+- Every chord is defined in `modules/home-manager/hyprland/modules/keybindings.nix`. Keep GNOME and Hyprland bindings on the same chord where practical, and check the other profile before changing one.
+- The wallpaper path (`local.hyprland.wallpaper`) is a seeded user-writable file that `wallpaper-set` overwrites in place, not a store symlink. Don't turn it back into an `xdg.configFile` entry.
+- Scripts in `modules/home-manager/hyprland/scripts/` are embedded with `pkgs.writeShellApplication`. They start with `# shellcheck shell=bash` and have no shebang.
 
 ## Worktree Discipline
 
-This applies to both this repo and the fork checkout. The worktree may contain unrelated user changes. Don't revert, reformat, or fold them into your work unless the task explicitly requires it.
-
-Before editing, check `git status --short`. Before finalizing, show or inspect the relevant diff. Keep commits atomic if Olaolu asks for a commit.
+Olaolu may have uncommitted changes in this repo or the fork checkout. Never revert, reformat, or fold them into your own work, and check `git status --short` before editing.
