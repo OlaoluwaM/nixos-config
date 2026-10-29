@@ -595,11 +595,11 @@
         "nixpkgs": "nixpkgs_5"
       },
       "locked": {
-        "lastModified": 1793054847,
-        "narHash": "sha256-mhud3nRH8RoP0h9MydfkJ8mISpj+QE/S//wOt9bNgC0=",
+        "lastModified": 1793236063,
+        "narHash": "sha256-jGFe4xdrCw6xpgH2zgKwslACyt/NGuPwGILPEMFxmcQ=",
         "owner": "NixOS",
         "repo": "nixos-hardware",
-        "rev": "8ba09466dc929acf5c8bb3e0cc40f472a7df3630",
+        "rev": "b6754c901c21478fd8450d62101e712b2a4f0d75",
         "type": "github"
       },
       "original": {
@@ -798,18 +798,18 @@
         ]
       },
       "locked": {
-        "lastModified": 1787279335,
-        "narHash": "sha256-CLX2Zp5i5BuLbOxNOkwRd9YY84IOrACNxBV79o9/F9Y=",
-        "ref": "refs/tags/v0.3.1",
-        "rev": "1a4716cde794a59928d9d9fc15f2afc7a95de360",
-        "revCount": 846,
+        "lastModified": 1792198292,
+        "narHash": "sha256-FvGMp246hFgviIPbBTeeM9GK3wyjwOgeQfE90rXwqZY=",
+        "ref": "refs/heads/master",
+        "rev": "4befab5bc670218e1dac84e4b60470bf26dbadf4",
+        "revCount": 870,
         "type": "git",
-        "url": "https://git.outfoxxed.me/quickshell/quickshell.git"
+        "url": "https://git.outfoxxed.me/quickshell/quickshell"
       },
       "original": {
-        "ref": "refs/tags/v0.3.1",
+        "rev": "4befab5bc670218e1dac84e4b60470bf26dbadf4",
         "type": "git",
-        "url": "https://git.outfoxxed.me/quickshell/quickshell.git"
+        "url": "https://git.outfoxxed.me/quickshell/quickshell"
       }
     },
     "root": {
@@ -834,11 +834,11 @@
     "silere-shell": {
       "flake": false,
       "locked": {
-        "lastModified": 1793134238,
-        "narHash": "sha256-IXr/38lfjWCebORU3gC/vf19MFsCdfGB7/0nbqFKOb8=",
+        "lastModified": 1793292131,
+        "narHash": "sha256-OeG/66fpEJR6WSEk1IxaRXkh9jnfjk0v+PFRkLp92+s=",
         "owner": "OlaoluwaM",
         "repo": "silere-shell",
-        "rev": "6a7063648e27ddb1a0370a505003e80db276acb1",
+        "rev": "71c2ee7279a4910e9d80d9901b3a624692732dbe",
         "type": "github"
       },
       "original": {
@@ -923,11 +923,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1793202819,
-        "narHash": "sha256-aSluQIbnFAZpL5dLPSF+UTSuxJ2fg/puN8RWk4FpcFQ=",
+        "lastModified": 1793267126,
+        "narHash": "sha256-Q4VISEqFaXoiEed+J/WKWWt8JogwVajx6dLV7XLNpEs=",
         "owner": "Nomadcxx",
         "repo": "sysc-greet",
-        "rev": "117802373c66cb58edd5bf91e6c05fe79a84403d",
+        "rev": "2dca655d51364db109208798cc662331a4c6df36",
         "type": "github"
       },
       "original": {
