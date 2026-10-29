@@ -80,7 +80,7 @@ let
     runtimeInputs = [
       pkgs.coreutils
       # hyprctl: whether the session reads locked.
-      pkgs.hyprland
+      cfg.commands.hyprlandPackage
       config.programs.hyprlock.package
       # pgrep: a hyprlock started outside the wrapper.
       pkgs.procps
@@ -152,6 +152,16 @@ in
           wallpaper.nix's matugen template, which ships under this
           package's share/silere-shell/matugen/.
         '';
+      };
+
+      # Set in compositor.nix from the same flake input the NixOS module
+      # installs, so every hyprctl a helper calls matches the running
+      # compositor. Under the NixOS-integrated entrypoint this is the same
+      # store path as the system package, not a second copy.
+      hyprlandPackage = lib.mkOption {
+        type = lib.types.package;
+        internal = true;
+        description = "Hyprland package whose hyprctl the session's helper scripts call.";
       };
 
       quickshellPackage = lib.mkOption {

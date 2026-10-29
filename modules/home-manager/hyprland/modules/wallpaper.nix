@@ -117,7 +117,7 @@ let
       # hyprctl + jq: the glass sampler cover-fits the image to the focused
       # monitor's mode, the same way the screenshot and record scripts in
       # commands.nix read their capture geometry.
-      pkgs.hyprland
+      cfg.commands.hyprlandPackage
       pkgs.jq
     ];
     runtimeEnv.HYPR_WALLPAPER_PATH = cfg.wallpaper;

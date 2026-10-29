@@ -31,7 +31,7 @@ When prose and code disagree, trust `flake.nix` and the relevant module files ov
 
 Don't update `flake.lock`, flake inputs, `home.stateVersion`, or `system.stateVersion` as incidental cleanup. Change them only when the task explicitly calls for it (re-locking `silere-shell` after deliberately pushed fork commits is the routine example), and explain the migration risk.
 
-This repo intentionally runs stable Nixpkgs/Home Manager with selected packages from `nixpkgs-unstable`. Keep that split unless there's a specific reason to move a whole subsystem together.
+This repo intentionally runs stable Nixpkgs/Home Manager with selected packages from `nixpkgs-unstable`, plus upstream flakes pinned where Nixpkgs lags (Hyprland, Quickshell, Vicinae). Keep that split unless there's a specific reason to move a whole subsystem together.
 
 ## Nix Workflow
 
@@ -62,12 +62,14 @@ Agent sessions run on `boreas` itself, so this config is the running system. Edi
 The Hyprland profile is deliberately a small, owned desktop setup rather than a copied rice. Keep changes aligned with the existing launch path:
 
 ```text
-greetd -> tuigreet -> Hyprland -> Home Manager hyprland.lua -> hyprland-session.target -> user services
+greetd -> tuigreet -> Hyprland -> hyprland-session.target -> user services
 ```
+
+Hyprland starts the target itself. Home Manager's Hyprland systemd integration is deliberately off; see `compositor.nix` and the profile README before changing that.
 
 `hyprland-session.target` starts `silere-shell.service`, Vicinae, the awww wallpaper daemon and restore unit, hypridle, hyprsunset, and the idle-inhibit helpers. The profile README has the full list.
 
-Don't casually switch just one Hyprland ecosystem package to unstable. If Hyprland itself moves, verify that the compositor, portal, lock, idle, and shell stack move coherently.
+Hyprland and its portal come from the tag-pinned `hyprland` flake input, not Nixpkgs. The profile README explains the pin, the portal override, and the mesa sync. Upgrade by bumping the tag, and check that lock, idle, and the shell still work with the new compositor. Don't move a single Hyprland ecosystem package on its own.
 
 Keybindings live in `modules/home-manager/hyprland/modules/keybindings.nix`, the single definition site for every chord. Keep equivalent GNOME and Hyprland keybindings on the same chord wherever practical. Before changing a binding in either profile, inspect the other profile and preserve parity unless a desktop-specific constraint requires an intentional difference.
 

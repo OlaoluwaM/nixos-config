@@ -62,9 +62,17 @@ in
       # Vicinae is built from its own flake input, which Hydra never builds;
       # upstream publishes binaries to this cachix instead. Without it every
       # `nix flake update vicinae` costs a local Qt compile.
-      extra-substituters = [ "https://vicinae.cachix.org" ];
+      # Hyprland's flake input is in the same position, with upstream's own
+      # cachix (https://wiki.hypr.land/Nix/Cachix/). The cache only helps once
+      # this setting is live, so the switch that first brings it in still
+      # compiles Hyprland unless the substituter is passed with --option.
+      extra-substituters = [
+        "https://vicinae.cachix.org"
+        "https://hyprland.cachix.org"
+      ];
       extra-trusted-public-keys = [
         "vicinae.cachix.org-1:1kDrfienkGHPYbkpNj1mWTr7Fm1+zcenzgTizIcI3oc="
+        "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
       ];
     };
     # Opinionated: disable channels

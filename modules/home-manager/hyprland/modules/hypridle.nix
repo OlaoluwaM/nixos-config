@@ -8,7 +8,9 @@
 
 let
   cfg = config.local.hyprland;
-  dpms = action: "${pkgs.hyprland}/bin/hyprctl dispatch 'hl.dsp.dpms({ action = \"${action}\" })'";
+  dpms =
+    action:
+    "${lib.getExe' cfg.commands.hyprlandPackage "hyprctl"} dispatch 'hl.dsp.dpms({ action = \"${action}\" })'";
 in
 {
   config = lib.mkIf cfg.enable {
@@ -65,7 +67,7 @@ in
           # behind the lock with the screen lit until someone touches it. The
           # restart runs the chain again from zero; the 600s lock request it
           # brings finds the lock already up, and the wrapper skips it.
-          after_sleep_cmd = "${dpms "enable"}; ${pkgs.hyprland}/bin/hyprctl dispatch 'hl.dsp.force_idle(0)'";
+          after_sleep_cmd = "${dpms "enable"}; ${lib.getExe' cfg.commands.hyprlandPackage "hyprctl"} dispatch 'hl.dsp.force_idle(0)'";
 
           # Wait until the session is locked before allowing suspend to
           # continue.

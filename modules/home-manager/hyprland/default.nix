@@ -171,7 +171,26 @@ in
     # Caveat: environment.d is only read when the systemd user manager itself
     # starts, not on every `home-manager switch`. An already-running session
     # will not pick this up until the next login.
-    systemd.user.sessionVariables.WALLPAPERS_DIR = wallpapersDir;
+    #
+    # The two XDG_SESSION_* values sit here for the same reason: Hyprland's
+    # own environment import (see compositor.nix) leaves them out, and
+    # services and the apps they launch used to get them from Home Manager's
+    # hyprland.start hook, which is gone. Static values are fine because
+    # this module only exists in the Hyprland profile.
+    systemd.user.sessionVariables = {
+      WALLPAPERS_DIR = wallpapersDir;
+      XDG_SESSION_TYPE = "wayland";
+      XDG_SESSION_DESKTOP = "Hyprland";
+    };
+
+    # The session target itself is upstream's unit, which Hyprland starts on
+    # launch. The flake installs it under share/ rather than lib/, so a
+    # NixOS systemd.packages entry would not find it; ~/.local/share/systemd/
+    # user is on the user manager's unit search path, so link it there.
+    # Taking the file from the package keeps it in step with the compositor
+    # that starts it.
+    xdg.dataFile."systemd/user/${hyprlandSessionTarget}".source =
+      "${commands.hyprlandPackage}/share/systemd/user/${hyprlandSessionTarget}";
 
     # Same value, exposed as a commands.nix option (see the re-plumb comment
     # on commands.wallpaperSetScript) so silere.nix's wallpapersDir default

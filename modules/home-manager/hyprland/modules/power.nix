@@ -16,7 +16,7 @@ let
       commands.quickshellPackage
       pkgs.coreutils
       # Keep the compositor notification available when the shell is down.
-      pkgs.hyprland
+      commands.hyprlandPackage
       pkgs.libnotify
     ];
     # Target the same packaged shell.qml that the shell service starts.

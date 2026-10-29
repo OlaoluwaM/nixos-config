@@ -2,10 +2,16 @@
   config,
   lib,
   pkgs,
+  inputs,
   ...
 }:
 let
   cfg = config.local.hyprland;
+  system = pkgs.stdenv.hostPlatform.system;
+  hyprlandPackages = inputs.hyprland.packages.${system};
+  # The nixos-unstable snapshot Hyprland's flake builds against (see the
+  # hyprland input in flake.nix).
+  hyprlandNixpkgs = inputs.hyprland.inputs.nixpkgs.legacyPackages.${system};
 in
 {
   options.local.hyprland = {
@@ -22,10 +28,23 @@ in
     # XWayland support for older apps that still speak X11.
     programs.hyprland = {
       enable = true;
+      # Both from the flake input, so the compositor and portal stay built
+      # against each other; the portal carries workspace sharing.
+      package = hyprlandPackages.hyprland;
+      portalPackage = hyprlandPackages.xdg-desktop-portal-hyprland;
       xwayland = {
         enable = true;
       };
     };
+
+    # The flake's Hyprland links against nixos-unstable's mesa while this
+    # system runs 26.05's, and that mismatch shows up as lag and FPS drops in
+    # GPU-heavy apps (https://github.com/hyprwm/Hyprland/issues/5148). Move
+    # the system mesa to Hyprland's snapshot to match. This changes the
+    # Intel iGPU's userspace driver for every app, not just Hyprland; the
+    # NVIDIA driver comes from the kernel packages and is unaffected.
+    # enable32Bit is off on this host, so there is no package32 to sync.
+    hardware.graphics.package = hyprlandNixpkgs.mesa;
 
     # Force XWayland apps to use Wayland to avoid some pixalation issues
     # Helps Chromium/Electron apps prefer Wayland behavior under NixOS.

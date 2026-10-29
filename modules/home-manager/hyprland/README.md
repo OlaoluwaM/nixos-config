@@ -50,18 +50,43 @@ Each file has one main job:
   the selected desktop when `local.antiburn.enable` is enabled.
 - `../deja-dup.nix` starts the Flatpak backup scheduler with this desktop.
 
+## Where Hyprland Comes From
+
+Hyprland and its screen-share portal come from upstream's `hyprland` flake
+input, not from Nixpkgs. The input is pinned to a release tag in `flake.nix`.
+To upgrade, change the tag in the URL. `nix flake update` does not move it.
+
+The portal is set to its own newer tag. Hyprland 0.57.0 pins a portal version
+that cannot share a whole workspace. Remove that override when a newer
+Hyprland tag pins portal 1.5.0 or later.
+
+The flake builds against nixos-unstable. For this reason, the system uses
+mesa from that same snapshot (`modules/nixos/hyprland.nix`). Helper scripts
+get `hyprctl` from the same package through
+`local.hyprland.commands.hyprlandPackage`.
+
 ## How Login Works
 
 ```text
-greetd -> tuigreet -> Hyprland -> hyprland.lua -> hyprland-session.target
+greetd -> tuigreet -> Hyprland -> hyprland-session.target
 ```
 
 `greetd` runs the login screen. `tuigreet` asks for the user name and password.
 It then starts Hyprland.
 
-Home Manager writes `~/.config/hypr/hyprland.lua`. That file starts
-`hyprland-session.target`. A target is a named group of background programs.
-This target starts and stops the desktop programs together.
+Hyprland starts `hyprland-session.target` by itself. A target is a named group
+of background programs. This target starts and stops the desktop programs
+together. When Hyprland exits, it stops `graphical-session.target`, and this
+target stops with it.
+
+The target file comes from the Hyprland package. `default.nix` links it into
+`~/.local/share/systemd/user/`. Home Manager's own Hyprland session setup is
+turned off, because it would start the target a second time.
+
+Hyprland copies only some environment variables to the background programs.
+`default.nix` puts the others (`XDG_SESSION_TYPE`, `XDG_SESSION_DESKTOP`, and
+`WALLPAPERS_DIR`) in `~/.config/environment.d/`. Changes to these values take
+effect at the next login.
 
 The group includes the shell, Vicinae, wallpaper services, idle tools, KDE
 Connect icon, and keyring.

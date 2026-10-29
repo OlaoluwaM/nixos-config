@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  inputs,
   ...
 }:
 
@@ -17,14 +18,18 @@ let
   cfg = config.local.hyprland;
   theme = config.local.theme.colors;
   stripHash = s: lib.removePrefix "#" s;
-  # Local copies used only by the `on = hyprland.shutdown` handler below.
-  # keybindings.nix keeps its own copies for its binds; small duplication
+  # Local copy used by wsCompact and the event handlers below.
+  # keybindings.nix keeps its own copy for its binds; small duplication
   # between sibling modules is fine, cross-module coupling is not.
   lua = lib.generators.mkLuaInline;
-  luaString = builtins.toJSON;
 in
 {
   config = lib.mkIf cfg.enable {
+    # The same flake package modules/nixos/hyprland.nix installs, shared with
+    # the helper scripts through the commands tree (see commands.nix).
+    local.hyprland.commands.hyprlandPackage =
+      inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
+
     wayland.windowManager.hyprland = {
       enable = true;
 
@@ -44,26 +49,18 @@ in
       # regardless of future Home Manager default changes.
       configType = "lua";
 
-      # When Hyprland starts, Home Manager can copy important session variables
-      # into the environment inherited by services run through `systemctl --user`
-      # before starting hyprland-session.target. Services started this way, such
-      # as hypridle, hyprsunset, and Vicinae, need these values to know which
-      # Wayland/Hyprland session they belong to. Without them, those services
-      # can start but fail to talk to the compositor, portals, or the right
-      # display.
-      systemd = {
-        enable = true;
-        variables = [
-          "DISPLAY"
-          "HYPRLAND_INSTANCE_SIGNATURE"
-          "WAYLAND_DISPLAY"
-          "XDG_CURRENT_DESKTOP"
-          "XDG_SESSION_DESKTOP"
-          "XDG_SESSION_TYPE"
-          # Repo-specific: read by the wallpaper pipeline (wallpaper.nix).
-          "WALLPAPERS_DIR"
-        ];
-      };
+      # Hyprland (0.57+) runs the session target itself: at startup it imports
+      # DISPLAY, WAYLAND_DISPLAY, HYPRLAND_INSTANCE_SIGNATURE,
+      # XDG_CURRENT_DESKTOP, PATH and XDG_DATA_DIRS into the systemd user
+      # manager and starts hyprland-session.target, and on exit it stops
+      # graphical-session.target. Home Manager's integration did the same job
+      # from a hyprland.start hook, which now fires after Hyprland's own start
+      # and stop/start-cycled the target, so every session service started
+      # twice per login. Off here; default.nix links upstream's target unit
+      # and puts the variables Hyprland doesn't import (XDG_SESSION_TYPE,
+      # XDG_SESSION_DESKTOP, WALLPAPERS_DIR) in environment.d, where the user
+      # manager has them before anything starts.
+      systemd.enable = false;
 
       settings = {
         # Enable switching workspaces with a three finger swipe
@@ -111,10 +108,22 @@ in
 
         # GNOME-style dynamic workspaces, compositor half (the bar's widget
         # half reads the same state through the shell's wsDynamic mode).
-        # Keeps occupied workspaces contiguous from 1: when a middle
-        # workspace empties, everything above shifts down -- so like GNOME,
-        # closing the last window on a workspace collapses it and the
-        # workspace you are looking at inherits the next one's windows.
+        # Keeps occupied workspaces contiguous from 1 by renumbering them
+        # (hl.dsp.workspace.change_id, 0.56+) rather than moving windows, so
+        # a shifted workspace keeps its tiling layout and its identity --
+        # which is what a workspace screen-share follows, so a stream of it
+        # survives the shift. The bar hears each renumber as the
+        # changeworkspaceid event, which the fork's CompositorHyprland
+        # already refreshes on.
+        #
+        # Like GNOME, the empty workspace you are looking at stays put: if
+        # you close the last window on a middle workspace, nothing slides in.
+        # Its number is still taken, so the pass stops there; once you leave,
+        # Hyprland drops the empty workspace, workspace.removed fires, and
+        # the next pass shifts everything above it down. An empty workspace
+        # you land on past the trailing slot (Super+5 with two occupied) is
+        # renumbered into that slot, GNOME's "one empty at the end".
+        #
         # Runs in-process via hl.dispatch (verified live: dispatcher objects
         # are invocable through hl.dispatch even though binds are their usual
         # home), so no hyprctl child processes and no external daemon.
@@ -126,9 +135,16 @@ in
         # the per-monitor id allocation if a dock becomes permanent.
         #
         # The 200ms one-shot timer coalesces event bursts (closing a window
-        # fires several events), and re-entrancy self-terminates: our own
-        # moves re-schedule one more pass, which finds the layout already
-        # compact and does nothing.
+        # fires several events). Renumbering fires none of the events below,
+        # so a pass never re-triggers itself.
+        #
+        # Since 0.57 special workspaces have no number, so their ws.id is
+        # nil rather than negative; the nil check keeps `ws.id > 0` from
+        # raising and aborting the whole pass while a scratchpad exists.
+        # change_id refuses a number any workspace holds, hence the `taken`
+        # table: Hyprland only keeps an empty workspace while it is the one
+        # being viewed, or if a workspace rule makes it persistent (none
+        # here), so a taken target means "the viewed empty one".
         wsCompact = {
           _var = lua ''
             (function()
@@ -138,7 +154,7 @@ in
                 local monitors = {}
                 local normal = {}
                 for _, ws in ipairs(hl.get_workspaces()) do
-                  if ws.id > 0 and not ws.special then
+                  if ws.id and ws.id > 0 and not ws.special then
                     table.insert(normal, ws)
                     monitors[ws.monitor and ws.monitor.name or "?"] = true
                   end
@@ -147,27 +163,33 @@ in
                 for _ in pairs(monitors) do monitorCount = monitorCount + 1 end
                 if monitorCount > 1 then return end
                 table.sort(normal, function(a, b) return a.id < b.id end)
-                local expected = 1
-                local activeId = 0
+                local taken = {}
+                local viewedEmpty = nil
                 for _, ws in ipairs(normal) do
-                  if ws.active then activeId = ws.id end
+                  taken[ws.id] = true
+                  if ws.active and ws.windows == 0 then viewedEmpty = ws.id end
+                end
+                local function renumber(from, to)
+                  hl.dispatch(hl.dsp.workspace.change_id({ workspace = from, id = to }))
+                  taken[from] = nil
+                  taken[to] = true
+                end
+                local expected = 1
+                for _, ws in ipairs(normal) do
                   if ws.windows > 0 then
                     if ws.id ~= expected then
-                      for _, w in ipairs(hl.get_workspace_windows(ws.id)) do
-                        hl.dispatch(hl.dsp.window.move({
-                          workspace = expected,
-                          window = "address:" .. tostring(w.address),
-                          silent = true,
-                        }))
-                      end
+                      -- the viewed empty workspace holds this number: leave
+                      -- everything above it alone until it is left
+                      if taken[expected] then return end
+                      renumber(ws.id, expected)
                     end
                     expected = expected + 1
                   end
                 end
-                -- stranded past the trailing empty (expected is exactly the
-                -- GNOME "one empty at the end" slot): walk back to it
-                if activeId > expected then
-                  hl.dispatch(hl.dsp.focus({ workspace = expected }))
+                -- the viewed empty workspace past the trailing slot
+                -- (expected is exactly GNOME's "one empty at the end")
+                if viewedEmpty and viewedEmpty > expected and not taken[expected] then
+                  renumber(viewedEmpty, expected)
                 end
               end
               return function()
@@ -179,19 +201,14 @@ in
           '';
         };
 
+        # No hyprland.shutdown handler stopping the session target: since
+        # 0.57, a Hyprland that started hyprland-session.target itself stops
+        # graphical-session.target on exit, and upstream's target is BindsTo=
+        # that, so the session services stop with it. Hyprland skips both
+        # halves under HYPRLAND_NO_SD_TARGET or when launched by systemd
+        # (MANAGERPID set); neither applies to the greetd launch here, but
+        # either would need the handler and Home Manager's integration back.
         on = [
-          # Runs when Hyprland is already shutting down so no need for
-          # hyprshutdown.
-          {
-            _args = [
-              "hyprland.shutdown"
-              (lua ''
-                function()
-                  hl.exec_cmd(${luaString "${pkgs.systemd}/bin/systemctl --user stop ${config.wayland.systemd.target}"})
-                end
-              '')
-            ];
-          }
           # The three ways a workspace can lose its last window. window.destroy
           # rather than window.close: close is the request, destroy the unmap.
           {
@@ -265,6 +282,20 @@ in
               vibrancy = 0.6;
               vibrancy_darkness = 0.3;
               brightness = 1.1;
+              # 0.57 blur variants layer a finish over the kawase blur above.
+              # "frost" is the static frosted-glass finish (no per-frame cost,
+              # unlike the animated ones such as water or aurora), tuned by
+              # the decoration:blur:glass:* defaults. A look to judge live;
+              # "kawase" is plain blur again.
+              variant = "frost";
+              # Fades the blur with each pixel's own opacity instead of
+              # cutting it off, so the shell's anti-aliased rounded corners
+              # and soft pane edges don't end on a hard frosted rim.
+              # ignore_alpha in the layer rules below still drops the
+              # near-transparent margins entirely. Needs
+              # render:use_shader_blur_blend (set below); upstream marks
+              # that blend path experimental.
+              proportional = true;
             };
             # Window shadows off (2026-08-23): the flat look won. The old
             # tuning (range 12, render_power 2, theme.shadowColor) is gone
@@ -280,6 +311,9 @@ in
           dwindle = {
             preserve_split = true;
           };
+
+          # decoration:blur:proportional only works on this blend path.
+          render.use_shader_blur_blend = true;
 
           misc = {
             disable_hyprland_logo = true;
