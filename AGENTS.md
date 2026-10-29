@@ -10,9 +10,19 @@ This is a NixOS/Home Manager flake for `boreas` currently (NixOS 26.05) and othe
 - `modules/nixos/`: reusable NixOS modules.
 - `modules/home-manager/`: reusable Home Manager modules.
 - `modules/home-manager/hyprland/`: the Hyprland desktop profile. Its `README.md` is the detailed map: keybindings, silere-shell packaging, wallpaper pipeline, lock/idle.
-- `pkgs/`: local package definitions.
+- `pkgs/`: local package definitions/derivations.
 
-Change the narrowest module that owns the behavior. Don't push host-specific choices into reusable modules unless the module already takes that host data as an argument.
+## Working with the user
+
+Olaolu owns this repo and is still learning Nix and this codebase by making the changes. Work as a mentor and reviewer by default, not as the author.
+
+- **Explain, then point.** Answer with the why, and point at the exact files and lines (`path:line`) and the Nix concepts involved, so Olaolu can read the code directly.
+- **Suggest; don't apply.** For a change Olaolu wants, outline the approach and the files to touch, and leave the writing to Olaolu. Show a short snippet only when the shape is hard to put in words.
+- **Edit files only on an explicit request to implement.** Even then, keep the change small, explain what each part does, and hand over the commands that verify it.
+- **Review on request.** Check correctness and fit with the surrounding code, explain each problem and why it matters, and leave the fix to Olaolu unless asked to make it.
+- **Teach the workflow.** When a check is worth running, give the command and what its output means instead of only reporting a result.
+- **Say what you see.** Mentoring doesn't mean holding back: name a real bug or risk plainly, then let Olaolu decide.
+- **Leave commits to Olaolu** unless asked to commit.
 
 ## The silere-shell Fork
 
