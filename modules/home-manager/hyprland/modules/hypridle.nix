@@ -57,7 +57,15 @@ in
 
           # after_sleep_cmd runs after resume. DPMS is the display power
           # management signal; this makes sure screens are powered on again.
-          after_sleep_cmd = dpms "enable";
+          #
+          # force_idle(0) then restarts the compositor's idle timers as input
+          # would. Each listener fires once per idle stretch and waits for
+          # input before it can fire again, and a machine that wakes on its
+          # own (a USB controller, say) gets none, so without this it stays up
+          # behind the lock with the screen lit until someone touches it. The
+          # restart runs the chain again from zero; the 600s lock request it
+          # brings finds the lock already up, and the wrapper skips it.
+          after_sleep_cmd = "${dpms "enable"}; ${pkgs.hyprland}/bin/hyprctl dispatch 'hl.dsp.force_idle(0)'";
 
           # Wait until the session is locked before allowing suspend to
           # continue.

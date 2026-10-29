@@ -139,6 +139,9 @@ hypridle watches for keyboard and mouse use.
 - After 11 minutes, it turns the screens off.
 - After 15 minutes, it puts the computer to sleep.
 
+Waking up starts the timers again from zero, so a computer that wakes up by
+itself with nobody there goes back to sleep after another 15 minutes.
+
 Video or audio playback can block these timers. Caffeine can also block them
 until the user turns it off.
 
