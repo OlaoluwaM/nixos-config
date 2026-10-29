@@ -41,11 +41,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # silere-shell v0.9.0 requires Quickshell 0.3.1. Stable and the locked
-    # unstable snapshot still package 0.3.0, so pin the official release and
-    # keep it on this flake's Nixpkgs package set.
+    # Silere shell nd Hyprland v0.57+ require code on based on quickshell 0.32
     quickshell = {
-      url = "git+https://git.outfoxxed.me/quickshell/quickshell.git?ref=refs/tags/v0.3.1";
+      url = "git+https://git.outfoxxed.me/quickshell/quickshell?rev=4befab5bc670218e1dac84e4b60470bf26dbadf4";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -169,7 +167,7 @@
             nixos-hardware.nixosModules.asus-zephyrus-gu603h
             ./hosts/boreas
             sysc-greet.nixosModules.default
-            
+
             # Integrate Home Manager into the NixOS configuration so a normal
             # nixos-rebuild also activates the user's Home Manager configuration.
             home-manager.nixosModules.home-manager
