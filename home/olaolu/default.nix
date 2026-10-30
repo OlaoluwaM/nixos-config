@@ -128,6 +128,7 @@ in
     ../../modules/home-manager/git.nix
     ../../modules/home-manager/gpg.nix
     ../../modules/home-manager/hardware-interface.nix
+    ../../modules/home-manager/isd.nix
     ../../modules/home-manager/lazygit.nix
     ../../modules/home-manager/lsd.nix
     ../../modules/home-manager/neovim.nix
@@ -196,8 +197,6 @@ in
     haskellPackages.implicit-hie
     haskellPackages.ghc-events
     (callPackage ../../pkgs/hacker-laws-cli { })
-
-    isd
 
     libappindicator
     libpq
@@ -282,7 +281,6 @@ in
     unstable.libva
     unstable.libva-utils
     unstable.lld
-    unstable.lnav
     unstable.lsof
 
     unstable.navi
@@ -403,6 +401,7 @@ in
   local.gh.enable = true;
   local.git.enable = true;
   local.gpg.enable = true;
+  local.isd.enable = true;
   local.lazygit.enable = true;
   local.lsd.enable = true;
   local.neovim.enable = true;
