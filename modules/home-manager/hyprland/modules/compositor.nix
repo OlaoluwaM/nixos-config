@@ -3,6 +3,7 @@
   lib,
   pkgs,
   inputs,
+  unstable,
   ...
 }:
 
@@ -25,10 +26,11 @@ let
 in
 {
   config = lib.mkIf cfg.enable {
-    # The same flake package modules/nixos/hyprland.nix installs, shared with
-    # the helper scripts through the commands tree (see commands.nix).
+    # The same package modules/nixos/hyprland.nix installs (both read
+    # ../source.nix), shared with the helper scripts through the commands
+    # tree (see commands.nix).
     local.hyprland.commands.hyprlandPackage =
-      inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
+      (import ../source.nix { inherit inputs unstable pkgs; }).hyprland;
 
     wayland.windowManager.hyprland = {
       enable = true;

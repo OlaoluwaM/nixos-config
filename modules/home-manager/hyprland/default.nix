@@ -183,14 +183,20 @@ in
       XDG_SESSION_DESKTOP = "Hyprland";
     };
 
-    # The session target itself is upstream's unit, which Hyprland starts on
-    # launch. The flake installs it under share/ rather than lib/, so a
-    # NixOS systemd.packages entry would not find it; ~/.local/share/systemd/
-    # user is on the user manager's unit search path, so link it there.
-    # Taking the file from the package keeps it in step with the compositor
-    # that starts it.
-    xdg.dataFile."systemd/user/${hyprlandSessionTarget}".source =
-      "${commands.hyprlandPackage}/share/systemd/user/${hyprlandSessionTarget}";
+    # The session target Hyprland (0.57+) starts on launch, defined here
+    # rather than linked from the package: where a build installs the unit
+    # (the flake puts it under share/, NixOS only looks in lib/) varies by
+    # package source, and this way switching sources in ./source.nix
+    # can't lose it. Mirrors upstream's systemd/hyprland-session.target:
+    # BindsTo stops it, and the services PartOf it, when Hyprland's exit
+    # stops graphical-session.target; PropagatesStopTo works the other way.
+    systemd.user.targets.hyprland-session.Unit = {
+      Description = "Hyprland session";
+      BindsTo = [ "graphical-session.target" ];
+      Wants = [ "graphical-session-pre.target" ];
+      After = [ "graphical-session-pre.target" ];
+      PropagatesStopTo = [ "graphical-session.target" ];
+    };
 
     # Same value, exposed as a commands.nix option (see the re-plumb comment
     # on commands.wallpaperSetScript) so silere.nix's wallpapersDir default

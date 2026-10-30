@@ -52,9 +52,15 @@ Each file has one main job:
 
 ## Where Hyprland Comes From
 
-Hyprland and its screen-share portal come from upstream's `hyprland` flake
-input, not from Nixpkgs. The input is pinned to a release tag in `flake.nix`.
-To upgrade, change the tag in the URL. `nix flake update` does not move it.
+`source.nix` in this folder decides where Hyprland and its screen-share portal
+come from. The NixOS module and the Home Manager profile both read it. Today
+it is upstream's `hyprland` flake input. Changing its last line to `unstable`
+or `pkgs` (stable nixpkgs) moves the whole desktop to that source, because
+nixpkgs uses the same package names.
+
+The flake input is pinned to a release tag. To upgrade, change the tag in the
+URL. `nix flake update` does not move it, and Hyprland has no release branch
+to follow instead.
 
 The portal is set to its own newer tag. Hyprland 0.57.0 pins a portal version
 that cannot share a whole workspace. Remove that override when a newer
@@ -80,9 +86,10 @@ of background programs. This target starts and stops the desktop programs
 together. When Hyprland exits, it stops `graphical-session.target`, and this
 target stops with it.
 
-The target file comes from the Hyprland package. `default.nix` links it into
-`~/.local/share/systemd/user/`. Home Manager's own Hyprland session setup is
-turned off, because it would start the target a second time.
+`default.nix` defines the target itself, as a copy of the one Hyprland ships,
+so it does not depend on where a Hyprland package puts its files. Home
+Manager's own Hyprland session setup is turned off, because it would start the
+target a second time.
 
 Hyprland copies only some environment variables to the background programs.
 `default.nix` puts the others (`XDG_SESSION_TYPE`, `XDG_SESSION_DESKTOP`, and

@@ -3,12 +3,13 @@
   lib,
   pkgs,
   inputs,
+  unstable,
   ...
 }:
 let
   cfg = config.local.hyprland;
-  system = pkgs.stdenv.hostPlatform.system;
-  hyprlandPackages = inputs.hyprland.packages.${system};
+  # Chosen once in the Hyprland profile's source.nix, shared with Home Manager.
+  hyprlandPackages = import ../home-manager/hyprland/source.nix { inherit inputs unstable pkgs; };
 in
 {
   options.local.hyprland = {
@@ -25,8 +26,7 @@ in
     # XWayland support for older apps that still speak X11.
     programs.hyprland = {
       enable = true;
-      # Both from the flake input, so the compositor and portal stay built
-      # against each other; the portal carries workspace sharing.
+      # Both from the same set, so the compositor and portal stay built against each other
       package = hyprlandPackages.hyprland;
       portalPackage = hyprlandPackages.xdg-desktop-portal-hyprland;
       xwayland = {
