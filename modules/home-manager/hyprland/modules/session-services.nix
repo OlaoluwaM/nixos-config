@@ -58,6 +58,22 @@ in
           Restart = "on-failure";
         };
       };
+
+      hyprland-logs-to-journal = {
+        Unit = {
+          Description = "Forward Hyprland logs to the systemd journal";
+          PartOf = [ config.wayland.systemd.target ];
+          After = [ config.wayland.systemd.target ];
+        };
+
+        Install.WantedBy = [ config.wayland.systemd.target ];
+
+        Service = {
+          ExecStart = "${pkgs.coreutils}/bin/tail -n +1 -F %t/hypr/\${HYPRLAND_INSTANCE_SIGNATURE}/hyprland.log";
+          StandardOutput = "journal";
+          Restart = "on-failure";
+        };
+      };
     };
   };
 }
