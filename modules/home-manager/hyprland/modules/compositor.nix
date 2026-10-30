@@ -72,11 +72,6 @@ in
           action = "workspace";
         };
 
-        # GNOME lets a swipe continue past the last workspace into a fresh
-        # empty one; with the wsCompact collapser below, that swipe-created
-        # workspace IS the dynamic model's trailing empty slot.
-        config.gestures.workspace_swipe_create_new = true;
-
         # Monitor rule. Blank monitor name means "apply to all monitors".
         # preferred = use the monitor's preferred resolution/refresh rate.
         # auto = let Hyprland choose the position. 1 = scale factor.
@@ -234,6 +229,15 @@ in
         ];
 
         config = {
+          # GNOME lets a swipe continue past the last workspace into a fresh
+          # empty one; with the wsCompact collapser below, that swipe-created
+          # workspace IS the dynamic model's trailing empty slot.
+          gestures.workspace_swipe_create_new = true;
+
+          debug = {
+            disable_logs = false;
+          };
+
           input = {
             kb_layout = "us";
             follow_mouse = 1;
@@ -290,14 +294,6 @@ in
               # the decoration:blur:glass:* defaults. A look to judge live;
               # "kawase" is plain blur again.
               variant = "frost";
-              # Fades the blur with each pixel's own opacity instead of
-              # cutting it off, so the shell's anti-aliased rounded corners
-              # and soft pane edges don't end on a hard frosted rim.
-              # ignore_alpha in the layer rules below still drops the
-              # near-transparent margins entirely. Needs
-              # render:use_shader_blur_blend (set below); upstream marks
-              # that blend path experimental.
-              proportional = true;
             };
             # Window shadows off (2026-08-23): the flat look won. The old
             # tuning (range 12, render_power 2, theme.shadowColor) is gone
@@ -313,9 +309,6 @@ in
           dwindle = {
             preserve_split = true;
           };
-
-          # decoration:blur:proportional only works on this blend path.
-          render.use_shader_blur_blend = true;
 
           misc = {
             disable_hyprland_logo = true;
