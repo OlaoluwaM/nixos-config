@@ -1,5 +1,16 @@
 # TODO
 
+## Hyprland: off the flake
+
+`modules/home-manager/hyprland/source.nix` picks where Hyprland comes from; switching is a one-word change to its last line. Hyprland needs 0.57+ and its portal 1.5.0+ (workspace sharing) in whichever source you pick. Check with `nix eval --raw github:nixos/nixpkgs/<channel>#hyprland.version` and `#xdg-desktop-portal-hyprland.version`.
+
+- [ ] Move to `unstable` once nixos-unstable has both. Patch releases then arrive with `nix flake update nixpkgs-unstable`, with no tag bumps.
+- [ ] Move to stable nixpkgs once a stable release has both (likely 26.11).
+- [ ] Once nothing uses the flake: delete the `hyprland` input from `flake.nix`, the `hyprland.cachix.org` entries in `hosts/boreas/default.nix`, and the flake wording in the profile README and `AGENTS.md`.
+- [ ] At the 26.11 upgrade, if Hyprland still comes from the flake or `unstable`: before rebooting, check that the mesa driver doesn't need a newer glibc than Hyprland has, or Hyprland loses OpenGL.
+  - Driver: `objdump -T $(nix eval --raw .#nixosConfigurations.boreas.config.hardware.graphics.package)/lib/libgallium-*.so | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -1`
+  - Hyprland: `nix-store -qR $(nix eval --raw .#nixosConfigurations.boreas.config.programs.hyprland.package) | grep -o 'glibc-2\.[0-9]*' | sort -uV`
+
 ## Upstream: sysc-greet
 
 Contributions to [Nomadcxx/sysc-greet](https://github.com/Nomadcxx/sysc-greet) that would let `modules/nixos/greet.nix` drop its workarounds.
