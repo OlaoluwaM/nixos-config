@@ -9,9 +9,6 @@ let
   cfg = config.local.hyprland;
   system = pkgs.stdenv.hostPlatform.system;
   hyprlandPackages = inputs.hyprland.packages.${system};
-  # The nixos-unstable snapshot Hyprland's flake builds against (see the
-  # hyprland input in flake.nix).
-  hyprlandNixpkgs = inputs.hyprland.inputs.nixpkgs.legacyPackages.${system};
 in
 {
   options.local.hyprland = {
@@ -37,14 +34,14 @@ in
       };
     };
 
-    # The flake's Hyprland links against nixos-unstable's mesa while this
-    # system runs 26.05's, and that mismatch shows up as lag and FPS drops in
-    # GPU-heavy apps (https://github.com/hyprwm/Hyprland/issues/5148). Move
-    # the system mesa to Hyprland's snapshot to match. This changes the
-    # Intel iGPU's userspace driver for every app, not just Hyprland; the
-    # NVIDIA driver comes from the kernel packages and is unaffected.
-    # enable32Bit is off on this host, so there is no package32 to sync.
-    hardware.graphics.package = hyprlandNixpkgs.mesa;
+    # The system mesa deliberately stays on 26.05's, even though the flake's
+    # Hyprland links against nixos-unstable's. The Hyprland wiki suggests
+    # moving hardware.graphics.package to Hyprland's mesa to avoid lag in
+    # GPU-heavy apps (https://github.com/hyprwm/Hyprland/issues/5148), but
+    # that driver is built for unstable's newer glibc (it needs GLIBC_2.43),
+    # and every program built from stable nixpkgs (Quickshell, kitty, ...)
+    # then fails to load it: no OpenGL, so no bar and no greeter. A stable
+    # driver loads in Hyprland too, since glibc is backward compatible.
 
     # Force XWayland apps to use Wayland to avoid some pixalation issues
     # Helps Chromium/Electron apps prefer Wayland behavior under NixOS.

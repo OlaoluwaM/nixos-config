@@ -51,12 +51,8 @@
     # releases (stable 0.55.x, unstable 0.56.x when 0.57.0 shipped), and the
     # flake keeps the compositor and its portal built against each other.
     # A tag ref never moves under `nix flake update`, so upgrading is a
-    # deliberate edit of this URL. Deliberately NOT following our nixpkgs:
-    # upstream's cachix (see nix.settings on boreas) only holds builds
-    # against Hyprland's own nixpkgs pin, and a follows would compile Hyprland
-    # locally. That pin is nixos-unstable, so boreas syncs mesa to it
-    # (modules/nixos/hyprland.nix).
-    #
+    # deliberate edit of this URL.
+    # boreas still keeps the stable mesa driver (modules/nixos/hyprland.nix explains why).
     # The xdph override exists for workspace sharing (screen-share a whole
     # workspace, for streams): it needs xdg-desktop-portal-hyprland 1.5.0,
     # but v0.57.0's lock pins a portal commit from just before that feature

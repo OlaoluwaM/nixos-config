@@ -60,8 +60,9 @@ The portal is set to its own newer tag. Hyprland 0.57.0 pins a portal version
 that cannot share a whole workspace. Remove that override when a newer
 Hyprland tag pins portal 1.5.0 or later.
 
-The flake builds against nixos-unstable. For this reason, the system uses
-mesa from that same snapshot (`modules/nixos/hyprland.nix`). Helper scripts
+The flake builds against nixos-unstable, but the system keeps the stable mesa
+driver. The unstable driver needs a newer glibc than stable programs have, so
+apps like the bar could not use it (`modules/nixos/hyprland.nix`). Helper scripts
 get `hyprctl` from the same package through
 `local.hyprland.commands.hyprlandPackage`.
 
