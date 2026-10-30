@@ -111,7 +111,13 @@ capture_region() {
 	local geometry="$1"
 
 	[[ -n "$geometry" ]] || exit 0
-	grim -g "$geometry" - | tee >(wl-copy --type image/png) | satty "${satty_args[@]}"
+	# satty is a GTK4 app, and GTK4 draws with Vulkan. The Vulkan loader opens
+	# every installed driver, NVIDIA's included, and opening it wakes the dGPU
+	# from runtime suspend: ~1.8s before satty's window appears, on a card it
+	# never renders on. Hiding NVIDIA's driver keeps satty on the Intel iGPU
+	# and lets the dGPU sleep. Scoped to satty, not the session, because PRIME
+	# offload needs that driver visible to everything else.
+	grim -g "$geometry" - | tee >(wl-copy --type image/png) | VK_LOADER_DRIVERS_DISABLE='nvidia*' satty "${satty_args[@]}"
 	notify_location "Screenshot captured" "On the clipboard now; annotated saves go to $screenshot_dir" "$screenshot_dir"
 }
 
@@ -120,7 +126,8 @@ area)
 	capture_region "$(area_geometry || true)"
 	;;
 full)
-	grim - | tee >(wl-copy --type image/png) | satty "${satty_args[@]}"
+	# VK_LOADER_DRIVERS_DISABLE: same reason as in capture_region.
+	grim - | tee >(wl-copy --type image/png) | VK_LOADER_DRIVERS_DISABLE='nvidia*' satty "${satty_args[@]}"
 	notify_location "Screenshot captured" "On the clipboard now; annotated saves go to $screenshot_dir" "$screenshot_dir"
 	;;
 window)
