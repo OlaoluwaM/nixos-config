@@ -154,10 +154,7 @@ in
         '';
       };
 
-      # Set in compositor.nix from the same flake input the NixOS module
-      # installs, so every hyprctl a helper calls matches the running
-      # compositor. Under the NixOS-integrated entrypoint this is the same
-      # store path as the system package, not a second copy.
+      # Comes from lib/hyprland-source.nix
       hyprlandPackage = lib.mkOption {
         type = lib.types.package;
         internal = true;
