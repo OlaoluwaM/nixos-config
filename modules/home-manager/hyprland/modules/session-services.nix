@@ -71,6 +71,7 @@ in
         Service = {
           ExecStart = "${pkgs.coreutils}/bin/tail -n +1 -F %t/hypr/\${HYPRLAND_INSTANCE_SIGNATURE}/hyprland.log";
           StandardOutput = "journal";
+          SyslogIdentifier = "hyprland-logs-to-journal"; # This way the service can be id'd properly, not just as 'tail'
           Restart = "on-failure";
         };
       };
