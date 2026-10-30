@@ -142,6 +142,7 @@ in
   config = lib.mkIf config.local.hyprland.enable (
     lib.mkMerge [
       (lib.mkIf cfg.enable {
+        # This pulls in a hyprland from stable for the greeter to use (the greeter calls hyprctl to exit it's hyprland on login). It doesn't interface with our hyprland version (defined in lib/hyprland-source.nix) except to start it on successful login.
         services.sysc-greet = {
           enable = true;
           compositor = "hyprland"; # or "cagebreak", "sway", "mango", "hyprland" (0.55+)
