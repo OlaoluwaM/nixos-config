@@ -52,8 +52,9 @@ Each file has one main job:
 
 ## Where Hyprland Comes From
 
-`source.nix` in this folder decides where Hyprland and its screen-share portal
-come from. The NixOS module and the Home Manager profile both read it. Today
+`lib/hyprland-source.nix` (at the repo root) decides where Hyprland and its
+screen-share portal come from. The NixOS module and the Home Manager profile
+both read it. Today
 it is upstream's `hyprland` flake input. Changing its last line to `unstable`
 or `pkgs` (stable nixpkgs) moves the whole desktop to that source, because
 nixpkgs uses the same package names.

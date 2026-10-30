@@ -8,8 +8,8 @@
 }:
 let
   cfg = config.local.hyprland;
-  # Chosen once in the Hyprland profile's source.nix, shared with Home Manager.
-  hyprlandPackages = import ../home-manager/hyprland/source.nix { inherit inputs unstable pkgs; };
+  # Chosen once in lib/hyprland-source.nix, shared with Home Manager.
+  hyprlandPackages = import ../../lib/hyprland-source.nix { inherit inputs unstable pkgs; };
 in
 {
   options.local.hyprland = {

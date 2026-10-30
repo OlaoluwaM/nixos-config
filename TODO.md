@@ -2,7 +2,7 @@
 
 ## Hyprland: off the flake
 
-`modules/home-manager/hyprland/source.nix` picks where Hyprland comes from; switching is a one-word change to its last line. Hyprland needs 0.57+ and its portal 1.5.0+ (workspace sharing) in whichever source you pick. Check with `nix eval --raw github:nixos/nixpkgs/<channel>#hyprland.version` and `#xdg-desktop-portal-hyprland.version`.
+`lib/hyprland-source.nix` picks where Hyprland comes from; switching is a one-word change to its last line. Hyprland needs 0.57+ and its portal 1.5.0+ (workspace sharing) in whichever source you pick. Check with `nix eval --raw github:nixos/nixpkgs/<channel>#hyprland.version` and `#xdg-desktop-portal-hyprland.version`.
 
 - [ ] Move to `unstable` once nixos-unstable has both. Patch releases then arrive with `nix flake update nixpkgs-unstable`, with no tag bumps.
 - [ ] Move to stable nixpkgs once a stable release has both (likely 26.11).

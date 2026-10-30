@@ -11,6 +11,7 @@ This is a NixOS/Home Manager flake for `boreas` (NixOS 26.05).
 - `modules/home-manager/`: reusable Home Manager modules.
 - `modules/home-manager/hyprland/`: the Hyprland desktop profile. Its `README.md` is the detailed map: keybindings, silere-shell packaging, wallpaper pipeline, lock/idle.
 - `pkgs/`: local package definitions/derivations.
+- `lib/`: plain Nix functions that both the NixOS and Home Manager sides import (not modules; nothing merges them into `config`).
 
 Change the narrowest module that owns the behavior. Don't push host-specific choices into reusable modules unless the module already takes that host data as an argument.
 
@@ -73,7 +74,7 @@ greetd -> tuigreet -> Hyprland -> hyprland-session.target -> user services
 ```
 
 - Hyprland starts the target itself. Home Manager's Hyprland systemd integration is deliberately off; read `compositor.nix` and the profile README before changing that.
-- Hyprland and its portal come from `modules/home-manager/hyprland/source.nix`, currently the tag-pinned `hyprland` flake input. The profile README explains the pin, the portal override, and why the system mesa stays on stable. Upgrade by bumping the tag and check that lock, idle, and the shell still work. Don't move a single Hyprland ecosystem package on its own.
+- Hyprland and its portal come from `lib/hyprland-source.nix`, currently the tag-pinned `hyprland` flake input. The profile README explains the pin, the portal override, and why the system mesa stays on stable. Upgrade by bumping the tag and check that lock, idle, and the shell still work. Don't move a single Hyprland ecosystem package on its own.
 - Every chord is defined in `modules/home-manager/hyprland/modules/keybindings.nix`. Keep GNOME and Hyprland bindings on the same chord where practical, and check the other profile before changing one.
 - The wallpaper path (`local.hyprland.wallpaper`) is a seeded user-writable file that `wallpaper-set` overwrites in place, not a store symlink. Don't turn it back into an `xdg.configFile` entry.
 - Scripts in `modules/home-manager/hyprland/scripts/` are embedded with `pkgs.writeShellApplication`. They start with `# shellcheck shell=bash` and have no shebang.

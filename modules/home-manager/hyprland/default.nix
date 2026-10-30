@@ -186,7 +186,7 @@ in
     # The session target Hyprland (0.57+) starts on launch, defined here
     # rather than linked from the package: where a build installs the unit
     # (the flake puts it under share/, NixOS only looks in lib/) varies by
-    # package source, and this way switching sources in ./source.nix
+    # package source, and this way switching sources in lib/hyprland-source.nix
     # can't lose it. Mirrors upstream's systemd/hyprland-session.target:
     # BindsTo stops it, and the services PartOf it, when Hyprland's exit
     # stops graphical-session.target; PropagatesStopTo works the other way.
