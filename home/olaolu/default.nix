@@ -197,9 +197,12 @@ in
     haskellPackages.ghc-events
     (callPackage ../../pkgs/hacker-laws-cli { })
 
+    isd
+
     libappindicator
     libpq
     libwebp
+    lm_sensors
     localsend
 
     meson
@@ -274,11 +277,12 @@ in
 
     unstable.libdrm
     unstable.lazydocker
+    unstable.lazyjournal
     unstable.libgcc
     unstable.libva
     unstable.libva-utils
     unstable.lld
-    lm_sensors
+    unstable.lnav
     unstable.lsof
 
     unstable.navi
