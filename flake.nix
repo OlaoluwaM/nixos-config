@@ -47,22 +47,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Hyprland from upstream's flake, pinned to a release tag: nixpkgs lags
-    # releases (stable 0.55.x, unstable 0.56.x when 0.57.0 shipped), and the
-    # flake keeps the compositor and its portal built against each other.
-    # A tag ref never moves under `nix flake update`, so upgrading is a
-    # deliberate edit of this URL.
-    # boreas still keeps the stable mesa driver (modules/nixos/hyprland.nix explains why).
-    # The xdph override exists for workspace sharing (screen-share a whole
-    # workspace, for streams): it needs xdg-desktop-portal-hyprland 1.5.0,
-    # but v0.57.0's lock pins a portal commit from just before that feature
-    # merged. Drop the override once a Hyprland tag locks xdph >= 1.5.0.
-    # The overridden portal misses the cache and builds locally; it is small.
-    hyprland = {
-      url = "github:hyprwm/Hyprland/v0.57.0";
-      inputs.xdph.url = "github:hyprwm/xdg-desktop-portal-hyprland/v1.5.0";
-    };
-
     # My fork of s3rven/silere-shell, the Quickshell/QML bar for the Hyprland
     # profile. Fork-side NixOS-compat commits land on custom-branch. Upstream
     # ships no flake and its packaging/ directory is AUR-only, so this is

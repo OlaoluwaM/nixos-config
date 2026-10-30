@@ -55,19 +55,20 @@ Each file has one main job:
 `lib/hyprland-source.nix` (at the repo root) decides where Hyprland and its
 screen-share portal come from. The NixOS module and the Home Manager profile
 both read it. Today
-it is upstream's `hyprland` flake input. Changing its last line to `unstable`
-or `pkgs` (stable nixpkgs) moves the whole desktop to that source, because
-nixpkgs uses the same package names.
+it is `unstable` (nixos-unstable). Changing its last line to `pkgs` (stable
+nixpkgs) moves the whole desktop to that source, because each source uses the
+same package names.
 
-The flake input is pinned to a release tag. To upgrade, change the tag in the
-URL. `nix flake update` does not move it, and Hyprland has no release branch
-to follow instead.
+Hyprland is not pinned to a version. It moves whenever `nixpkgs-unstable` is
+updated, including a `nix flake update` run for other packages, and that can
+bring a minor release as well as a patch. After such an update, check
+`hyprland.version` and test lock, idle, the bar, and screen-sharing.
 
-The portal is set to its own newer tag. Hyprland 0.57.0 pins a portal version
-that cannot share a whole workspace. Remove that override when a newer
-Hyprland tag pins portal 1.5.0 or later.
+Workspace sharing (screen-share a whole workspace) needs
+`xdg-desktop-portal-hyprland` 1.5.0 or later. nixos-unstable ships it, so no
+override is needed.
 
-The flake builds against nixos-unstable, but the system keeps the stable mesa
+Hyprland builds against nixos-unstable, but the system keeps the stable mesa
 driver. The unstable driver needs a newer glibc than stable programs have, so
 apps like the bar could not use it (`modules/nixos/hyprland.nix`). Helper scripts
 get `hyprctl` from the same package through

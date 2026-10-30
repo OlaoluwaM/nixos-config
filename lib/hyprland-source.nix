@@ -8,17 +8,15 @@
 # the answer, and standalone Home Manager can't read a NixOS option. Both
 # callers already receive `inputs` and `unstable` through specialArgs.
 #
-# nixpkgs names both packages the way the flake does, so switching is a
-# one-word change to the line below:
-#   inputs.hyprland.packages.${system}  upstream's flake, tag-pinned (today)
-#   unstable                             nixos-unstable, which picks up patch releases
-#   pkgs                                 stable nixpkgs
+# Both nixpkgs sets name the packages the same way, so switching between them
+# is a one-word change to the line below:
+#   unstable  nixos-unstable, which moves with each update, minor releases included (today)
+#   pkgs      stable nixpkgs
+# Upstream's tag-pinned flake uses the same names too: re-add the `hyprland`
+# input and return inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.
 {
   inputs,
   unstable,
   pkgs,
 }:
-let
-  system = pkgs.stdenv.hostPlatform.system;
-in
-inputs.hyprland.packages.${system}
+unstable
