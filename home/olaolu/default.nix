@@ -326,6 +326,7 @@ in
     # unstable.stack2nix
     unstable.starship
 
+    unstable.tailspin
     unstable.tealdeer
     unstable.termdown
     unstable.tinyxxd
