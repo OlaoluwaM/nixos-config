@@ -230,8 +230,10 @@ When an image is picked, `wallpaper-set <image-path>` does this:
    colors used by `silere-shell`.
 5. It samples the image for the shell's adaptive glass: mean luminance,
    texture and tone for the strip under a top bar, the strip under a bottom
-   bar, and the whole picture, measured after cover-fitting the image to the
-   focused monitor. The result goes to `~/.config/silere-shell/glass.json`.
+   bar, the whole picture, and the corner the menu opens into under either
+   bar (that corner also records its brightest tenth), measured after
+   cover-fitting the image to the focused monitor. The result goes to
+   `~/.config/silere-shell/glass.json`.
    This step runs last and never fails the script; a bad sample leaves the
    shell on its previous one.
 

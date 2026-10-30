@@ -69,26 +69,53 @@ sample_region() {
 	printf '{"luminance":%s,"noise":%s,"tone":"#%s"}' "${stats% *}" "${stats#* }" "$tone"
 }
 
-# The shell's adaptive glass (fork ADR 0004) follows a sample of the wallpaper:
-# the strip under a top bar, the strip under a bottom bar, and the whole
-# picture, measured on the image cover-fitted to the focused monitor the way
-# awww shows it. The sample goes to the shell's own config directory, beside
-# the settings it already watches, through the same tmp-and-rename the stable
-# path uses so the shell never reads a half-written file.
+# A region that also records its brightest tenth. A pane spanning a bright sky
+# and a dark field has a middling mean, yet its text is only as legible as the
+# brightest part it covers. The 32x32 cells stand in for the compositor's blur,
+# so one bright pixel cannot count as a bright area.
+sample_peak_region() {
+	local fit="$1" gravity="$2" crop="$3"
+	local region peak
+	region="$(sample_region "$fit" "$gravity" "$crop")" || return 1
+	peak="$(magick "$fit" -gravity "$gravity" -crop "$crop" +repage +gravity -colorspace Gray \
+		-scale '32x32!' -crop 32x1 +repage +append -sort-pixels \
+		-format '%[fx:p{921,0}.intensity]' info:)" || return 1
+	case "$peak" in
+	[0-9.]*) ;;
+	*) return 1 ;;
+	esac
+	printf '%s,"peak":%s}' "${region%\}}" "$peak"
+}
+
+# The shell's adaptive glass (fork ADRs 0004 and 0005) follows a sample of the
+# wallpaper: the strip under a top bar, the strip under a bottom bar, the whole
+# picture, and the corner the menu opens into under either bar, measured on the
+# image cover-fitted to the focused monitor the way awww shows it. The sample
+# goes to the shell's own config directory, beside the settings it already
+# watches, through the same tmp-and-rename the stable path uses so the shell
+# never reads a half-written file.
 sample_glass() {
 	local image="$1"
 	local out_dir="${XDG_CONFIG_HOME:-$HOME/.config}/silere-shell"
-	local size width height fit top bottom field tmp_json
-	# The focused monitor's mode. A compositor that is not answering falls back
-	# to the panel this profile ships on, which only skews the strip height.
+	local size scale width height menu_w menu_h fit top bottom field menu_top menu_bottom tmp_json
+	# The focused monitor's mode and scale. A compositor that is not answering
+	# falls back to the panel this profile ships on, which only skews the crops.
 	size="$(hyprctl monitors -j 2>/dev/null \
-		| jq -r 'first(.[] | select(.focused)) | "\(.width)x\(.height)"' 2>/dev/null)" || size=""
+		| jq -r 'first(.[] | select(.focused)) | "\(.width)x\(.height)@\(.scale)"' 2>/dev/null)" || size=""
 	case "$size" in
-	[1-9]*x[1-9]*) ;;
-	*) size="2560x1600" ;;
+	[1-9]*x[1-9]*@[0-9]*) ;;
+	*) size="2560x1600@1.6" ;;
 	esac
+	scale="${size#*@}"
+	size="${size%@*}"
 	width="${size%x*}"
 	height="${size#*x}"
+	# The menu opens under the workspaces widget, which leads this profile's
+	# left bar zone, so it hugs the left edge: its compact width (400 logical
+	# px) by its height cap (72% of the screen). Both are the fork's
+	# MenuWindow constants; a moved launcher or a retuned panel moves them.
+	menu_w="$(jq -n --argjson s "$scale" --argjson w "$width" '[400 * $s, $w] | min | floor')" || return 1
+	menu_h="$(jq -n --argjson h "$height" '$h * 0.72 | floor')" || return 1
 	fit="$(mktemp "${TMPDIR:-/tmp}/wallpaper-set.XXXXXX.miff")" || return 1
 	# The source, not the stable PNG: magick reads by content, so a mislabelled
 	# file samples fine, and the first frame covers animated formats.
@@ -100,11 +127,13 @@ sample_glass() {
 	top="$(sample_region "$fit" North "${width}x64+0+0")" || { rm -f "$fit"; return 1; }
 	bottom="$(sample_region "$fit" South "${width}x64+0+0")" || { rm -f "$fit"; return 1; }
 	field="$(sample_region "$fit" NorthWest "${width}x${height}+0+0")" || { rm -f "$fit"; return 1; }
+	menu_top="$(sample_peak_region "$fit" NorthWest "${menu_w}x${menu_h}+0+0")" || { rm -f "$fit"; return 1; }
+	menu_bottom="$(sample_peak_region "$fit" SouthWest "${menu_w}x${menu_h}+0+0")" || { rm -f "$fit"; return 1; }
 	rm -f "$fit"
 	mkdir -p "$out_dir" || return 1
 	tmp_json="$(mktemp "$out_dir/.glass.XXXXXX.json")" || return 1
-	if ! printf '{"version":1,"source":%s,"top":%s,"bottom":%s,"field":%s}\n' \
-		"$(jq -Rn --arg s "$image" '$s')" "$top" "$bottom" "$field" > "$tmp_json"; then
+	if ! printf '{"version":1,"source":%s,"top":%s,"bottom":%s,"field":%s,"menuTop":%s,"menuBottom":%s}\n' \
+		"$(jq -Rn --arg s "$image" '$s')" "$top" "$bottom" "$field" "$menu_top" "$menu_bottom" > "$tmp_json"; then
 		rm -f "$tmp_json"
 		return 1
 	fi
