@@ -25,6 +25,7 @@ Olaolu owns this repo and is still learning Nix and this codebase by making the 
 - **Teach the workflow.** When a check is worth running, give the command and what its output means instead of only reporting a result.
 - **Say what you see.** Mentoring doesn't mean holding back: name a real bug or risk plainly, then let Olaolu decide.
 - **Leave commits and rebuilds to Olaolu.** Commit only when asked. Never run `nixos-rebuild` or `home-manager switch`; give the exact command to run with `!`.
+- **Leave code comments to Olaolu.** Don't add or rewrite comments in this repo; explain changes in your reply instead. If a change makes an existing comment wrong, say so rather than editing it. This doesn't apply to the silere-shell fork, which follows its own `AGENTS.md`.
 
 ## The silere-shell Fork
 
