@@ -75,8 +75,15 @@ in
     programs.zsh = {
       enable = true;
       enableCompletion = true;
+
       # Home Manager sources zsh-autosuggestions directly; no need to also load it as an oh-my-zsh plugin.
-      autosuggestion.enable = true;
+      autosuggestion = {
+        enable = true;
+        # Catppuccin Mocha overlay2: fg=8 (surface2) vanishes over a bright
+        # wallpaper seen through kitty's 0.70 background.
+        highlight = "fg=#9399b2";
+      };
+
       syntaxHighlighting.enable = true;
 
       sessionVariables = {
