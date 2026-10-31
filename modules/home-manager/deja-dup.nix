@@ -32,12 +32,15 @@ let
     "${userDirs.desktop}/digital-brain"
     "${home}/.claude"
     "${home}/.codex"
+    "${home}/.omp"
     configHome
   ];
 
   excludeList = [
     "$TRASH"
     "$DOWNLOAD"
+    "${home}/.omp/natives"
+    "${home}/.omp/run"
   ];
 
   # JSON string/list syntax is also valid GVariant syntax for these values.
