@@ -133,6 +133,7 @@ in
     ../../modules/home-manager/lsd.nix
     ../../modules/home-manager/neovim.nix
     ../../modules/home-manager/obs-studio.nix
+    ../../modules/home-manager/omp.nix
     ../../modules/home-manager/ssh.nix
     ../../modules/home-manager/vscode.nix
     ../../modules/home-manager/yazi.nix
@@ -407,6 +408,7 @@ in
   local.lsd.enable = true;
   local.neovim.enable = true;
   local.obsStudio.enable = true;
+  local.omp.enable = true;
   local.ssh.enable = true;
   local.yazi.enable = true;
 
