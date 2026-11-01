@@ -67,6 +67,11 @@ in
           checkUpdate = false;
         };
 
+        setupVersion = 2;
+        symbolPreset = "unicode";
+        composer.shape = "box";
+        theme.dark = "titanium";
+
         modelRoles = {
           default = "claude-bridge/claude-opus-5-5:high";
           plan = "claude-bridge/claude-opus-5-5:xhigh";
