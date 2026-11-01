@@ -26,7 +26,6 @@ let
   };
 
   models = {
-    providers.anthropic.apiKey = "!cat ${home}/.omp/agent/anthropic-api-key";
     providers.zai-api = {
       baseUrl = "https://api.z.ai/api/paas/v4";
       api = "openai-completions";
@@ -69,27 +68,48 @@ in
         };
 
         modelRoles = {
-          default = "openai-codex/gpt-6-astra:high";
-          plan = "openai-codex/gpt-6-astra:xhigh";
-          slow = "openai-codex/gpt-6-astra:xhigh";
+          default = "claude-bridge/claude-opus-5-5:high";
+          plan = "claude-bridge/claude-opus-5-5:xhigh";
+          slow = "claude-bridge/claude-fable-5-1:high";
           task = "openai-codex/gpt-6.1-sol:medium";
           commit = "openai-codex/gpt-6.1-sol:low";
           vision = "openai-codex/gpt-6.1-sol";
           advisor = "openai-codex/gpt-6.1-sol:medium";
-          smol = "anthropic/claude-haiku-5-5:low";
-          review = "anthropic/claude-sonnet-5-5:high";
+          smol = "openai-codex/gpt-6.1-terra:low,openai-codex/gpt-6-luna:low";
+          tiny = "claude-bridge/claude-haiku-5-5:low";
+          memory = "@smol";
+          review = "openai-codex/gpt-6-astra:high";
         };
 
-        retry.fallbackChains = {
-          smol = [ "zai-api/glm-5.3-flash:low" ];
-          review = [ "moonshot/kimi-k3.1-pro:high" ];
+        retry = {
+          fallbackOn = "usage-limit";
+          fallbackChains = {
+            default = [
+              "openai-codex/gpt-6-astra:high"
+              "openai-codex/gpt-6.1-sol:high"
+              "moonshot/kimi-k3.1-pro:high"
+            ];
+            plan = [
+              "openai-codex/gpt-6-astra:xhigh"
+              "moonshot/kimi-k3.1-pro:high"
+            ];
+            slow = [
+              "claude-bridge/claude-opus-5-5:xhigh"
+              "openai-codex/gpt-6-astra:xhigh"
+            ];
+            smol = [ "zai-api/glm-5.3-flash:low" ];
+            review = [
+              "openai-codex/gpt-6.1-sol:high"
+              "moonshot/kimi-k3.1-pro:high"
+            ];
+          };
         };
 
         enabledModels = [
           "openai-codex/gpt-6-astra"
           "openai-codex/gpt-6.1-sol"
-          "anthropic/claude-haiku-5-5"
-          "anthropic/claude-sonnet-5-5"
+          "openai-codex/gpt-6.1-terra"
+          "openai-codex/gpt-6-luna"
           "claude-bridge/claude-opus-5-5"
           "claude-bridge/claude-sonnet-5-5"
           "claude-bridge/claude-fable-5-1"
@@ -98,6 +118,7 @@ in
           "zai-api/glm-5.3-flash"
         ];
 
+        disabledProviders = [ "anthropic" ];
         extensions = [ "${ompClaudeBridge}" ];
 
         task = {
@@ -108,7 +129,8 @@ in
         tools.approvalMode = "write";
         providers.openai-codex.daybreak = false;
         advisor.enabled = true;
-        memory.backend = "local";
+        memory.backend = "mnemopi";
+        mnemopi.scoping = "per-project-tagged";
         session.warnCost = 25;
         skills.customDirectories = [ "${home}/.claude/skills" ];
       };
