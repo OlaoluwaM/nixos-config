@@ -3,10 +3,12 @@ import type { CustomToolFactory } from "@oh-my-pi/pi-coding-agent";
 const MAX_PROMPT_BYTES = 100_000;
 const TIMEOUT_MS = 30 * 60 * 1000;
 
-const READ_ONLY_GIT = ["git diff", "git status", "git log", "git show"];
+const API_KEY_VARS = ["ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN"];
+
+const READ_ONLY_GIT =["git diff", "git status", "git log", "git show"];
 
 const SYSTEM_PROMPT = [
-	"Another coding agent (oh-my-pi) called you through its ask_claude tool to review its work.",
+	"Another coding agent asked you to review its work.",
 	"You cannot edit files. Bash is limited to read-only git diff, status, log and show; run them as plain 'git <subcommand>' from the working directory, with no -C flag.",
 	"Project settings are not loaded, so start by reading the repository's AGENTS.md or CLAUDE.md, if either exists, and judge the change against its conventions.",
 	"Read the code you need yourself. Report findings ranked by severity, each with file:line, what goes wrong in practice, and a suggested fix. If nothing is worth changing, say so plainly.",
@@ -52,6 +54,8 @@ const factory: CustomToolFactory = pi => ({
 		const effort = params.effort ?? "high";
 
 		const args = [
+			...API_KEY_VARS.flatMap(name => ["-u", name]),
+			"claude",
 			"-p",
 			"--output-format",
 			"json",
@@ -84,7 +88,7 @@ const factory: CustomToolFactory = pi => ({
 			details: { model, effort },
 		});
 
-		const run = await pi.exec("claude", args, { signal, cwd: params.cwd ?? pi.cwd, timeout: TIMEOUT_MS });
+		const run = await pi.exec("env", args, { signal, cwd: params.cwd ?? pi.cwd, timeout: TIMEOUT_MS });
 		if (run.killed) {
 			throw new Error("ask_claude was cancelled or ran past its 30-minute limit");
 		}

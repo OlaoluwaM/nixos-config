@@ -11,6 +11,7 @@ let
   yaml = pkgs.formats.yaml { };
 
   models = {
+    providers.anthropic.apiKey = "!cat ${home}/.omp/agent/anthropic-api-key";
     providers.zai-api = {
       baseUrl = "https://api.z.ai/api/paas/v4";
       api = "openai-completions";
@@ -60,13 +61,20 @@ in
           commit = "openai-codex/gpt-6.1-sol:low";
           vision = "openai-codex/gpt-6.1-sol";
           advisor = "openai-codex/gpt-6.1-sol:medium";
-          smol = "zai-api/glm-5.3-flash:low";
-          review = "moonshot/kimi-k3.1-pro:high";
+          smol = "anthropic/claude-haiku-5-5:low";
+          review = "anthropic/claude-sonnet-5-5:high";
+        };
+
+        retry.fallbackChains = {
+          smol = [ "zai-api/glm-5.3-flash:low" ];
+          review = [ "moonshot/kimi-k3.1-pro:high" ];
         };
 
         enabledModels = [
           "openai-codex/gpt-6-astra"
           "openai-codex/gpt-6.1-sol"
+          "anthropic/claude-haiku-5-5"
+          "anthropic/claude-sonnet-5-5"
           "moonshot/kimi-k3.1-pro"
           "zai-api/glm-5.3-flash"
         ];
