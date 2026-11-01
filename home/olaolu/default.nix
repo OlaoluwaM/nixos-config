@@ -133,7 +133,7 @@ in
     ../../modules/home-manager/lsd.nix
     ../../modules/home-manager/neovim.nix
     ../../modules/home-manager/obs-studio.nix
-    ../../modules/home-manager/omp.nix
+    ../../modules/home-manager/omp
     ../../modules/home-manager/ssh.nix
     ../../modules/home-manager/vscode.nix
     ../../modules/home-manager/yazi.nix
