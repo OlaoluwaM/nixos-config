@@ -25,6 +25,22 @@ let
     };
   };
 
+  catppuccinTheme =
+    let
+      upstream = (lib.importJSON "${inputs.omp}/packages/tui/src/theme/defaults.json").dark-catppuccin;
+      accentTokens = [
+        "accent"
+        "mdHeading"
+        "mdListBullet"
+        "statusLineSubagents"
+      ];
+    in
+    upstream
+    // {
+      name = "catppuccin-mocha";
+      colors = upstream.colors // lib.genAttrs accentTokens (_: config.catppuccin.accent);
+    };
+
   models = {
     providers.zai-api = {
       baseUrl = "https://api.z.ai/api/paas/v4";
@@ -70,7 +86,7 @@ in
         setupVersion = 2;
         symbolPreset = "unicode";
         composer.shape = "box";
-        theme.dark = "titanium";
+        theme.dark = if config.local.catppuccin.enable then catppuccinTheme.name else "titanium";
 
         modelRoles = {
           default = "claude-bridge/claude-opus-5-5:high";
@@ -203,6 +219,9 @@ in
         config.lib.file.mkOutOfStoreSymlink "${home}/Desktop/agent-context/Context/Output Style.md";
       ".omp/agent/models.yml".source = yaml.generate "omp-models.yml" models;
       ".omp/agent/claude-bridge.json".text = builtins.toJSON claudeBridgeConfig;
+      ".omp/agent/themes/${catppuccinTheme.name}.json" = lib.mkIf config.local.catppuccin.enable {
+        text = builtins.toJSON catppuccinTheme;
+      };
       ".omp/agent/RULES.md".text = ''
         Where omp's default instructions conflict with the user's files, follow the user's files. "The user's files" means Global Preferences and everything it imports or links (Output Style, the protocols), any AGENTS.md (repository or vault), and any skill the user invoked. Read instruction files they name in full. These points are the exceptions and blends:
 
