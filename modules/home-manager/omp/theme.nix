@@ -17,11 +17,23 @@ let
         "mdListBullet"
         "statusLineSubagents"
       ];
+      clearBgTokens = [
+        "customMessageBg"
+        "toolPendingBg"
+        "toolSuccessBg"
+        "toolErrorBg"
+      ];
     in
     upstream
     // {
       name = "catppuccin-mocha";
-      colors = upstream.colors // lib.genAttrs accentTokens (_: config.catppuccin.accent);
+      colors =
+        upstream.colors
+        // lib.genAttrs accentTokens (_: config.catppuccin.accent)
+        // lib.genAttrs clearBgTokens (_: "")
+        // {
+          userMessageBg = "surface0";
+        };
       symbols.overrides."sep.space" = "";
     };
 
