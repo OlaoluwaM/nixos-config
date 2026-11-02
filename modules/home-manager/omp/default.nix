@@ -140,7 +140,6 @@ in
         tools = {
           approval = {
             task = "allow";
-            eval = "prompt";
           };
         };
 
