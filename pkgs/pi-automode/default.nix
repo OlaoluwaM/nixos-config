@@ -42,6 +42,8 @@ in
 stdenvNoCC.mkDerivation {
   inherit pname version src;
 
+  patches = [ ./status-line.patch ];
+
   dontConfigure = true;
   dontBuild = true;
 
