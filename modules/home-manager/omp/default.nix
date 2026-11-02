@@ -54,6 +54,7 @@ let
 in
 {
   imports = [
+    ./automode.nix
     ./prompts.nix
     ./theme.nix
   ];
@@ -136,7 +137,6 @@ in
         };
 
         tools = {
-          approvalMode = "write";
           approval = {
             task = "allow";
             eval = "prompt";

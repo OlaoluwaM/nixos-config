@@ -31,6 +31,8 @@
     omp.url = "github:can1357/oh-my-pi";
     omp-claude-bridge.url = "github:OlaoluwaM/omp-claude-bridge/custom-branch";
     omp-claude-bridge.flake = false;
+    pi-automode.url = "github:czottmann/pi-automode/v1.17.0";
+    pi-automode.flake = false;
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
     catppuccin.url = "github:catppuccin/nix/release-26.05";
     # Vicinae from its own flake: nixpkgs lags upstream badly (0.23.x vs

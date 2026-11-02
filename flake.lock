@@ -588,6 +588,23 @@
         "type": "github"
       }
     },
+    "pi-automode": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1790091448,
+        "narHash": "sha256-hC5y4ReFLsRgUWxiuGVcGsEp8akmLVDrNQ1jxF2F+uE=",
+        "owner": "czottmann",
+        "repo": "pi-automode",
+        "rev": "820d7f2df583210307f4c870cdf67b8eaf6cf7d2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "czottmann",
+        "ref": "v1.17.0",
+        "repo": "pi-automode",
+        "type": "github"
+      }
+    },
     "quickshell": {
       "inputs": {
         "nixpkgs": [
@@ -621,6 +638,7 @@
         "nixpkgs-unstable": "nixpkgs-unstable",
         "omp": "omp",
         "omp-claude-bridge": "omp-claude-bridge",
+        "pi-automode": "pi-automode",
         "quickshell": "quickshell",
         "silere-shell": "silere-shell",
         "snowfall-flake": "snowfall-flake",
