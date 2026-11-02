@@ -20,6 +20,10 @@ let
     classifierReasoningLevel = "low";
     classifierTimeoutMs = 14000;
     allowInsideWorkingDirectory = true;
+    log = {
+      enabled = true;
+      classifierIo = false;
+    };
   };
 
   automodeConfig =
