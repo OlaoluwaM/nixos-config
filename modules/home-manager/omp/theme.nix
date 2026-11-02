@@ -22,6 +22,7 @@ let
     // {
       name = "catppuccin-mocha";
       colors = upstream.colors // lib.genAttrs accentTokens (_: config.catppuccin.accent);
+      symbols.overrides."sep.space" = "";
     };
 
 in
