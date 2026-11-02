@@ -15,12 +15,30 @@ let
     inherit (unstable) bun;
   };
 
-  automodeConfig = {
-    autoMode = {
-      classifierModel = "openai-codex/gpt-6.1-terra";
-      classifierReasoningLevel = "low";
-    };
+  automodeSettings = {
+    classifierModel = "openai-codex/gpt-6.1-sol";
+    classifierReasoningLevel = "low";
+    classifierTimeoutMs = 14000;
+    allowInsideWorkingDirectory = true;
   };
+
+  automodeConfig =
+    pkgs.runCommand "pi-automode-config.json"
+      {
+        nativeBuildInputs = [
+          pkgs.claude-code
+          pkgs.jq
+        ];
+        settings = builtins.toJSON automodeSettings;
+        passAsFile = [ "settings" ];
+      }
+      ''
+        export HOME="$TMPDIR"
+        claude auto-mode defaults > rules.json
+        jq --slurpfile settings "$settingsPath" \
+          '{ autoMode: ($settings[0] + { environment, allow, soft_deny, hard_deny }) }' \
+          rules.json > "$out"
+      '';
 in
 {
   config = lib.mkIf cfg.enable {
@@ -29,6 +47,6 @@ in
       tools.approvalMode = "yolo";
     };
 
-    home.file.".pi/agent/extensions/pi-automode/config.json".text = builtins.toJSON automodeConfig;
+    home.file.".pi/agent/extensions/pi-automode/config.json".source = automodeConfig;
   };
 }
