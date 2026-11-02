@@ -56,6 +56,7 @@ in
   imports = [
     ./automode.nix
     ./prompts.nix
+    ./statusline.nix
     ./theme.nix
   ];
 
