@@ -19,6 +19,8 @@ let
     classifierModel = "openai-codex/gpt-6.1-sol";
     classifierReasoningLevel = "low";
     classifierTimeoutMs = 14000;
+    fastClassifierModel = "typesafe/jev-1.14.0";
+    injectionProbeModel = "typesafe/jev-1.14.0";
     allowInsideWorkingDirectory = true;
     log = {
       enabled = true;
