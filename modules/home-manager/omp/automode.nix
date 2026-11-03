@@ -16,6 +16,7 @@ let
   };
 
   automodeSettings = {
+    enabled = false; # Automode seems to make things worse so I'll disable it for now
     classifierModel = "openai-codex/gpt-6.1-sol";
     classifierReasoningLevel = "low";
     classifierTimeoutMs = 14000;
