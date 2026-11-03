@@ -42,8 +42,6 @@ in
 stdenvNoCC.mkDerivation {
   inherit pname version src;
 
-  patches = [ ./status-line.patch ];
-
   dontConfigure = true;
   dontBuild = true;
 
@@ -57,7 +55,7 @@ stdenvNoCC.mkDerivation {
 
   meta = {
     description = "Claude Code-style auto mode for Pi and Oh My Pi: a classifier model screens tool calls before they run";
-    homepage = "https://github.com/czottmann/pi-automode";
+    homepage = "https://github.com/OlaoluwaM/pi-automode";
     license = lib.licenses.mit;
     platforms = lib.platforms.linux;
   };
