@@ -242,6 +242,8 @@ in
     wl-clipboard
     woff2
 
+    yq
+
     z3
 
     # Packages from unstable channel
