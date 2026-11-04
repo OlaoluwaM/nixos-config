@@ -28,7 +28,7 @@
     # Other stuff
     claude-code.url = "github:sadjow/claude-code-nix";
     codex-cli.url = "github:sadjow/codex-cli-nix";
-    omp.url = "github:can1357/oh-my-pi";
+    omp.url = "github:can1357/oh-my-pi/v18.15.0";
     omp-claude-bridge.url = "github:OlaoluwaM/omp-claude-bridge/custom-branch";
     omp-claude-bridge.flake = false;
     pi-automode.url = "github:OlaoluwaM/pi-automode/custom-branch";

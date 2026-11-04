@@ -68,6 +68,7 @@ in
   config = lib.mkIf cfg.enable {
     programs.omp = {
       enable = true;
+      package = unstable.omp;
       settings = {
         startup = {
           quiet = true;
