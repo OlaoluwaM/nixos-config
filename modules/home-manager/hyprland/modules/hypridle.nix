@@ -67,7 +67,14 @@ in
           # behind the lock with the screen lit until someone touches it. The
           # restart runs the chain again from zero; the 600s lock request it
           # brings finds the lock already up, and the wrapper skips it.
-          after_sleep_cmd = "${dpms "enable"}; ${lib.getExe' cfg.commands.hyprlandPackage "hyprctl"} dispatch 'hl.dsp.force_idle(0)'";
+          #
+          # The "turn on" above can fail when it arrives a moment too early,
+          # and when that happens Hyprland gets stuck thinking the screen is
+          # already on, so the screen stays black. hypr-dpms-resume runs last
+          # as a safety net: a few seconds later it checks whether the screen
+          # really came on and, if it didn't, turns it off and on again. Its
+          # header comment (scripts/hypr-dpms-resume.sh) tells the whole story.
+          after_sleep_cmd = "${dpms "enable"}; ${lib.getExe' cfg.commands.hyprlandPackage "hyprctl"} dispatch 'hl.dsp.force_idle(0)'; ${lib.getExe cfg.commands.dpmsResumeScript}";
 
           # Wait until the session is locked before allowing suspend to
           # continue.

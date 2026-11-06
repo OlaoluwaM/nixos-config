@@ -9,10 +9,10 @@
 #
 # This module packages the shared helper scripts other Hyprland modules launch
 # (screenshot, screenrecord, manual caffeine/idle-inhibit toggle, the
-# silere-lock wrapper every session lock goes through) and declares the
-# local.hyprland.commands option tree those modules read them back from. See
-# the long comment on that option block below for why it exists as an option
-# tree instead of a plain `let` value.
+# silere-lock wrapper every session lock goes through, the after-wake screen
+# fix hypr-dpms-resume) and declares the local.hyprland.commands option tree
+# those modules read them back from. See the long comment on that option block
+# below for why it exists as an option tree instead of a plain `let` value.
 let
   cfg = config.local.hyprland;
 
@@ -73,6 +73,18 @@ let
     text = builtins.readFile ../scripts/hypr-shell-caffeine.sh;
   };
 
+  # hypridle's after_sleep_cmd runs this after every wake to fix a screen that
+  # stays black. Its header comment explains why that can happen.
+  dpmsResumeScript = pkgs.writeShellApplication {
+    name = "hypr-dpms-resume";
+    runtimeInputs = [
+      pkgs.coreutils
+      cfg.commands.hyprlandPackage
+      pkgs.jq
+    ];
+    text = builtins.readFile ../scripts/hypr-dpms-resume.sh;
+  };
+
   # hypridle's lock_cmd and the shell menu's Lock target. Its header comment
   # holds the rules it keeps.
   lockScript = pkgs.writeShellApplication {
@@ -123,6 +135,12 @@ in
         type = lib.types.package;
         internal = true;
         description = "Manual idle-inhibitor helper used by the Hyprland session.";
+      };
+
+      dpmsResumeScript = lib.mkOption {
+        type = lib.types.package;
+        internal = true;
+        description = "hypr-dpms-resume, which hypridle's after_sleep_cmd runs to cycle DPMS on outputs Hyprland reports on but the kernel has disabled.";
       };
 
       lockScript = lib.mkOption {
@@ -211,6 +229,7 @@ in
     local.hyprland.commands = {
       inherit
         caffeineScript
+        dpmsResumeScript
         lockScript
         screenshotScript
         screenrecordScript
