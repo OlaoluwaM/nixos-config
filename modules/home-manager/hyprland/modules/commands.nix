@@ -79,8 +79,8 @@ let
     name = "hypr-dpms-resume";
     runtimeInputs = [
       pkgs.coreutils
+      pkgs.gawk
       cfg.commands.hyprlandPackage
-      pkgs.jq
     ];
     text = builtins.readFile ../scripts/hypr-dpms-resume.sh;
   };
@@ -140,7 +140,7 @@ in
       dpmsResumeScript = lib.mkOption {
         type = lib.types.package;
         internal = true;
-        description = "hypr-dpms-resume, which hypridle's after_sleep_cmd runs to cycle DPMS on outputs Hyprland reports on but the kernel has disabled.";
+        description = "hypr-dpms-resume, which hypridle's after_sleep_cmd runs to cycle DPMS on outputs whose post-resume DPMS enable Hyprland's log shows failing.";
       };
 
       lockScript = lib.mkOption {
