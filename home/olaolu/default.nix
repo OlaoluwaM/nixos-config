@@ -238,6 +238,8 @@ in
     typescript
     typst
 
+    unzip
+
     wirelesstools
     wl-clipboard
     woff2
@@ -311,7 +313,7 @@ in
       ps.dnspython
     ]))
 
-    unstable.rainfrog
+    # unstable.rainfrog # broken, uncomment later when it may be fixed
     unstable.rip2
     unstable.ripgrep
     unstable.ripgrep-all
