@@ -103,5 +103,17 @@ in
         extensionPkgs.wifi-commander
       ];
     };
+
+    # Home Manager's qt module (qt.enable in desktop.nix) exports
+    # QML2_IMPORT_PATH to every user service. It points at the profile's QML
+    # modules, which come from stable nixpkgs (Qt 6.11.2). Vicinae comes from
+    # its own flake and is built against a newer Qt (6.12.0 as of 0.30.0).
+    # With the variable set, Vicinae loads the profile's QtQuick plugins into
+    # its own Qt and segfaults when the window opens. Its wrapper already
+    # supplies the matching modules, so drop the variable for this unit only.
+    # Apps launched from Vicinae inherit its environment and lose the variable
+    # too. The two Qt versions can drift apart on any lock bump, so keep this
+    # even when they happen to match.
+    systemd.user.services.vicinae.Service.UnsetEnvironment = [ "QML2_IMPORT_PATH" ];
   };
 }
