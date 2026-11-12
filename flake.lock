@@ -761,11 +761,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794457232,
-        "narHash": "sha256-kaE/6/3ZTTLL9xfUa4bsESNoKYo/jpQNrqVb3QyuuxI=",
+        "lastModified": 1794523883,
+        "narHash": "sha256-6gGJ8uDpA6ZHagQd34Npqifi6E0qGj8B5BPj3eROjp8=",
         "owner": "OlaoluwaM",
         "repo": "sysc-greet",
-        "rev": "aecf6345adf5069fd2e162cf8f6da5e7e57cb03e",
+        "rev": "b4adc7b387f87fdeb510cec6aca752022449a638",
         "type": "github"
       },
       "original": {
