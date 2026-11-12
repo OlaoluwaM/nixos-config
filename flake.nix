@@ -21,7 +21,7 @@
     };
 
     sysc-greet = {
-      url = "github:Nomadcxx/sysc-greet";
+      url = "github:OlaoluwaM/sysc-greet/custom-fork";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
