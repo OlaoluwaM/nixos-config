@@ -7,11 +7,6 @@
 
 let
   cfg = config.local.obsStudio;
-
-  # C23 strrchr preserves const from the filename passed to the shader loaders.
-  obsNoisePackage = unstable.obs-studio-plugins.obs-noise.overrideAttrs (old: {
-    patches = (old.patches or [ ]) ++ [ ./obs-noise-const-filenames.patch ];
-  });
 in
 {
   options.local.obsStudio = {
@@ -31,7 +26,7 @@ in
         obs-backgroundremoval
         obs-pipewire-audio-capture
         obs-vkcapture
-        obsNoisePackage
+        obs-noise
         obs-aitum-multistream
       ];
     };
