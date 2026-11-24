@@ -199,6 +199,7 @@ in
     haskellPackages.ghc-events
     (callPackage ../../pkgs/hacker-laws-cli { })
 
+    (callPackage ../../pkgs/learnharness { })
     libappindicator
     libpq
     libwebp
