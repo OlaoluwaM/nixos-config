@@ -877,7 +877,19 @@ in
       Install.WantedBy = [ hyprlandSessionTarget ];
 
       Service = {
-        ExecStart = "${lib.getExe' quickshellPackage "qs"} -p ${silereShellSrc}/share/silere-shell/shell.qml";
+        # Quickshell warns each time a tray app or media player fails to
+        # answer a D-Bus property read, and Qt each time a text-input surface
+        # is disabled out of order. The shell can act on neither, and between
+        # them they were nearly every line this unit logged, burying the
+        # shell's own silere.* lines.
+        #
+        # This is qs's own --log-rules flag, not Environment=QT_LOGGING_RULES:
+        # a unit's Environment= overrides `systemctl --user set-environment`,
+        # which is how the shell's docs/debugging.md turns one category's
+        # Debug lines on, and the flag leaves that variable free to add its
+        # rules. The flag wins where the two name the same category, so
+        # seeing these warnings again means dropping the rule here.
+        ExecStart = "${lib.getExe' quickshellPackage "qs"} --log-rules \"quickshell.dbus.properties.warning=false;qt.qpa.wayland.textinput.warning=false\" -p ${silereShellSrc}/share/silere-shell/shell.qml";
         Restart = "on-failure";
         Environment = [ "PATH=${silereShellPath}" ];
       };
