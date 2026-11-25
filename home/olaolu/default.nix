@@ -232,6 +232,7 @@ in
     service-wrapper
     slack
     slackDesktopEntry
+    sox_ng
     spotify
 
     texliveFull
