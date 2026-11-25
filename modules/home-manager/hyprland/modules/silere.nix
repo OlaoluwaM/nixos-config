@@ -72,6 +72,7 @@ let
         readonly property string caffeineUnit:        ${qml sc.caffeineUnit}
         readonly property string caffeinePresets:     ${qml sc.caffeinePresets}
         readonly property string dndPresets:          ${qml sc.dndPresets}
+        readonly property string dndBypassApps:       ${qml sc.dndBypassApps}
         readonly property int    notifMaxVisible:     ${qml sc.notifMaxVisible}
         readonly property bool   notifHistoryPersistent: ${qml sc.notifHistoryPersistent}
         readonly property int    notifHistoryLimit:   ${qml sc.notifHistoryLimit}
@@ -421,6 +422,13 @@ in
       # not bound by this list -- it writes any 5-480 minute value directly.
       default = "15,30,60,0";
       description = "Comma-separated minutes for the DND timed presets (0 = until turned off).";
+    };
+
+    dndBypassApps = lib.mkOption {
+      type = lib.types.strMatching "[^[:cntrl:]]{0,512}";
+      # List of apps that are allowed to bypass DND (comma-separated).
+      default = "silere-shell,Hypr Shell";
+      description = "Comma-separated list of apps that are allowed to bypass DND.";
     };
 
     # bounds mirror the fork's _schema clamp for notifMaxVisible
