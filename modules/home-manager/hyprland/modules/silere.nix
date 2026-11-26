@@ -3,6 +3,7 @@
   inputs,
   lib,
   pkgs,
+  unstable,
   ...
 }:
 
@@ -162,13 +163,10 @@ let
   # ...) as the literal command name, so bash has to be resolvable too, not
   # just the coreutils it then calls out to.
   #
-  # Re-checked against the custom-branch rev this module now pins (grep
-  # command\s*=\s*\[...\]|execDetached\(\[...\]|exec\(\[...\] across
-  # services/modules again): NightLight.qml no longer spawns or supervises
-  # hyprsunset itself -- a Nix-managed hyprsunset.service systemd unit owns
-  # the daemon now, and NightLight.qml only starts/stops that unit via
-  # "systemctl" and nudges it via "hyprctl hyprsunset temperature" IPC. That
-  # dropped pgrep/pkill, so procps came out of this list.
+  # Night light: NightLight.qml starts and stops the sunsetr.service unit
+  # from sunsetr.nix via "systemctl" and talks to the daemon only through
+  # the "sunsetr" CLI (status, get, set). Nothing here needs pgrep/pkill, so
+  # procps stays out of this list.
   silereShellPath =
     lib.makeBinPath [
       pkgs.bash
@@ -177,13 +175,7 @@ let
       pkgs.inotify-tools # inotifywait: the Screenshot, Recording and TimeZoneWatch watchers
       pkgs.libnotify # notify-send
       pkgs.systemd # systemctl, loginctl, busctl
-      # hyprsunset itself is never spawned or killed from here anymore (see
-      # above), but SystemTools.qml's optional-tool probe still shells out to
-      # `command -v hyprsunset`, and NightLight.qml gates its whole toggle UI
-      # on that probe's result (SystemTools.hasHyprsunset) -- so the binary
-      # still has to resolve on this unit's PATH even though nothing here
-      # runs it directly.
-      pkgs.hyprsunset
+      unstable.sunsetr # NightLight.qml's status, get and set calls; same package as the unit in sunsetr.nix
     ]
     # hyprctl is deliberately left out of the explicit list above: pkgs.hyprland
     # would drag a second copy of the compositor into the closure just to get
@@ -395,7 +387,7 @@ in
     caffeineUnit = lib.mkOption {
       type = lib.types.strMatching "^[A-Za-z0-9_.@:-]*$";
       # The shell's Caffeine service is a thin systemd control (same pattern
-      # as its NightLight/hyprsunset split): this unit's active state IS the
+      # as its NightLight/sunsetr split): this unit's active state IS the
       # manual inhibit. The unit itself lives in session-services.nix; the
       # fork ships this key empty, which keeps the whole feature dormant on
       # non-Nix installs.

@@ -12,7 +12,7 @@ called a compositor. The desktop also uses:
   being evaluated for Alt+Tab.
 - hyprlock for the lock screen.
 - hypridle for lock, screen-off, and sleep timers.
-- hyprsunset for warmer screen colors at night.
+- sunsetr for warmer screen colors at night.
 
 Set `desktopProfile = "hyprland"` for the host in `flake.nix` to turn this
 desktop on.
@@ -36,7 +36,8 @@ Each file has one main job:
 - `modules/hypridle.nix` controls what happens when the computer is left alone.
 - `modules/hyprshell.nix` packages and starts the dedicated Alt+Tab switcher;
   its import is currently commented out in `default.nix`.
-- `modules/hyprsunset.nix` controls the night color schedule.
+- `modules/sunsetr.nix` installs sunsetr and starts it with the session; the
+  shell's Night Light card owns its schedule and temperature.
 - `modules/session-services.nix` starts the media idle blocker, Caffeine, and
   the KDE Connect tray icon.
 - `modules/silere.nix` packages and starts `silere-shell`. It also sends the

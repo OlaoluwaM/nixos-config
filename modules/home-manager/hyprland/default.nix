@@ -29,7 +29,7 @@
 # - modules/power.nix: Vicinae power requests through the shell countdown
 # - modules/hyprlock.nix: lock-screen look and behavior
 # - modules/hypridle.nix: idle locking behavior
-# - modules/hyprsunset.nix: display color temperature schedule
+# - modules/sunsetr.nix: the night light daemon the shell's card controls
 # - modules/session-services.nix: extra Hyprland-session user services
 # - modules/silere.nix: the silere-shell Quickshell bar (packaging + user
 #   service)
@@ -82,11 +82,11 @@ in
     # import here so restoring the dedicated hyprshell switcher is a one-line
     # change rather than rediscovering how it was wired into the profile.
     # ./modules/hyprshell.nix
-    ./modules/hyprsunset.nix
     ./modules/keybindings.nix
     ./modules/power.nix
     ./modules/session-services.nix
     ./modules/silere.nix
+    ./modules/sunsetr.nix
     ./modules/wallpaper.nix
     ./modules/zathura.nix
     ../vicinae.nix
@@ -131,7 +131,7 @@ in
     local.vicinae.systemd.target = hyprlandSessionTarget;
 
     # Tells Home Manager which user systemd target represents "the Hyprland
-    # desktop session is running." Services such as hypridle, hyprsunset, and
+    # desktop session is running." Services such as hypridle, sunsetr, and
     # Vicinae attach themselves to this same target, so they start when
     # Hyprland starts and stop when the Hyprland session stops. Without one
     # shared target, each service would need its own separate start/stop
